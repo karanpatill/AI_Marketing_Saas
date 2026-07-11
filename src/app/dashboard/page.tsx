@@ -8,6 +8,7 @@ import {
   CheckCircle2, ArrowUpRight, Cpu, Radio,
   Loader2, LogOut, ArrowRight, ShieldCheck,
   Tag, Compass, HelpCircle, Users, Eye, Flag,
+  Building2,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 
