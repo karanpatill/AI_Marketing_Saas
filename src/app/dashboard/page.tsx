@@ -8,7 +8,7 @@ import {
   CheckCircle2, ArrowUpRight, Cpu, Radio,
   Loader2, LogOut, ArrowRight, ShieldCheck,
   Tag, Compass, HelpCircle, Users, Eye, Flag,
-  Building2,
+  Building,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 
@@ -197,7 +197,7 @@ export default function DashboardPage() {
             {/* Box 1: Company Definition */}
             <div className="bg-white border border-gray-200/80 rounded-2xl p-5 space-y-4 shadow-[0_4px_20px_rgb(0,0,0,0.01)]">
               <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1.5">
-                <Building2 className="w-4 h-4 text-brand-secondary" />
+                <Building className="w-4 h-4 text-brand-secondary" />
                 Company Definition
               </h3>
               

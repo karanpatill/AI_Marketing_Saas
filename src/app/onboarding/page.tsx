@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowRight, ArrowLeft, Check, Sparkles,
-  Building2, Target, Shield, Compass,
+  Building, Target, Shield, Compass,
   Laptop, Globe, Plus, Trash2, Tag, Key, Info, HelpCircle
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
@@ -230,8 +230,9 @@ export default function OnboardingPage() {
           {step === 1 && (
             <div className="space-y-5 animate-fade-up">
               <div>
+
                 <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                  <Building2 className="w-5 h-5 text-brand-primary" />
+                  <Building className="w-5 h-5 text-brand-primary" />
                   Company Profile
                 </h2>
                 <p className="text-xs text-gray-400 mt-1">
