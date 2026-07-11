@@ -747,7 +747,7 @@ export default function OnboardingPage() {
           competitors: (data.competitors || []).filter(c => c.trim().length > 0),
           platforms: data.platforms || [],
           main_goal: data.mainGoal,
-          approved_moodboard: data.approvedMoodboard ? JSON.stringify(data.approvedMoodboard) : null,
+          approved_moodboard: data.approvedMoodboard || null,
         })
         .select()
         .single();
