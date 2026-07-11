@@ -44,6 +44,21 @@ type BrandKit = {
   };
 };
 
+type MoodboardPalette = { name: string; hex: string; role: string };
+type MoodboardStyle = {
+  id: string;
+  name: string;
+  tagline: string;
+  palette: MoodboardPalette[];
+  typography: { headline: string; body: string; style: string };
+  keywords: string[];
+  gradient: string;
+  accentGradient: string;
+  texture: string;
+  imagePrompt: string;
+  generatedImageUrl: string | null;
+};
+
 type OnboardingData = {
   brandName: string;
   website: string;
@@ -71,7 +86,7 @@ type OnboardingData = {
   competitors: string[];
   mainGoal: string;
 
-  // Brand Identity Studio additions
+  // Brand Identity Studio
   kitType: "upload" | "generate";
   logoUrl: string;
   productImages: string[];
@@ -82,6 +97,9 @@ type OnboardingData = {
   icons: string[];
   brandGuidelinesFile: string;
   brandKitGenerated: BrandKit | null;
+
+  // Moodboard Studio (Phase 3)
+  approvedMoodboard: MoodboardStyle | null;
 };
 
 const INITIAL_DATA: OnboardingData = {
@@ -122,7 +140,119 @@ const INITIAL_DATA: OnboardingData = {
   icons: [],
   brandGuidelinesFile: "",
   brandKitGenerated: null,
+
+  // Moodboard Studio defaults
+  approvedMoodboard: null,
 };
+
+// ─── Moodboard Style Definitions ───
+const MOODBOARD_STYLES: { id: string; name: string; tagline: string; emoji: string; gradient: string; accentGradient: string; palette: { hex: string; name: string }[]; keywords: string[]; typography: { headline: string; body: string }; texture: string }[] = [
+  { id: "luxury", name: "Dark Luxury", tagline: "Opulent · Exclusive · Timeless", emoji: "👑",
+    gradient: "linear-gradient(135deg, #0D0D0D 0%, #1A1A2E 50%, #2D1B00 100%)",
+    accentGradient: "linear-gradient(90deg, #C9A84C, #8B6914)",
+    palette: [{ hex: "#0D0D0D", name: "Obsidian" }, { hex: "#C9A84C", name: "Gold Leaf" }, { hex: "#F5E6C8", name: "Champagne" }],
+    keywords: ["Exclusive", "Refined", "Heritage", "Prestige"],
+    typography: { headline: "Playfair Display", body: "Cormorant Garamond" },
+    texture: "Fine-grain leather · Gold foil · Black silk" },
+  { id: "minimal", name: "Minimal Pure", tagline: "Clean · Breathable · Essential", emoji: "◻️",
+    gradient: "linear-gradient(135deg, #FAFAFA 0%, #F2EFE9 100%)",
+    accentGradient: "linear-gradient(90deg, #1C1C1C, #8C8C8C)",
+    palette: [{ hex: "#FAFAFA", name: "Snow" }, { hex: "#1C1C1C", name: "Graphite" }, { hex: "#F2EFE9", name: "Ivory" }],
+    keywords: ["Clarity", "Breathing Room", "Precision", "Pure"],
+    typography: { headline: "Inter", body: "Inter" },
+    texture: "Uncoated matte · Hairlines · Whitespace" },
+  { id: "premium", name: "Premium Steel", tagline: "Sharp · Confident · Authority", emoji: "⚡",
+    gradient: "linear-gradient(135deg, #0A1628 0%, #1a2744 50%, #0D1F3C 100%)",
+    accentGradient: "linear-gradient(90deg, #0066FF, #C0C0C8)",
+    palette: [{ hex: "#0A1628", name: "Navy Depths" }, { hex: "#C0C0C8", name: "Chrome" }, { hex: "#0066FF", name: "Electric Blue" }],
+    keywords: ["Authority", "Innovation", "Technology", "Forward"],
+    typography: { headline: "Montserrat", body: "Source Sans Pro" },
+    texture: "Brushed aluminum · Carbon fiber · Polished steel" },
+  { id: "modern", name: "Modern Vivid", tagline: "Dynamic · Fresh · Digital-First", emoji: "🚀",
+    gradient: "linear-gradient(135deg, #4F46E5 0%, #06B6D4 100%)",
+    accentGradient: "linear-gradient(90deg, #4F46E5, #7C3AED)",
+    palette: [{ hex: "#4F46E5", name: "Deep Violet" }, { hex: "#06B6D4", name: "Cyan" }, { hex: "#FFFFFF", name: "White" }],
+    keywords: ["Vibrant", "Digital", "Scalable", "Fluid"],
+    typography: { headline: "Plus Jakarta Sans", body: "DM Sans" },
+    texture: "Glass morphism · Soft shadows · Gradient mesh" },
+  { id: "editorial", name: "Editorial", tagline: "Structured · Journalistic · Authoritative", emoji: "📰",
+    gradient: "linear-gradient(135deg, #FAF9F7 0%, #E8E4DC 100%)",
+    accentGradient: "linear-gradient(90deg, #CC2929, #111111)",
+    palette: [{ hex: "#FAF9F7", name: "Newsprint" }, { hex: "#CC2929", name: "Crimson" }, { hex: "#111111", name: "Press Black" }],
+    keywords: ["Credibility", "Narrative", "Structure", "Voice"],
+    typography: { headline: "Libre Baskerville", body: "Merriweather" },
+    texture: "Newsprint grain · Column grid · Editorial spacing" },
+  { id: "apple", name: "Apple Style", tagline: "Precise · Human · Magical", emoji: "🍎",
+    gradient: "linear-gradient(180deg, #FFFFFF 0%, #F5F5F7 100%)",
+    accentGradient: "linear-gradient(90deg, #0071E3, #00A3FF)",
+    palette: [{ hex: "#FFFFFF", name: "Pure White" }, { hex: "#1D1D1F", name: "SF Black" }, { hex: "#0071E3", name: "Apple Blue" }],
+    keywords: ["Simplicity", "Craftsmanship", "Delight", "Intuitive"],
+    typography: { headline: "SF Pro Display", body: "SF Pro Text" },
+    texture: "Anodized aluminum · Gorilla glass · Retina" },
+  { id: "tesla", name: "Tesla Style", tagline: "Future · Electric · Inevitable", emoji: "⚡",
+    gradient: "linear-gradient(135deg, #101010 0%, #1C1C1C 100%)",
+    accentGradient: "linear-gradient(90deg, #CC0000, #880000)",
+    palette: [{ hex: "#101010", name: "Space Black" }, { hex: "#CC0000", name: "Tesla Red" }, { hex: "#E8E8E8", name: "Chrome" }],
+    keywords: ["Electrified", "Engineered", "Revolutionary", "Pure"],
+    typography: { headline: "Gotham", body: "Inter" },
+    texture: "Carbon fiber · Matte finish · Precision" },
+  { id: "nike", name: "Nike Style", tagline: "Bold · Motion · Victory", emoji: "✓",
+    gradient: "linear-gradient(135deg, #000000 0%, #2A2A2A 100%)",
+    accentGradient: "linear-gradient(90deg, #FF4500, #DFFF00)",
+    palette: [{ hex: "#000000", name: "Jet Black" }, { hex: "#FF4500", name: "Signal Orange" }, { hex: "#DFFF00", name: "Volt" }],
+    keywords: ["Motion", "Power", "Victory", "Relentless"],
+    typography: { headline: "Futura PT", body: "Helvetica Neue" },
+    texture: "Performance fabric · Motion blur · Impact photography" },
+  { id: "scandinavian", name: "Scandinavian", tagline: "Hygge · Natural · Balanced", emoji: "🌿",
+    gradient: "linear-gradient(135deg, #F7F4EF 0%, #E8DFD0 100%)",
+    accentGradient: "linear-gradient(90deg, #2D4A3E, #8FAF8F)",
+    palette: [{ hex: "#F7F4EF", name: "Birch" }, { hex: "#2D4A3E", name: "Forest" }, { hex: "#8FAF8F", name: "Sage" }],
+    keywords: ["Hygge", "Functional", "Nature", "Calm"],
+    typography: { headline: "Josefin Sans", body: "Lato" },
+    texture: "Raw wood · Linen · Ceramic matte · Natural stone" },
+  { id: "softPastel", name: "Soft Pastel", tagline: "Gentle · Joyful · Nurturing", emoji: "🌸",
+    gradient: "linear-gradient(135deg, #FDDDE6 0%, #E8D5F5 50%, #D5F5E3 100%)",
+    accentGradient: "linear-gradient(90deg, #FDDDE6, #E8D5F5)",
+    palette: [{ hex: "#FDDDE6", name: "Blush" }, { hex: "#E8D5F5", name: "Lavender" }, { hex: "#D5F5E3", name: "Mint" }],
+    keywords: ["Warmth", "Gentle", "Creative", "Joyful"],
+    typography: { headline: "Nunito", body: "Nunito Sans" },
+    texture: "Watercolor · Soft brushstrokes · Delicate patterns" },
+  { id: "boldStartup", name: "Bold Startup", tagline: "Disruptive · Energetic · Fearless", emoji: "💥",
+    gradient: "linear-gradient(135deg, #0A0A0A 0%, #1A0A00 100%)",
+    accentGradient: "linear-gradient(90deg, #FFD700, #FF2D78)",
+    palette: [{ hex: "#0A0A0A", name: "Night" }, { hex: "#FFD700", name: "Electric Yellow" }, { hex: "#FF2D78", name: "Hot Pink" }],
+    keywords: ["Disruptive", "Fearless", "Hype", "Energy"],
+    typography: { headline: "Space Grotesk", body: "Space Mono" },
+    texture: "Street art · Digital noise · Neon glow" },
+  { id: "corporate", name: "Corporate Pro", tagline: "Trustworthy · Structured · Global", emoji: "🏢",
+    gradient: "linear-gradient(135deg, #003580 0%, #1a4d99 100%)",
+    accentGradient: "linear-gradient(90deg, #003580, #4A7FC1)",
+    palette: [{ hex: "#003580", name: "Corporate Blue" }, { hex: "#FDFCFB", name: "Warm White" }, { hex: "#4A7FC1", name: "Steel Blue" }],
+    keywords: ["Professional", "Global", "Reliable", "Leadership"],
+    typography: { headline: "Arial", body: "Georgia" },
+    texture: "Embossed paper · Clean grid · Professional photography" },
+  { id: "magazine", name: "Magazine", tagline: "Curated · Visual · Aspirational", emoji: "📖",
+    gradient: "linear-gradient(135deg, #0A0A0A 0%, #1a1a1a 100%)",
+    accentGradient: "linear-gradient(90deg, #E63946, #0A0A0A)",
+    palette: [{ hex: "#0A0A0A", name: "Rich Black" }, { hex: "#FFFEF9", name: "Magazine White" }, { hex: "#E63946", name: "Accent Red" }],
+    keywords: ["Aspirational", "Curated", "Sophisticated", "Iconic"],
+    typography: { headline: "Didot", body: "Garamond" },
+    texture: "Glossy print · Full-bleed photography · White margin" },
+  { id: "fashion", name: "Fashion House", tagline: "Iconic · Avant-garde · Signature", emoji: "👗",
+    gradient: "linear-gradient(135deg, #F5F0EA 0%, #C9978A 100%)",
+    accentGradient: "linear-gradient(90deg, #1A1A1A, #C19A6B)",
+    palette: [{ hex: "#F5F0EA", name: "Porcelain" }, { hex: "#1A1A1A", name: "Onyx" }, { hex: "#C9978A", name: "Dusty Rose" }],
+    keywords: ["Iconic", "Avant-garde", "Signature", "Wearable Art"],
+    typography: { headline: "Vogue", body: "Times New Roman" },
+    texture: "Silk fabric · Runway · Couture stitching" },
+  { id: "lifestyle", name: "Lifestyle", tagline: "Real · Warm · Community", emoji: "☀️",
+    gradient: "linear-gradient(135deg, #FFF8F0 0%, #F4845F 100%)",
+    accentGradient: "linear-gradient(90deg, #F4845F, #F6C26A)",
+    palette: [{ hex: "#FFF8F0", name: "Cream" }, { hex: "#F4845F", name: "Sunset Orange" }, { hex: "#F6C26A", name: "Golden Hour" }],
+    keywords: ["Authentic", "Community", "Real Moments", "Joy"],
+    typography: { headline: "Poppins", body: "Open Sans" },
+    texture: "Golden hour photography · Linen · Real moments" },
+];
 
 // Preset lists to avoid manual typing
 const PRESET_VALUES = [
@@ -190,6 +320,11 @@ export default function OnboardingPage() {
   const [newCompetitorInput, setNewCompetitorInput] = useState("");
   const [uploadingField, setUploadingField] = useState<string | null>(null);
 
+  // Moodboard Studio states
+  const [moodboardGenerating, setMoodboardGenerating] = useState<string | null>(null);
+  const [moodboardPreviews, setMoodboardPreviews] = useState<Record<string, { generated: boolean }>>({});
+  const [hoveredMood, setHoveredMood] = useState<string | null>(null);
+
   // Load from localStorage
   useEffect(() => {
     const saved = localStorage.getItem("automarc_onboarding_v4");
@@ -212,11 +347,56 @@ export default function OnboardingPage() {
   };
 
   const handleNext = () => {
-    if (step < 6) setStep(step + 1);
+    if (step < 7) setStep(step + 1);
   };
 
   const handleBack = () => {
     if (step > 1) setStep(step - 1);
+  };
+
+  // Generate moodboard preview for a single style
+  const generateMoodboardPreview = async (styleId: string) => {
+    setMoodboardGenerating(styleId);
+    try {
+      await fetch("/api/generate-moodboard", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          style: styleId,
+          brandName: data.brandName,
+          industry: data.industry,
+          brandPersonality: data.brandPersonality,
+          brandValues: data.brandValues,
+          usp: data.usp,
+        }),
+      });
+      // Mark as generated (image comes when API key is set)
+      setMoodboardPreviews((prev) => ({ ...prev, [styleId]: { generated: true } }));
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setMoodboardGenerating(null);
+    }
+  };
+
+  const approveMoodboard = (styleId: string) => {
+    const style = MOODBOARD_STYLES.find((s) => s.id === styleId);
+    if (!style) return;
+    // Build full MoodboardStyle object
+    const approved = {
+      id: style.id,
+      name: style.name,
+      tagline: style.tagline,
+      palette: style.palette.map((p) => ({ name: p.name, hex: p.hex, role: "" })),
+      typography: { headline: style.typography.headline, body: style.typography.body, style: "" },
+      keywords: style.keywords,
+      gradient: style.gradient,
+      accentGradient: style.accentGradient,
+      texture: style.texture,
+      imagePrompt: `${style.name} moodboard for ${data.brandName}`,
+      generatedImageUrl: null,
+    };
+    updateData({ approvedMoodboard: approved });
   };
 
   // Real Website Crawler & Brand DNA Generator
@@ -524,11 +704,13 @@ export default function OnboardingPage() {
       case 4:
         return (data.platforms || []).length > 0 && data.mainGoal !== "";
       case 5:
-        // Studio assets check
         return data.kitType === "generate" 
           ? data.brandKitGenerated !== null 
           : (data.logoUrl || "").trim().length > 0;
       case 6:
+        // Moodboard Studio — must approve one moodboard
+        return data.approvedMoodboard !== null;
+      case 7:
         return true;
       default:
         return false;
@@ -565,6 +747,7 @@ export default function OnboardingPage() {
           competitors: (data.competitors || []).filter(c => c.trim().length > 0),
           platforms: data.platforms || [],
           main_goal: data.mainGoal,
+          approved_moodboard: data.approvedMoodboard ? JSON.stringify(data.approvedMoodboard) : null,
         })
         .select()
         .single();
@@ -615,10 +798,10 @@ export default function OnboardingPage() {
       <div className="w-full h-1 bg-gray-100 relative">
         <div
           className="h-full bg-[#06B6D4] transition-all duration-300 ease-out"
-          style={{ width: `${(step / 6) * 100}%` }}
+          style={{ width: `${(step / 7) * 100}%` }}
         />
         <div className="absolute right-6 -top-5 text-[9px] font-bold text-gray-400 tracking-wider">
-          STEP {step} OF 6
+          STEP {step} OF 7
         </div>
       </div>
 
@@ -1683,8 +1866,188 @@ export default function OnboardingPage() {
             </div>
           )}
 
-          {/* ─── Step 6: Review & Finalize ─── */}
+          {/* ─── Step 6: Moodboard Studio ⭐ ─── */}
           {step === 6 && (
+            <div className="space-y-6 animate-fade-up">
+              <div>
+                <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                  <Paintbrush className="w-5 h-5 text-[#06B6D4]" />
+                  Moodboard Studio
+                  <span className="ml-1 text-[9px] font-black text-[#06B6D4] bg-[#06B6D4]/10 px-2 py-0.5 rounded-full uppercase tracking-widest">Signature Feature</span>
+                </h2>
+                <p className="text-xs text-gray-400 mt-1">
+                  Choose your brand&apos;s visual soul. The approved moodboard becomes your brand&apos;s permanent visual memory — influencing every future AI generation.
+                </p>
+              </div>
+
+              {/* Approved Banner */}
+              {data.approvedMoodboard && (
+                <div
+                  className="relative overflow-hidden rounded-2xl p-5 border-2 border-[#06B6D4]/30"
+                  style={{ background: data.approvedMoodboard.gradient }}
+                >
+                  <div className="absolute inset-0 opacity-20" style={{ background: data.approvedMoodboard.accentGradient }} />
+                  <div className="relative z-10 flex items-center justify-between">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                        <span className="text-[10px] font-black uppercase tracking-widest text-white/60">Visual Brain Locked In</span>
+                      </div>
+                      <p className="text-white font-bold text-base">{data.approvedMoodboard.name}</p>
+                      <p className="text-white/70 text-[10px] mt-0.5">{data.approvedMoodboard.tagline}</p>
+                      <div className="flex gap-1.5 mt-2">
+                        {data.approvedMoodboard.palette.slice(0, 4).map((p) => (
+                          <div
+                            key={p.hex}
+                            className="w-5 h-5 rounded-full border-2 border-white/30 shadow-sm"
+                            style={{ backgroundColor: p.hex }}
+                            title={p.name}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => updateData({ approvedMoodboard: null })}
+                      className="text-white/50 hover:text-white text-[10px] font-bold uppercase tracking-wider border border-white/20 px-3 py-1.5 rounded-lg transition-colors"
+                    >
+                      Change
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Style Grid */}
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                {MOODBOARD_STYLES.map((style) => {
+                  const isApproved = data.approvedMoodboard?.id === style.id;
+                  const isGenerating = moodboardGenerating === style.id;
+                  return (
+                    <div
+                      key={style.id}
+                      onMouseEnter={() => setHoveredMood(style.id)}
+                      onMouseLeave={() => setHoveredMood(null)}
+                      className={`relative rounded-xl overflow-hidden cursor-pointer transition-all duration-300 group ${
+                        isApproved
+                          ? "ring-2 ring-[#06B6D4] ring-offset-2 scale-[1.02]"
+                          : "hover:scale-[1.02] hover:shadow-lg"
+                      }`}
+                    >
+                      {/* Gradient Visual */}
+                      <div
+                        className="h-28 w-full relative"
+                        style={{ background: style.gradient }}
+                      >
+                        {/* Accent line at bottom */}
+                        <div
+                          className="absolute bottom-0 left-0 right-0 h-1"
+                          style={{ background: style.accentGradient }}
+                        />
+
+                        {/* Color swatches overlay */}
+                        <div className="absolute bottom-3 left-3 flex gap-1">
+                          {style.palette.map((p) => (
+                            <div
+                              key={p.hex}
+                              className="w-4 h-4 rounded-full border border-white/40 shadow-sm"
+                              style={{ backgroundColor: p.hex }}
+                              title={p.name}
+                            />
+                          ))}
+                        </div>
+
+                        {/* Approved check */}
+                        {isApproved && (
+                          <div className="absolute top-2 right-2 w-6 h-6 bg-[#06B6D4] rounded-full flex items-center justify-center shadow-lg">
+                            <Check className="w-3.5 h-3.5 text-white" />
+                          </div>
+                        )}
+
+                        {/* Emoji badge */}
+                        <div className="absolute top-2 left-2 text-lg leading-none">{style.emoji}</div>
+
+                        {/* Hover overlay with actions */}
+                        <div className={`absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-2 transition-opacity duration-200 ${
+                          hoveredMood === style.id && !isApproved ? "opacity-100" : "opacity-0"
+                        }`}>
+                          <button
+                            onClick={() => approveMoodboard(style.id)}
+                            className="px-3 py-1.5 bg-[#06B6D4] text-white text-[10px] font-black uppercase tracking-wider rounded-lg shadow-lg hover:bg-[#06B6D4]/90 transition-colors"
+                          >
+                            ✓ Approve This
+                          </button>
+                          <button
+                            onClick={() => generateMoodboardPreview(style.id)}
+                            disabled={isGenerating}
+                            className="px-3 py-1 bg-white/10 border border-white/30 text-white text-[9px] font-bold uppercase tracking-wider rounded-lg hover:bg-white/20 transition-colors flex items-center gap-1"
+                          >
+                            {isGenerating ? (
+                              <><Loader2 className="w-2.5 h-2.5 animate-spin" /> Generating...</>
+                            ) : (
+                              <><Sparkles className="w-2.5 h-2.5" /> Preview with AI</>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Card Info */}
+                      <div className="bg-white border border-gray-100 px-2.5 py-2">
+                        <p className="text-[11px] font-bold text-gray-900 leading-tight">{style.name}</p>
+                        <p className="text-[9px] text-gray-400 mt-0.5 leading-tight">{style.tagline}</p>
+                        <div className="flex flex-wrap gap-0.5 mt-1.5">
+                          {style.keywords.slice(0, 2).map((kw) => (
+                            <span key={kw} className="text-[8px] font-semibold text-gray-500 bg-gray-50 border border-gray-100 px-1.5 py-0.5 rounded-md">
+                              {kw}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Typography & Texture Preview for Approved */}
+              {data.approvedMoodboard && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                  <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                    <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2">Typography System</p>
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] text-gray-500">Headline Font</span>
+                        <span className="text-[11px] font-bold text-gray-800">{data.approvedMoodboard.typography.headline}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] text-gray-500">Body Font</span>
+                        <span className="text-[11px] font-bold text-gray-800">{data.approvedMoodboard.typography.body}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                    <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2">Texture & Feel</p>
+                    <p className="text-[10px] text-gray-600 leading-relaxed">{data.approvedMoodboard.texture}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Helper text */}
+              {!data.approvedMoodboard && (
+                <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 flex items-start gap-3">
+                  <div className="w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center shrink-0 mt-0.5">
+                    <Eye className="w-3 h-3 text-amber-600" />
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-bold text-amber-800">Hover a card to approve or preview with AI</p>
+                    <p className="text-[10px] text-amber-600 mt-0.5">
+                      When your Gemini API key is connected, clicking &ldquo;Preview with AI&rdquo; will generate a real branded moodboard image tailored to {data.brandName || "your brand"}.
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ─── Step 7: Review & Finalize ─── */}
+          {step === 7 && (
             <div className="space-y-6 animate-fade-up">
               <div>
                 <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
@@ -1754,6 +2117,37 @@ export default function OnboardingPage() {
                   </div>
                 </div>
               </div>
+
+              {/* Approved Moodboard Summary */}
+              {data.approvedMoodboard && (
+                <div
+                  className="relative overflow-hidden rounded-2xl p-5"
+                  style={{ background: data.approvedMoodboard.gradient }}
+                >
+                  <div className="absolute inset-0 opacity-10" style={{ background: data.approvedMoodboard.accentGradient }} />
+                  <div className="relative z-10">
+                    <p className="text-[9px] font-black uppercase tracking-widest text-white/50 mb-1">Visual Brain</p>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-white font-bold">{data.approvedMoodboard.name}</p>
+                        <p className="text-white/60 text-[10px]">{data.approvedMoodboard.tagline}</p>
+                      </div>
+                      <div className="flex gap-1.5">
+                        {data.approvedMoodboard.palette.slice(0, 5).map((p) => (
+                          <div key={p.hex} className="w-5 h-5 rounded-full border-2 border-white/30" style={{ backgroundColor: p.hex }} />
+                        ))}
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-1 mt-3">
+                      {data.approvedMoodboard.keywords.map((kw) => (
+                        <span key={kw} className="text-[9px] font-semibold text-white/70 bg-white/10 border border-white/20 px-2 py-0.5 rounded-full">
+                          {kw}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -1769,7 +2163,7 @@ export default function OnboardingPage() {
               Back
             </button>
 
-            {step < 6 ? (
+            {step < 7 ? (
               <button
                 onClick={handleNext}
                 disabled={!isStepValid()}
