@@ -454,85 +454,83 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
-                {/* 5. Website Visual Direction Mockup */}
+                {/* 5. Social Post & Carousel Direction */}
                 <div className="border border-white/10 bg-white/[0.02] rounded-2xl p-4 space-y-3">
-                  <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest block">Website Visual Direction</span>
+                  <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest block">Social Post Visual Direction</span>
                   
-                  {/* Web Frame */}
+                  {/* Instagram / Social Frame */}
                   <div className="border border-white/10 rounded-xl overflow-hidden bg-black/40 text-[9px] font-sans">
-                    {/* Browser bar */}
-                    <div className="bg-[#111] px-3 py-1.5 border-b border-white/5 flex items-center gap-1.5">
-                      <div className="flex gap-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-red-500/80" />
-                        <span className="w-1.5 h-1.5 rounded-full bg-yellow-500/80" />
-                        <span className="w-1.5 h-1.5 rounded-full bg-green-500/80" />
-                      </div>
-                      <div className="bg-white/5 rounded px-2 py-0.5 text-[7px] text-gray-400 text-center flex-1 mx-4 font-mono truncate">
-                        {dna.website || `www.${dna.brand_name.toLowerCase()}.in`}
-                      </div>
-                    </div>
-                    {/* Mock Hero page content */}
-                    <div className="p-4 space-y-3 relative overflow-hidden bg-gradient-to-br from-black to-slate-900/60" style={{ height: "135px" }}>
-                      <div className="flex justify-between items-center text-[7px] text-white/70 border-b border-white/5 pb-1 relative z-10">
-                        <span className="font-bold font-serif">{dna.brand_name.toUpperCase()}</span>
-                        <div className="flex gap-2 text-[6px]">
-                          <span>Services</span>
-                          <span>Pricing</span>
-                          <span>Contact</span>
+                    {/* Social Post Header */}
+                    <div className="px-3 py-2 border-b border-white/5 flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-4 h-4 rounded-full bg-white/15 border border-white/10 overflow-hidden">
+                          {assets?.logo_url ? (
+                            <img src={assets.logo_url} alt="Profile" className="w-full h-full object-cover" />
+                          ) : (
+                            <span className="text-[6px] font-bold text-white flex items-center justify-center h-full uppercase">{dna.brand_name.charAt(0)}</span>
+                          )}
+                        </div>
+                        <div className="leading-tight">
+                          <p className="text-[8px] font-black text-white">{dna.brand_name.toLowerCase()}</p>
+                          <p className="text-[6px] text-gray-400">Sponsored</p>
                         </div>
                       </div>
-                      <div className="space-y-1 relative z-10 pt-1.5">
-                        <h5 className="font-bold text-white text-[10px] leading-tight max-w-[150px]" style={{ fontFamily: typography.primaryFont }}>
-                          Building the Future of {dna.industry}
-                        </h5>
-                        <p className="text-[7px] text-white/50 leading-relaxed max-w-[140px] truncate">
-                          {dna.business_description}
-                        </p>
-                      </div>
-                      <button className="px-2 py-1 rounded text-[6px] font-bold uppercase tracking-wider relative z-10" style={{ backgroundColor: colors.secondaryHex, color: "#000" }}>
-                        Explore Experiences
-                      </button>
-                      <div className="absolute right-0 bottom-0 top-0 w-24 opacity-30 pointer-events-none">
-                        <img src={moodImages[0]} alt="Hero Bg" className="w-full h-full object-cover" />
+                      <span className="text-[10px] text-white/50 font-bold leading-none select-none">•••</span>
+                    </div>
+
+                    {/* Social Post Body */}
+                    <div className="relative overflow-hidden bg-gradient-to-b from-transparent to-black" style={{ height: "135px" }}>
+                      <img src={moodImages[0]} alt="Post visual" className="w-full h-full object-cover opacity-50 absolute inset-0 pointer-events-none" />
+                      
+                      {/* Brand Overlay Text */}
+                      <div className="absolute inset-0 p-3 flex flex-col justify-between z-10 bg-gradient-to-t from-black/80 via-black/20 to-black/35">
+                        <div className="flex justify-between items-center">
+                          <span className="text-[6px] font-black text-[#C9A84C] border border-[#C9A84C]/30 px-1 py-0.5 rounded uppercase tracking-widest">Aesthetic Focus</span>
+                          <span className="text-[6px] text-white/60">Slide 1 / 5</span>
+                        </div>
+                        <div className="space-y-1">
+                          <h5 className="font-bold text-white text-[10px] leading-tight max-w-[150px]" style={{ fontFamily: typography.primaryFont }}>
+                            {dna.usp}
+                          </h5>
+                          <p className="text-[6px] text-white/70 leading-relaxed max-w-[165px] line-clamp-2">
+                            {dna.business_description}
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {/* 6. UI/UX Elements Mockup Box */}
+                {/* 6. Post Layout Elements Box */}
                 <div className="border border-white/10 bg-white/[0.02] rounded-2xl p-4 space-y-4">
-                  <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest block">UI / UX Elements</span>
+                  <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest block">Carousel & Post Components</span>
                   
                   <div className="space-y-3">
-                    {/* Buttons layout */}
-                    <div className="flex gap-2">
-                      <button className="flex-1 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-opacity hover:opacity-90" style={{ backgroundColor: colors.secondaryHex, color: "#000" }}>
-                        Primary Button
-                      </button>
-                      <button className="flex-1 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-wider border border-white/20 hover:bg-white/5 text-white">
-                        Secondary
-                      </button>
+                    {/* Badge component */}
+                    <div className="flex items-center justify-between bg-black/40 border border-white/5 p-2 rounded-lg">
+                      <span className="text-[7px] text-gray-400 uppercase font-mono">Accent Graphic Badge</span>
+                      <span className="text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded" style={{ backgroundColor: colors.secondaryHex, color: "#000" }}>
+                        {dna.brand_personality}
+                      </span>
                     </div>
 
-                    {/* Mock Card */}
-                    <div className="bg-black/30 border border-white/5 p-2 rounded-xl flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 border border-white/10">
-                        <img src={moodImages[1]} alt="Product" className="w-full h-full object-cover" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-[9px] font-bold text-white truncate">Private Premium Experience</p>
-                        <span className="text-[7px] text-[#C9A84C] font-semibold hover:underline block mt-0.5 cursor-pointer">View Details &rarr;</span>
-                      </div>
+                    {/* Typography Card */}
+                    <div className="bg-[#111] border border-white/10 p-3 rounded-lg text-center space-y-1">
+                      <p className="text-[7px] text-gray-400 font-bold uppercase tracking-widest">Text Slide Style</p>
+                      <p className="text-white text-[9px] leading-normal font-serif italic mx-auto max-w-[150px]" style={{ fontFamily: typography.primaryFont }}>
+                        &ldquo;{dna.mission.length > 55 ? `${dna.mission.slice(0, 52)}...` : dna.mission}&rdquo;
+                      </p>
                     </div>
 
-                    {/* Input Field */}
-                    <div className="relative">
-                      <input 
-                        type="text" 
-                        readOnly 
-                        placeholder="Enter email to get started" 
-                        className="w-full bg-black/40 border border-white/10 rounded-lg px-2.5 py-1.5 text-[8px] text-gray-300 placeholder-gray-500 outline-none cursor-default" 
-                      />
+                    {/* Carousel Nav dots preview */}
+                    <div className="flex items-center justify-between text-[7px] text-gray-400 bg-black/20 p-1.5 rounded-lg border border-white/5">
+                      <span>Swipe for details</span>
+                      <div className="flex gap-1">
+                        <span className="w-1 h-1 rounded-full bg-[#C9A84C]" />
+                        <span className="w-1 h-1 rounded-full bg-white/20" />
+                        <span className="w-1 h-1 rounded-full bg-white/20" />
+                        <span className="w-1 h-1 rounded-full bg-white/20" />
+                      </div>
                     </div>
                   </div>
                 </div>
