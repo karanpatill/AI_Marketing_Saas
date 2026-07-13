@@ -41,11 +41,8 @@ type BrandDna = {
   platforms: string[];
   main_goal: string;
   created_at: string;
+  approved_moodboard: any;
 };
-
-const SIDEBAR = [
-  { icon: <BarChart3 className="w-3.5 h-3.5" />, label: "Mission Control", active: true },
-];
 
 // --- Brand Assets Type ---
 type BrandAssets = {
@@ -67,6 +64,7 @@ export default function DashboardPage() {
   const [dna, setDna] = useState<BrandDna | null>(null);
   const [assets, setAssets] = useState<BrandAssets | null>(null);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<"control" | "dna">("control");
 
   // Fetch latest DNA & Assets from Supabase
   useEffect(() => {
@@ -146,6 +144,118 @@ export default function DashboardPage() {
     );
   }
 
+  // --- Parse approved moodboard if exists ---
+  let moodboard: any = null;
+  if (dna.approved_moodboard) {
+    try {
+      moodboard = typeof dna.approved_moodboard === "string" 
+        ? JSON.parse(dna.approved_moodboard) 
+        : dna.approved_moodboard;
+    } catch (e) {
+      console.error("Failed to parse approved moodboard", e);
+    }
+  }
+
+  // --- Dynamic Color System ---
+  const colors = assets?.logo_studio_data?.colors || (moodboard ? {
+    primaryHex: moodboard.palette[0]?.hex || "#0D0D0D",
+    secondaryHex: moodboard.palette[1]?.hex || "#C9A84C",
+    primaryRgb: "13, 13, 13",
+    secondaryRgb: "201, 168, 76",
+    primaryCmyk: "70%, 50%, 0%, 95%",
+    pantoneApprox: "Pantone Neutral Black"
+  } : {
+    primaryHex: "#0F172A",
+    secondaryHex: "#06B6D4",
+    primaryRgb: "15, 23, 42",
+    secondaryRgb: "6, 182, 212",
+    primaryCmyk: "64%, 45%, 0%, 84%",
+    pantoneApprox: "Pantone 2965 C"
+  });
+
+  const typography = assets?.logo_studio_data?.typography || (moodboard ? {
+    primaryFont: moodboard.typography?.headline || "Playfair Display",
+    bodyFont: moodboard.typography?.body || "Cormorant Garamond",
+    usage: `Use ${moodboard.typography?.headline || 'Playfair Display'} for headings and ${moodboard.typography?.body || 'Cormorant Garamond'} for body text.`
+  } : {
+    primaryFont: "Outfit",
+    bodyFont: "Inter",
+    usage: "Use Outfit for display headers, Inter for general text."
+  });
+
+  // --- Fallback Mood Images based on style ---
+  const getStyleImages = (styleId: string) => {
+    switch (styleId) {
+      case "luxury":
+        return [
+          "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=400&q=80",
+          "https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=400&q=80",
+          "https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=400&q=80",
+          "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=400&q=80"
+        ];
+      case "minimal":
+        return [
+          "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&q=80",
+          "https://images.unsplash.com/photo-1513694203232-719a280e022f?w=400&q=80",
+          "https://images.unsplash.com/photo-1595428774223-ef52624120d2?w=400&q=80",
+          "https://images.unsplash.com/photo-1517816743773-6e0fd518b4a6?w=400&q=80"
+        ];
+      case "premium":
+        return [
+          "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=400&q=80",
+          "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=400&q=80",
+          "https://images.unsplash.com/photo-1551434678-e076c223a692?w=400&q=80",
+          "https://images.unsplash.com/photo-1563986768609-322da13575f3?w=400&q=80"
+        ];
+      case "scandinavian":
+        return [
+          "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=400&q=80",
+          "https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?w=400&q=80",
+          "https://images.unsplash.com/photo-1448375240586-882707db888b?w=400&q=80",
+          "https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=400&q=80"
+        ];
+      default:
+        return [
+          "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=400&q=80",
+          "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=400&q=80",
+          "https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=400&q=80",
+          "https://images.unsplash.com/photo-1551434678-e076c223a692?w=400&q=80"
+        ];
+    }
+  };
+
+  const baseMoodImages = getStyleImages(moodboard?.id || "default");
+
+  // Blend uploaded images into moodboard grid if they exist
+  const moodImages = [
+    assets?.office_images?.[0] || baseMoodImages[0],
+    assets?.product_images?.[0] || baseMoodImages[1],
+    assets?.team_photos?.[0] || baseMoodImages[2],
+    assets?.office_images?.[1] || baseMoodImages[3]
+  ];
+
+  // Imagery Direction row (up to 5 images)
+  const imageryDirection = [
+    ...(assets?.product_images || []),
+    ...(assets?.team_photos || []),
+    ...(assets?.office_images || [])
+  ].slice(0, 5);
+
+  // If no uploaded imagery direction, use baseMoodImages as placeholders
+  const activeImageryList = imageryDirection.length > 0 ? imageryDirection : baseMoodImages;
+
+  const gradients = moodboard ? [
+    { name: "Primary Gradient", style: moodboard.gradient },
+    { name: "Accent Gradient", style: moodboard.accentGradient },
+    { name: "Silk Soft", style: `linear-gradient(135deg, ${colors.primaryHex} 0%, #111827 100%)` },
+    { name: "Gold Leather", style: `linear-gradient(135deg, ${colors.secondaryHex} 0%, #374151 100%)` }
+  ] : [
+    { name: "Primary Gradient", style: "linear-gradient(135deg, #0F172A 0%, #1E293B 100%)" },
+    { name: "Accent Gradient", style: "linear-gradient(135deg, #06B6D4 0%, #0891B2 100%)" },
+    { name: "Silk Soft", style: "linear-gradient(135deg, #0F172A 0%, #111827 100%)" },
+    { name: "Gold Leather", style: "linear-gradient(135deg, #06B6D4 0%, #374151 100%)" }
+  ];
+
   return (
     <div className="min-h-screen bg-gray-50/30 flex flex-col justify-between">
       
@@ -153,7 +263,7 @@ export default function DashboardPage() {
       <Navbar />
 
       {/* Main Workspace Grid */}
-      <div className="flex-1 flex max-w-7xl w-full mx-auto px-5 sm:px-8 lg:px-16 py-6 gap-6">
+      <div className="flex-1 flex max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 gap-6">
         
         {/* Left App Sidebar */}
         <aside className="hidden md:flex flex-col justify-between w-[220px] bg-white border border-gray-200/80 rounded-2xl p-4 shrink-0 shadow-[0_4px_20px_rgb(0,0,0,0.01)]">
@@ -179,19 +289,29 @@ export default function DashboardPage() {
 
             {/* Nav Menu */}
             <nav className="space-y-1">
-              {SIDEBAR.map(({ icon, label, active }) => (
-                <div
-                  key={label}
-                  className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold cursor-pointer transition-all
-                    ${active
-                      ? "bg-brand-dark text-white shadow-sm"
-                      : "text-gray-500 hover:text-gray-800 hover:bg-gray-50"
-                    }`}
-                >
-                  {icon}
-                  <span>{label}</span>
-                </div>
-              ))}
+              <button
+                onClick={() => setActiveTab("control")}
+                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all text-left
+                  ${activeTab === "control"
+                    ? "bg-brand-dark text-white shadow-sm"
+                    : "text-gray-500 hover:text-gray-800 hover:bg-gray-50"
+                  }`}
+              >
+                <BarChart3 className="w-3.5 h-3.5" />
+                <span>Mission Control</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab("dna")}
+                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all text-left
+                  ${activeTab === "dna"
+                    ? "bg-brand-dark text-white shadow-sm"
+                    : "text-gray-500 hover:text-gray-800 hover:bg-gray-50"
+                  }`}
+              >
+                <Layers className="w-3.5 h-3.5" />
+                <span>Brand DNA Details</span>
+              </button>
             </nav>
           </div>
 
@@ -212,7 +332,7 @@ export default function DashboardPage() {
           <div className="bg-white border border-gray-200/80 rounded-2xl p-6 shadow-[0_4px_20px_rgb(0,0,0,0.01)] flex flex-col sm:flex-row justify-between sm:items-center gap-4">
             <div className="space-y-1">
               <h2 className="text-lg font-bold text-gray-900 tracking-tight">
-                {dna.brand_name} Brand DNA Dashboard
+                {dna.brand_name} Brand Dashboard
               </h2>
               <div className="flex flex-wrap gap-2 text-[10px] text-gray-400">
                 <span><strong>Category:</strong> {dna.category}</span>
@@ -230,311 +350,578 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Detailed Info Cards Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            
-            {/* Box 1: Company Definition */}
-            <div className="bg-white border border-gray-200/80 rounded-2xl p-5 space-y-4 shadow-[0_4px_20px_rgb(0,0,0,0.01)]">
-              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1.5">
-                <Building className="w-4 h-4 text-brand-secondary" />
-                Company Definition
-              </h3>
+          {/* Tab 1: Mission Control (Visual Style Tile Moodboard) */}
+          {activeTab === "control" && (
+            <div className="bg-[#0b0c10] text-white rounded-3xl p-6 md:p-8 border border-white/10 shadow-2xl relative overflow-hidden font-sans space-y-6">
               
-              <div className="space-y-2 text-xs">
-                <div className="flex flex-col gap-1 border-b border-gray-100 pb-2">
-                  <span className="text-gray-400 font-medium">Business Description</span>
-                  <p className="text-gray-700 leading-relaxed">{dna.business_description}</p>
-                </div>
-                {dna.website && (
-                  <div className="flex justify-between border-b border-gray-100 pb-2">
-                    <span className="text-gray-400">Website</span>
-                    <a href={dna.website} target="_blank" rel="noreferrer" className="text-brand-secondary hover:underline font-semibold">{dna.website}</a>
+              {/* Style Tile Main Header Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 border-b border-white/10 pb-6">
+                
+                {/* 1. Logo & Brand box */}
+                <div className="space-y-4 pr-0 lg:pr-6 border-r border-white/0 lg:border-white/10">
+                  <div className="flex items-center gap-3">
+                    {assets?.logo_url ? (
+                      <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center p-1.5 border border-white/10">
+                        <img src={assets.logo_url} alt="Emblem" className="max-w-full max-h-full object-contain" />
+                      </div>
+                    ) : assets?.logo_studio_data?.assets?.monogramSvg ? (
+                      <div className="w-12 h-12 rounded-full overflow-hidden flex items-center justify-center bg-gray-900 border border-white/10 p-1" dangerouslySetInnerHTML={{ __html: assets.logo_studio_data.assets.monogramSvg }} />
+                    ) : (
+                      <div className="w-12 h-12 rounded-full bg-[#C9A84C] flex items-center justify-center text-black font-black text-sm uppercase">
+                        {dna.brand_name.charAt(0)}
+                      </div>
+                    )}
+                    <div>
+                      <h1 className="text-xl font-bold uppercase tracking-wider font-serif text-white">{dna.brand_name}</h1>
+                      <p className="text-[9px] text-[#C9A84C] font-semibold uppercase tracking-widest leading-none mt-0.5">{dna.sub_category || dna.category}</p>
+                    </div>
                   </div>
-                )}
-                <div className="flex justify-between">
-                  <span className="text-gray-400">USP (Unique Value)</span>
-                  <span className="font-semibold text-gray-800 text-right max-w-[200px]">{dna.usp}</span>
+                  <div className="space-y-1.5 pt-2">
+                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Brand Tagline</p>
+                    <p className="text-xs italic text-gray-300 leading-relaxed font-serif">&ldquo;{dna.usp}&rdquo;</p>
+                  </div>
                 </div>
-              </div>
-            </div>
 
-            {/* Box 2: Mission, Vision & Personality */}
-            <div className="bg-white border border-gray-200/80 rounded-2xl p-5 space-y-4 shadow-[0_4px_20px_rgb(0,0,0,0.01)]">
-              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1.5">
-                <Compass className="w-4 h-4 text-brand-secondary" />
-                Brand Identity DNA
-              </h3>
-              
-              <div className="space-y-2 text-xs">
-                <div className="flex flex-col gap-1 border-b border-gray-100 pb-2">
-                  <span className="text-gray-400 font-medium">Mission</span>
-                  <p className="text-gray-700 font-medium">{dna.mission}</p>
-                </div>
-                {dna.vision && (
-                  <div className="flex flex-col gap-1 border-b border-gray-100 pb-2">
-                    <span className="text-gray-400 font-medium">Vision</span>
-                    <p className="text-gray-700">{dna.vision}</p>
+                {/* 2. Color Palette Box */}
+                <div className="space-y-3 px-0 lg:px-4 border-r border-white/0 lg:border-white/10">
+                  <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Color Palette</span>
+                  <div className="grid grid-cols-6 gap-1.5 h-12">
+                    {/* Primary */}
+                    <div className="rounded border border-white/10 flex flex-col justify-end p-1 relative group overflow-hidden" style={{ backgroundColor: colors.primaryHex }}>
+                      <span className="text-[8px] font-bold text-white bg-black/60 px-1 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity absolute bottom-1 left-1 font-mono">{colors.primaryHex}</span>
+                    </div>
+                    {/* Secondary */}
+                    <div className="rounded border border-white/10 flex flex-col justify-end p-1 relative group overflow-hidden" style={{ backgroundColor: colors.secondaryHex }}>
+                      <span className="text-[8px] font-bold text-white bg-black/60 px-1 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity absolute bottom-1 left-1 font-mono">{colors.secondaryHex}</span>
+                    </div>
+                    {/* Swatches fallback */}
+                    <div className="rounded border border-white/10" style={{ backgroundColor: "#5A2E17" }} />
+                    <div className="rounded border border-white/10" style={{ backgroundColor: "#4B0E16" }} />
+                    <div className="rounded border border-white/10" style={{ backgroundColor: "#0D0D0D" }} />
+                    <div className="rounded border border-white/10" style={{ backgroundColor: "#F5ECD9" }} />
                   </div>
-                )}
-                <div className="flex justify-between border-b border-gray-100 pb-2">
-                  <span className="text-gray-400">Brand Personality</span>
-                  <span className="font-semibold text-gray-800 capitalize">{dna.brand_personality}</span>
+                  <div className="flex justify-between items-center text-[8px] text-gray-400 font-mono">
+                    <span><strong>CMYK:</strong> {colors.primaryCmyk}</span>
+                    <span><strong>PANTONE:</strong> {colors.pantoneApprox}</span>
+                  </div>
                 </div>
-                <div className="flex flex-col gap-1.5">
-                  <span className="text-gray-400">Core Brand Values</span>
-                  <div className="flex flex-wrap gap-1">
-                    {(dna.brand_values || []).map((v) => (
-                      <span key={v} className="px-2 py-1 rounded bg-gray-50 border border-gray-200 text-[10px] text-gray-600 font-semibold">{v}</span>
+
+                {/* 3. Typography font showcase box */}
+                <div className="space-y-3 pl-0 lg:pl-6 flex flex-col justify-between">
+                  <div>
+                    <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest block mb-1">Typography System</span>
+                    <div className="space-y-1.5">
+                      <div>
+                        <span className="text-[8px] text-gray-400 uppercase tracking-wide">Headline:</span>
+                        <h4 className="text-base font-bold text-white leading-none mt-0.5" style={{ fontFamily: typography.primaryFont }}>
+                          {typography.primaryFont}
+                        </h4>
+                      </div>
+                      <div>
+                        <span className="text-[8px] text-gray-400 uppercase tracking-wide">Body Text:</span>
+                        <p className="text-xs text-gray-300 leading-none mt-0.5" style={{ fontFamily: typography.bodyFont }}>
+                          {typography.bodyFont}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-[8px] text-gray-500 font-mono leading-tight">{typography.usage}</p>
+                </div>
+
+              </div>
+
+              {/* Middle Section: Mood images, Visual Mockups, UI Elements */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                
+                {/* 4. Brand Mood Box */}
+                <div className="border border-white/10 bg-white/[0.02] rounded-2xl p-4 space-y-3 flex flex-col justify-between">
+                  <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest block">Brand Mood & Tone</span>
+                  
+                  <div className="grid grid-cols-2 gap-2 my-auto">
+                    {moodImages.map((img, idx) => (
+                      <div key={idx} className="relative h-20 rounded-lg overflow-hidden border border-white/10 group">
+                        <img src={img} alt="Mood" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                      </div>
                     ))}
                   </div>
-                </div>
-              </div>
-            </div>
 
-            {/* Box 3: Offerings & Pricing */}
-            <div className="bg-white border border-gray-200/80 rounded-2xl p-5 space-y-4 shadow-[0_4px_20px_rgb(0,0,0,0.01)]">
-              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1.5">
-                <Tag className="w-4 h-4 text-brand-secondary" />
-                Offerings & Commercials
-              </h3>
-              
-              <div className="space-y-3 text-xs">
-                {dna.products && dna.products.length > 0 && (
-                  <div className="flex flex-col gap-1.5 border-b border-gray-100 pb-2">
-                    <span className="text-gray-400">Products</span>
-                    <div className="flex flex-wrap gap-1">
-                      {dna.products.map(p => (
-                        <span key={p} className="px-2 py-1 rounded bg-blue-50/50 border border-blue-100 text-[10px] text-blue-700 font-semibold">{p}</span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {dna.services && dna.services.length > 0 && (
-                  <div className="flex flex-col gap-1.5 border-b border-gray-100 pb-2">
-                    <span className="text-gray-400">Services</span>
-                    <div className="flex flex-wrap gap-1">
-                      {dna.services.map(s => (
-                        <span key={s} className="px-2 py-1 rounded bg-emerald-50/50 border border-emerald-100 text-[10px] text-emerald-700 font-semibold">{s}</span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Pricing Strategy</span>
-                  <span className="font-semibold text-gray-800">{dna.pricing}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Box 4: Target Audience Profile */}
-            <div className="bg-white border border-gray-200/80 rounded-2xl p-5 space-y-4 shadow-[0_4px_20px_rgb(0,0,0,0.01)]">
-              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1.5">
-                <Users className="w-4 h-4 text-brand-secondary" />
-                Target Audience & Market
-              </h3>
-              
-              <div className="space-y-3 text-xs">
-                <div className="flex flex-col gap-1 border-b border-gray-100 pb-2">
-                  <span className="text-gray-400 font-medium">Target Demographics</span>
-                  <p className="text-gray-700">{dna.target_audience}</p>
-                </div>
-                {dna.customer_personas && (
-                  <div className="flex flex-col gap-1 border-b border-gray-100 pb-2">
-                    <span className="text-gray-400 font-medium">Customer Persona</span>
-                    <p className="text-gray-600 italic leading-relaxed">{dna.customer_personas}</p>
-                  </div>
-                )}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <span className="text-gray-400 block mb-1">Country Focus</span>
-                    <span className="font-semibold text-gray-800">{dna.country}</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-400 block mb-1">Languages</span>
-                    <span className="font-semibold text-gray-800">{(dna.languages || []).join(", ")}</span>
+                  <div className="flex justify-between items-center text-[9px] font-bold text-[#C9A84C] tracking-wide uppercase pt-1">
+                    <span>Luxurious</span>
+                    <span>•</span>
+                    <span>Timeless</span>
+                    <span>•</span>
+                    <span>Exclusive</span>
                   </div>
                 </div>
-              </div>
-            </div>
 
-          </div>
-
-          {/* Box 5: Brand Assets & Media Locker */}
-          {assets && (
-            <div className="bg-white border border-gray-200/80 rounded-2xl p-6 space-y-5 shadow-[0_4px_20px_rgb(0,0,0,0.01)]">
-              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1.5 border-b border-gray-100 pb-3">
-                <Image className="w-4 h-4 text-brand-secondary" />
-                Brand Assets & Media Locker
-              </h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs">
-                
-                {/* Logo & Guideline Column */}
-                <div className="space-y-4">
-                  <div>
-                    <span className="text-gray-400 block mb-1.5 font-semibold">Active Logo Graphic</span>
-                    {assets.logo_url ? (
-                      <div className="w-24 h-24 bg-gray-50 border border-gray-200 rounded-xl flex items-center justify-center p-2 shadow-[0_2px_8px_rgb(0,0,0,0.02)]">
-                        <img src={assets.logo_url} alt="Brand Logo" className="max-w-full max-h-full object-contain" />
+                {/* 5. Website Visual Direction Mockup */}
+                <div className="border border-white/10 bg-white/[0.02] rounded-2xl p-4 space-y-3">
+                  <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest block">Website Visual Direction</span>
+                  
+                  {/* Web Frame */}
+                  <div className="border border-white/10 rounded-xl overflow-hidden bg-black/40 text-[9px] font-sans">
+                    {/* Browser bar */}
+                    <div className="bg-[#111] px-3 py-1.5 border-b border-white/5 flex items-center gap-1.5">
+                      <div className="flex gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-red-500/80" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-yellow-500/80" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-green-500/80" />
                       </div>
-                    ) : assets.logo_studio_data?.assets?.primaryLogoSvg ? (
-                      <div className="w-24 h-24 bg-gray-950 rounded-xl flex items-center justify-center p-2 shadow-sm" dangerouslySetInnerHTML={{ __html: assets.logo_studio_data.assets.primaryLogoSvg }} />
-                    ) : (
-                      <span className="text-gray-400 italic text-[10px]">No logo uploaded or generated</span>
-                    )}
-                  </div>
-
-                  <div className="pt-1">
-                    <span className="text-gray-400 block mb-1.5 font-semibold">Brand Stylebook / Guidelines</span>
-                    {assets.brand_guidelines ? (
-                      <a
-                        href={assets.brand_guidelines}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-1.5 px-3 py-2 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-700 font-bold rounded-lg transition-colors"
-                      >
-                        <FileText className="w-3.5 h-3.5 text-brand-secondary" />
-                        View Guidelines PDF
-                      </a>
-                    ) : (
-                      <span className="text-gray-400 italic text-[10px] block">No guidelines document uploaded</span>
-                    )}
-                  </div>
-                </div>                {/* Media Gallery & Resources Columns */}
-                <div className="md:col-span-2 space-y-4">
-                  {/* Row 1: Images Gallery */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    {/* Product Photos */}
-                    <div className="space-y-1.5">
-                      <span className="text-gray-400 block font-semibold">Product Images ({assets.product_images?.length || 0})</span>
-                      {assets.product_images && assets.product_images.length > 0 ? (
-                        <div className="flex flex-wrap gap-1">
-                          {assets.product_images.map((img, i) => (
-                            <a key={i} href={img} target="_blank" rel="noreferrer" className="w-10 h-10 rounded-lg border border-gray-150 overflow-hidden bg-gray-50 block hover:opacity-80">
-                              <img src={img} alt="Product" className="w-full h-full object-cover" />
-                            </a>
-                          ))}
-                        </div>
-                      ) : (
-                        <span className="text-gray-400 italic text-[9px] block">No product images</span>
-                      )}
+                      <div className="bg-white/5 rounded px-2 py-0.5 text-[7px] text-gray-400 text-center flex-1 mx-4 font-mono truncate">
+                        {dna.website || `www.${dna.brand_name.toLowerCase()}.in`}
+                      </div>
                     </div>
-
-                    {/* Team Photos */}
-                    <div className="space-y-1.5">
-                      <span className="text-gray-400 block font-semibold">Team Photos ({assets.team_photos?.length || 0})</span>
-                      {assets.team_photos && assets.team_photos.length > 0 ? (
-                        <div className="flex flex-wrap gap-1">
-                          {assets.team_photos.map((img, i) => (
-                            <a key={i} href={img} target="_blank" rel="noreferrer" className="w-10 h-10 rounded-lg border border-gray-150 overflow-hidden bg-gray-50 block hover:opacity-80">
-                              <img src={img} alt="Team" className="w-full h-full object-cover" />
-                            </a>
-                          ))}
+                    {/* Mock Hero page content */}
+                    <div className="p-4 space-y-3 relative overflow-hidden bg-gradient-to-br from-black to-slate-900/60" style={{ height: "135px" }}>
+                      <div className="flex justify-between items-center text-[7px] text-white/70 border-b border-white/5 pb-1 relative z-10">
+                        <span className="font-bold font-serif">{dna.brand_name.toUpperCase()}</span>
+                        <div className="flex gap-2 text-[6px]">
+                          <span>Services</span>
+                          <span>Pricing</span>
+                          <span>Contact</span>
                         </div>
-                      ) : (
-                        <span className="text-gray-400 italic text-[9px] block">No team photos</span>
-                      )}
-                    </div>
-
-                    {/* Office Workspace */}
-                    <div className="space-y-1.5">
-                      <span className="text-gray-400 block font-semibold">Office Images ({assets.office_images?.length || 0})</span>
-                      {assets.office_images && assets.office_images.length > 0 ? (
-                        <div className="flex flex-wrap gap-1">
-                          {assets.office_images.map((img, i) => (
-                            <a key={i} href={img} target="_blank" rel="noreferrer" className="w-10 h-10 rounded-lg border border-gray-150 overflow-hidden bg-gray-50 block hover:opacity-80">
-                              <img src={img} alt="Office" className="w-full h-full object-cover" />
-                            </a>
-                          ))}
-                        </div>
-                      ) : (
-                        <span className="text-gray-400 italic text-[9px] block">No office images</span>
-                      )}
+                      </div>
+                      <div className="space-y-1 relative z-10 pt-1.5">
+                        <h5 className="font-bold text-white text-[10px] leading-tight max-w-[150px]" style={{ fontFamily: typography.primaryFont }}>
+                          Building the Future of {dna.industry}
+                        </h5>
+                        <p className="text-[7px] text-white/50 leading-relaxed max-w-[140px] truncate">
+                          {dna.business_description}
+                        </p>
+                      </div>
+                      <button className="px-2 py-1 rounded text-[6px] font-bold uppercase tracking-wider relative z-10" style={{ backgroundColor: colors.secondaryHex, color: "#000" }}>
+                        Explore Experiences
+                      </button>
+                      <div className="absolute right-0 bottom-0 top-0 w-24 opacity-30 pointer-events-none">
+                        <img src={moodImages[0]} alt="Hero Bg" className="w-full h-full object-cover" />
+                      </div>
                     </div>
                   </div>
+                </div>
 
-                  {/* Row 2: Videos, Fonts & Icons */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-gray-100 pt-3">
-                    {/* Brand Videos */}
-                    <div className="space-y-1.5">
-                      <span className="text-gray-400 block font-semibold">Brand Videos ({assets.brand_videos?.length || 0})</span>
-                      {assets.brand_videos && assets.brand_videos.length > 0 ? (
-                        <div className="flex flex-wrap gap-1">
-                          {assets.brand_videos.map((vid, i) => (
-                            <a key={i} href={vid} target="_blank" rel="noreferrer" className="w-10 h-10 rounded-lg bg-gray-950 flex items-center justify-center text-white/50 hover:bg-gray-900">
-                              <Video className="w-4 h-4" />
-                            </a>
-                          ))}
-                        </div>
-                      ) : (
-                        <span className="text-gray-400 italic text-[9px] block">No videos uploaded</span>
-                      )}
+                {/* 6. UI/UX Elements Mockup Box */}
+                <div className="border border-white/10 bg-white/[0.02] rounded-2xl p-4 space-y-4">
+                  <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest block">UI / UX Elements</span>
+                  
+                  <div className="space-y-3">
+                    {/* Buttons layout */}
+                    <div className="flex gap-2">
+                      <button className="flex-1 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-opacity hover:opacity-90" style={{ backgroundColor: colors.secondaryHex, color: "#000" }}>
+                        Primary Button
+                      </button>
+                      <button className="flex-1 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-wider border border-white/20 hover:bg-white/5 text-white">
+                        Secondary
+                      </button>
                     </div>
 
-                    {/* Custom Fonts */}
-                    <div className="space-y-1.5">
-                      <span className="text-gray-400 block font-semibold">Brand Fonts ({assets.fonts?.length || 0})</span>
-                      {assets.fonts && assets.fonts.length > 0 ? (
-                        <div className="flex flex-wrap gap-1">
-                          {assets.fonts.map((f, i) => (
-                            <a key={i} href={f} target="_blank" rel="noreferrer" className="px-2 py-1 rounded bg-gray-50 border border-gray-200 text-[8px] font-mono font-bold text-gray-700 hover:bg-gray-100">
-                              FONT {i + 1}
-                            </a>
-                          ))}
-                        </div>
-                      ) : (
-                        <span className="text-gray-400 italic text-[9px] block">No fonts uploaded</span>
-                      )}
+                    {/* Mock Card */}
+                    <div className="bg-black/30 border border-white/5 p-2 rounded-xl flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 border border-white/10">
+                        <img src={moodImages[1]} alt="Product" className="w-full h-full object-cover" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[9px] font-bold text-white truncate">Private Premium Experience</p>
+                        <span className="text-[7px] text-[#C9A84C] font-semibold hover:underline block mt-0.5 cursor-pointer">View Details &rarr;</span>
+                      </div>
                     </div>
 
-                    {/* Custom Icons */}
-                    <div className="space-y-1.5">
-                      <span className="text-gray-400 block font-semibold">Brand Icons ({assets.icons?.length || 0})</span>
-                      {assets.icons && assets.icons.length > 0 ? (
-                        <div className="flex flex-wrap gap-1">
-                          {assets.icons.map((img, i) => (
-                            <a key={i} href={img} target="_blank" rel="noreferrer" className="w-10 h-10 rounded-lg border border-gray-150 overflow-hidden bg-gray-50 block hover:opacity-80">
-                              <img src={img} alt="Icon" className="w-full h-full object-contain p-1" />
-                            </a>
-                          ))}
-                        </div>
-                      ) : (
-                        <span className="text-gray-400 italic text-[9px] block">No icons uploaded</span>
-                      )}
+                    {/* Input Field */}
+                    <div className="relative">
+                      <input 
+                        type="text" 
+                        readOnly 
+                        placeholder="Enter email to get started" 
+                        className="w-full bg-black/40 border border-white/10 rounded-lg px-2.5 py-1.5 text-[8px] text-gray-300 placeholder-gray-500 outline-none cursor-default" 
+                      />
                     </div>
                   </div>
                 </div>
 
               </div>
 
-              {/* If generated via AI Logo Studio, show colors & typographies specifications */}
-              {assets.logo_studio_data?.colors && (
-                <div className="border-t border-gray-100 pt-4 grid grid-cols-2 sm:grid-cols-4 gap-4 text-[10px] text-gray-400 font-mono">
-                  <div>
-                    <span className="text-[9px] text-gray-400 block font-sans">PRIMARY HEX</span>
-                    <div className="flex items-center gap-1.5 font-bold text-gray-800">
-                      <span className="w-3 h-3 rounded border border-gray-200" style={{ backgroundColor: assets.logo_studio_data.colors.primaryHex }} />
-                      {assets.logo_studio_data.colors.primaryHex}
+              {/* Lower Section: Values, Image Direction, Component mockup */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
+                
+                {/* 7. Brand Essence / Core values */}
+                <div className="border border-white/10 bg-white/[0.02] rounded-2xl p-4 space-y-3">
+                  <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest block">Brand Essence</span>
+                  <div className="space-y-1">
+                    <p className="text-[10px] text-[#C9A84C] font-bold uppercase font-mono">{dna.brand_personality} personality</p>
+                    <div className="flex flex-wrap gap-1.5 pt-2">
+                      {(dna.brand_values || []).map((val) => (
+                        <span key={val} className="px-2.5 py-1 rounded bg-white/5 border border-white/10 text-[9px] text-gray-200 font-semibold">
+                          {val}
+                        </span>
+                      ))}
                     </div>
                   </div>
-                  <div>
-                    <span className="text-[9px] text-gray-400 block font-sans">SECONDARY HEX</span>
-                    <div className="flex items-center gap-1.5 font-bold text-gray-800">
-                      <span className="w-3 h-3 rounded border border-gray-200" style={{ backgroundColor: assets.logo_studio_data.colors.secondaryHex }} />
-                      {assets.logo_studio_data.colors.secondaryHex}
+                </div>
+
+                {/* 8. Imagery Direction Row */}
+                <div className="border border-white/10 bg-white/[0.02] rounded-2xl p-4 space-y-3">
+                  <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest block">Imagery Direction</span>
+                  <div className="flex gap-2 overflow-x-auto pb-1">
+                    {activeImageryList.map((img, i) => (
+                      <div key={i} className="relative w-12 h-12 rounded-lg overflow-hidden border border-white/10 shrink-0">
+                        <img src={img} alt="Gallery" className="w-full h-full object-cover" />
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex justify-between items-center text-[7px] text-gray-500">
+                    <span>Iconic</span>
+                    <span>Curated</span>
+                    <span>Authentic</span>
+                    <span>Refined</span>
+                  </div>
+                </div>
+
+                {/* 9. Components Box */}
+                <div className="border border-white/10 bg-white/[0.02] rounded-2xl p-4 space-y-3">
+                  <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest block">Components</span>
+                  <div className="bg-gradient-to-br from-gray-900 to-black border border-white/10 rounded-xl p-3 relative overflow-hidden" style={{ minHeight: "68px" }}>
+                    <div className="absolute top-2 right-2 text-[#C9A84C] font-bold text-[8px] tracking-widest uppercase">LV 2026-001</div>
+                    <p className="text-[7px] text-white/50">MEMBER CARD</p>
+                    <p className="text-[10px] font-bold text-white mt-1 tracking-wide">{dna.brand_name.toUpperCase()}</p>
+                    <div className="flex justify-between items-center mt-3 text-[6px] text-white/40">
+                      <span>{dna.main_goal}</span>
+                      <span>Synced DNA</span>
                     </div>
                   </div>
-                  <div>
-                    <span className="text-[9px] text-gray-400 block font-sans">CMYK</span>
-                    <div className="font-bold text-gray-700">{assets.logo_studio_data.colors.primaryCmyk}</div>
+                </div>
+
+              </div>
+
+              {/* 10. Mood Summary Banner at bottom */}
+              <div className="border-t border-white/10 pt-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 text-xs">
+                <div>
+                  <p className="text-[9px] font-black text-[#C9A84C] uppercase tracking-widest">Visual Brain Summary</p>
+                  <p className="text-gray-300 mt-1 leading-relaxed max-w-2xl font-serif text-[11px] italic">
+                    &ldquo;{dna.business_description}&rdquo;
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  {gradients.map((g, idx) => (
+                    <div key={idx} className="w-6 h-6 rounded-full border border-white/20 shadow-sm" style={{ background: g.style }} title={g.name} />
+                  ))}
+                </div>
+              </div>
+
+            </div>
+          )}
+
+          {/* Tab 2: Original Detailed Brand DNA Cards */}
+          {activeTab === "dna" && (
+            <div className="space-y-6">
+              
+              {/* Detailed Info Cards Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                
+                {/* Box 1: Company Definition */}
+                <div className="bg-white border border-gray-200/80 rounded-2xl p-5 space-y-4 shadow-[0_4px_20px_rgb(0,0,0,0.01)]">
+                  <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1.5">
+                    <Building className="w-4 h-4 text-brand-secondary" />
+                    Company Definition
+                  </h3>
+                  
+                  <div className="space-y-2 text-xs">
+                    <div className="flex flex-col gap-1 border-b border-gray-100 pb-2">
+                      <span className="text-gray-400 font-medium">Business Description</span>
+                      <p className="text-gray-700 leading-relaxed">{dna.business_description}</p>
+                    </div>
+                    {dna.website && (
+                      <div className="flex justify-between border-b border-gray-100 pb-2">
+                        <span className="text-gray-400">Website</span>
+                        <a href={dna.website} target="_blank" rel="noreferrer" className="text-brand-secondary hover:underline font-semibold">{dna.website}</a>
+                      </div>
+                    )}
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">USP (Unique Value)</span>
+                      <span className="font-semibold text-gray-800 text-right max-w-[200px]">{dna.usp}</span>
+                    </div>
                   </div>
-                  <div>
-                    <span className="text-[9px] text-gray-400 block font-sans">PANTONE APPROX</span>
-                    <div className="font-bold text-gray-700">{assets.logo_studio_data.colors.pantoneApprox}</div>
+                </div>
+
+                {/* Box 2: Mission, Vision & Personality */}
+                <div className="bg-white border border-gray-200/80 rounded-2xl p-5 space-y-4 shadow-[0_4px_20px_rgb(0,0,0,0.01)]">
+                  <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1.5">
+                    <Compass className="w-4 h-4 text-brand-secondary" />
+                    Brand Identity DNA
+                  </h3>
+                  
+                  <div className="space-y-2 text-xs">
+                    <div className="flex flex-col gap-1 border-b border-gray-100 pb-2">
+                      <span className="text-gray-400 font-medium">Mission</span>
+                      <p className="text-gray-700 font-medium">{dna.mission}</p>
+                    </div>
+                    {dna.vision && (
+                      <div className="flex flex-col gap-1 border-b border-gray-100 pb-2">
+                        <span className="text-gray-400 font-medium">Vision</span>
+                        <p className="text-gray-700">{dna.vision}</p>
+                      </div>
+                    )}
+                    <div className="flex justify-between border-b border-gray-100 pb-2">
+                      <span className="text-gray-400">Brand Personality</span>
+                      <span className="font-semibold text-gray-800 capitalize">{dna.brand_personality}</span>
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <span className="text-gray-400">Core Brand Values</span>
+                      <div className="flex flex-wrap gap-1">
+                        {(dna.brand_values || []).map((v) => (
+                          <span key={v} className="px-2 py-1 rounded bg-gray-50 border border-gray-200 text-[10px] text-gray-600 font-semibold">{v}</span>
+                        ))}
+                      </div>
+                    </div>
                   </div>
+                </div>
+
+                {/* Box 3: Offerings & Pricing */}
+                <div className="bg-white border border-gray-200/80 rounded-2xl p-5 space-y-4 shadow-[0_4px_20px_rgb(0,0,0,0.01)]">
+                  <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1.5">
+                    <Tag className="w-4 h-4 text-brand-secondary" />
+                    Offerings & Commercials
+                  </h3>
+                  
+                  <div className="space-y-3 text-xs">
+                    {dna.products && dna.products.length > 0 && (
+                      <div className="flex flex-col gap-1.5 border-b border-gray-100 pb-2">
+                        <span className="text-gray-400">Products</span>
+                        <div className="flex flex-wrap gap-1">
+                          {dna.products.map(p => (
+                            <span key={p} className="px-2 py-1 rounded bg-blue-50/50 border border-blue-100 text-[10px] text-blue-700 font-semibold">{p}</span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {dna.services && dna.services.length > 0 && (
+                      <div className="flex flex-col gap-1.5 border-b border-gray-100 pb-2">
+                        <span className="text-gray-400">Services</span>
+                        <div className="flex flex-wrap gap-1">
+                          {dna.services.map(s => (
+                            <span key={s} className="px-2 py-1 rounded bg-emerald-50/50 border border-emerald-100 text-[10px] text-emerald-700 font-semibold">{s}</span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Pricing Strategy</span>
+                      <span className="font-semibold text-gray-800">{dna.pricing}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Box 4: Target Audience Profile */}
+                <div className="bg-white border border-gray-200/80 rounded-2xl p-5 space-y-4 shadow-[0_4px_20px_rgb(0,0,0,0.01)]">
+                  <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1.5">
+                    <Users className="w-4 h-4 text-brand-secondary" />
+                    Target Audience & Market
+                  </h3>
+                  
+                  <div className="space-y-3 text-xs">
+                    <div className="flex flex-col gap-1 border-b border-gray-100 pb-2">
+                      <span className="text-gray-400 font-medium">Target Demographics</span>
+                      <p className="text-gray-700">{dna.target_audience}</p>
+                    </div>
+                    {dna.customer_personas && (
+                      <div className="flex flex-col gap-1 border-b border-gray-100 pb-2">
+                        <span className="text-gray-400 font-medium">Customer Persona</span>
+                        <p className="text-gray-600 italic leading-relaxed">{dna.customer_personas}</p>
+                      </div>
+                    )}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <span className="text-gray-400 block mb-1">Country Focus</span>
+                        <span className="font-semibold text-gray-800">{dna.country}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-400 block mb-1">Languages</span>
+                        <span className="font-semibold text-gray-800">{(dna.languages || []).join(", ")}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Box 5: Brand Assets & Media Locker */}
+              {assets && (
+                <div className="bg-white border border-gray-200/80 rounded-2xl p-6 space-y-5 shadow-[0_4px_20px_rgb(0,0,0,0.01)]">
+                  <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1.5 border-b border-gray-100 pb-3">
+                    <Image className="w-4 h-4 text-brand-secondary" />
+                    Brand Assets & Media Locker
+                  </h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs">
+                    
+                    {/* Logo & Guideline Column */}
+                    <div className="space-y-4">
+                      <div>
+                        <span className="text-gray-400 block mb-1.5 font-semibold">Active Logo Graphic</span>
+                        {assets.logo_url ? (
+                          <div className="w-24 h-24 bg-gray-50 border border-gray-200 rounded-xl flex items-center justify-center p-2 shadow-[0_2px_8px_rgb(0,0,0,0.02)]">
+                            <img src={assets.logo_url} alt="Brand Logo" className="max-w-full max-h-full object-contain" />
+                          </div>
+                        ) : assets.logo_studio_data?.assets?.primaryLogoSvg ? (
+                          <div className="w-24 h-24 bg-gray-950 rounded-xl flex items-center justify-center p-2 shadow-sm" dangerouslySetInnerHTML={{ __html: assets.logo_studio_data.assets.primaryLogoSvg }} />
+                        ) : (
+                          <span className="text-gray-400 italic text-[10px]">No logo uploaded or generated</span>
+                        )}
+                      </div>
+
+                      <div className="pt-1">
+                        <span className="text-gray-400 block mb-1.5 font-semibold">Brand Stylebook / Guidelines</span>
+                        {assets.brand_guidelines ? (
+                          <a
+                            href={assets.brand_guidelines}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1.5 px-3 py-2 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-700 font-bold rounded-lg transition-colors"
+                          >
+                            <FileText className="w-3.5 h-3.5 text-brand-secondary" />
+                            View Guidelines PDF
+                          </a>
+                        ) : (
+                          <span className="text-gray-400 italic text-[10px] block">No guidelines document uploaded</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Media Gallery & Resources Columns */}
+                    <div className="md:col-span-2 space-y-4">
+                      {/* Row 1: Images Gallery */}
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        {/* Product Photos */}
+                        <div className="space-y-1.5">
+                          <span className="text-gray-400 block font-semibold">Product Images ({assets.product_images?.length || 0})</span>
+                          {assets.product_images && assets.product_images.length > 0 ? (
+                            <div className="flex flex-wrap gap-1">
+                              {assets.product_images.map((img, i) => (
+                                <a key={i} href={img} target="_blank" rel="noreferrer" className="w-10 h-10 rounded-lg border border-gray-150 overflow-hidden bg-gray-50 block hover:opacity-80">
+                                  <img src={img} alt="Product" className="w-full h-full object-cover" />
+                                </a>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="text-gray-400 italic text-[9px] block">No product images</span>
+                          )}
+                        </div>
+
+                        {/* Team Photos */}
+                        <div className="space-y-1.5">
+                          <span className="text-gray-400 block font-semibold">Team Photos ({assets.team_photos?.length || 0})</span>
+                          {assets.team_photos && assets.team_photos.length > 0 ? (
+                            <div className="flex flex-wrap gap-1">
+                              {assets.team_photos.map((img, i) => (
+                                <a key={i} href={img} target="_blank" rel="noreferrer" className="w-10 h-10 rounded-lg border border-gray-150 overflow-hidden bg-gray-50 block hover:opacity-80">
+                                  <img src={img} alt="Team" className="w-full h-full object-cover" />
+                                </a>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="text-gray-400 italic text-[9px] block">No team photos</span>
+                          )}
+                        </div>
+
+                        {/* Office Workspace */}
+                        <div className="space-y-1.5">
+                          <span className="text-gray-400 block font-semibold">Office Images ({assets.office_images?.length || 0})</span>
+                          {assets.office_images && assets.office_images.length > 0 ? (
+                            <div className="flex flex-wrap gap-1">
+                              {assets.office_images.map((img, i) => (
+                                <a key={i} href={img} target="_blank" rel="noreferrer" className="w-10 h-10 rounded-lg border border-gray-150 overflow-hidden bg-gray-50 block hover:opacity-80">
+                                  <img src={img} alt="Office" className="w-full h-full object-cover" />
+                                </a>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="text-gray-400 italic text-[9px] block">No office images</span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Row 2: Videos, Fonts & Icons */}
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-gray-100 pt-3">
+                        {/* Brand Videos */}
+                        <div className="space-y-1.5">
+                          <span className="text-gray-400 block font-semibold">Brand Videos ({assets.brand_videos?.length || 0})</span>
+                          {assets.brand_videos && assets.brand_videos.length > 0 ? (
+                            <div className="flex flex-wrap gap-1">
+                              {assets.brand_videos.map((vid, i) => (
+                                <a key={i} href={vid} target="_blank" rel="noreferrer" className="w-10 h-10 rounded-lg bg-gray-950 flex items-center justify-center text-white/50 hover:bg-gray-900">
+                                  <Video className="w-4 h-4" />
+                                </a>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="text-gray-400 italic text-[9px] block">No videos uploaded</span>
+                          )}
+                        </div>
+
+                        {/* Custom Fonts */}
+                        <div className="space-y-1.5">
+                          <span className="text-gray-400 block font-semibold">Brand Fonts ({assets.fonts?.length || 0})</span>
+                          {assets.fonts && assets.fonts.length > 0 ? (
+                            <div className="flex flex-wrap gap-1">
+                              {assets.fonts.map((f, i) => (
+                                <a key={i} href={f} target="_blank" rel="noreferrer" className="px-2 py-1 rounded bg-gray-50 border border-gray-200 text-[8px] font-mono font-bold text-gray-700 hover:bg-gray-100">
+                                  FONT {i + 1}
+                                </a>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="text-gray-400 italic text-[9px] block">No fonts uploaded</span>
+                          )}
+                        </div>
+
+                        {/* Custom Icons */}
+                        <div className="space-y-1.5">
+                          <span className="text-gray-400 block font-semibold">Brand Icons ({assets.icons?.length || 0})</span>
+                          {assets.icons && assets.icons.length > 0 ? (
+                            <div className="flex flex-wrap gap-1">
+                              {assets.icons.map((img, i) => (
+                                <a key={i} href={img} target="_blank" rel="noreferrer" className="w-10 h-10 rounded-lg border border-gray-150 overflow-hidden bg-gray-50 block hover:opacity-80">
+                                  <img src={img} alt="Icon" className="w-full h-full object-contain p-1" />
+                                </a>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="text-gray-400 italic text-[9px] block">No icons uploaded</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                  </div>
+
+                  {/* If generated via AI Logo Studio, show colors & typographies specifications */}
+                  {assets.logo_studio_data?.colors && (
+                    <div className="border-t border-gray-100 pt-4 grid grid-cols-2 sm:grid-cols-4 gap-4 text-[10px] text-gray-400 font-mono">
+                      <div>
+                        <span className="text-[9px] text-gray-400 block font-sans">PRIMARY HEX</span>
+                        <div className="flex items-center gap-1.5 font-bold text-gray-800">
+                          <span className="w-3 h-3 rounded border border-gray-200" style={{ backgroundColor: assets.logo_studio_data.colors.primaryHex }} />
+                          {assets.logo_studio_data.colors.primaryHex}
+                        </div>
+                      </div>
+                      <div>
+                        <span className="text-[9px] text-gray-400 block font-sans">SECONDARY HEX</span>
+                        <div className="flex items-center gap-1.5 font-bold text-gray-800">
+                          <span className="w-3 h-3 rounded border border-gray-200" style={{ backgroundColor: assets.logo_studio_data.colors.secondaryHex }} />
+                          {assets.logo_studio_data.colors.secondaryHex}
+                        </div>
+                      </div>
+                      <div>
+                        <span className="text-[9px] text-gray-400 block font-sans">CMYK</span>
+                        <div className="font-bold text-gray-700">{assets.logo_studio_data.colors.primaryCmyk}</div>
+                      </div>
+                      <div>
+                        <span className="text-[9px] text-gray-400 block font-sans">PANTONE APPROX</span>
+                        <div className="font-bold text-gray-700">{assets.logo_studio_data.colors.pantoneApprox}</div>
+                      </div>
+                    </div>
+                  )}
+
                 </div>
               )}
-
             </div>
           )}
 
