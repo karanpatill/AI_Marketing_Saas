@@ -31,141 +31,73 @@ export async function POST(req: Request) {
     const html = await response.text();
     const $ = cheerio.load(html);
 
-    // 1. Brand Name Extraction
-    const title = $("title").text().trim() || $("meta[property='og:title']").attr("content")?.trim() || "";
-    let brandName = title.split(/[|:-]/)[0]?.trim() || "";
-    if (!brandName) {
-      try {
-        const parsed = new URL(targetUrl);
-        brandName = parsed.hostname.replace("www.", "").split(".")[0];
-        brandName = brandName.charAt(0).toUpperCase() + brandName.slice(1);
-      } catch (e) {
-        brandName = "My Brand";
-      }
-    }
-
-    // 2. Business Description Extraction
-    const metaDescription = $("meta[name='description']").attr("content")?.trim() || 
-                            $("meta[property='og:description']").attr("content")?.trim() || "";
+    // Remove script, style, and iframe tags to clean text
+    $("script, style, iframe, nav, footer").remove();
     
-    // Fallback: extract first text paragraph longer than 60 characters
-    let fallbackDesc = "";
-    $("p").each((_, el) => {
-      const text = $(el).text().trim();
-      if (text.length > 60 && text.length < 250 && !fallbackDesc) {
-        fallbackDesc = text;
-      }
-    });
-    const businessDescription = metaDescription || fallbackDesc || `${brandName} offers specialized products and services tailored to industry standards.`;
+    // Extract title, meta tags, and clean body text
+    const title = $("title").text().trim();
+    const metaDescription = $("meta[name='description']").attr("content")?.trim() || "";
+    const rawBodyText = $("body").text().replace(/\s+/g, " ").trim();
+    const cleanText = `Title: ${title}\nMeta Description: ${metaDescription}\nContent:\n${rawBodyText.slice(0, 8000)}`;
 
-    // 3. Industry & Category detection from page body text keywords
-    const bodyText = $("body").text().toLowerCase();
-    let industry = "Technology";
-    let category = "Software Service";
-
-    // Priority 1: Software, AI Agents, Dev Agencies
-    if (
-      bodyText.includes("software") || 
-      bodyText.includes("ai agent") || 
-      bodyText.includes("custom software") || 
-      bodyText.includes("bespoke") || 
-      bodyText.includes("developer") || 
-      bodyText.includes("engineering") || 
-      bodyText.includes("coding")
-    ) {
-      industry = "Software / Tech";
-      category = bodyText.includes("agent") || bodyText.includes("agency") || bodyText.includes("bespoke")
-        ? "AI & Software Engineering Agency"
-        : "B2B SaaS Platform";
-    } 
-    // Priority 2: Marketing & Creative Agency
-    else if (bodyText.includes("agency") || bodyText.includes("marketing") || bodyText.includes("advertise") || bodyText.includes("creative")) {
-      industry = "Marketing & Creative Agency";
-      category = "Marketing Services";
-    } 
-    // Priority 3: E-Commerce / Online Retail (specific keywords)
-    else if (
-      bodyText.includes("ecommerce") || 
-      bodyText.includes("e-commerce") || 
-      bodyText.includes("shop") || 
-      bodyText.includes("retail") || 
-      bodyText.includes("shopify") || 
-      bodyText.includes("add to cart") || 
-      bodyText.includes("checkout")
-    ) {
-      industry = "E-Commerce / Retail";
-      category = "Online Store";
-    } 
-    // Priority 4: Finance / FinTech
-    else if (bodyText.includes("finance") || bodyText.includes("crypto") || bodyText.includes("blockchain") || bodyText.includes("payment")) {
-      industry = "Finance / FinTech";
-      category = "Financial Software";
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      return NextResponse.json({ error: "Gemini API key is not configured" }, { status: 500 });
     }
 
-    // 4. Mission Statement guesses
-    let mission = "";
-    $("p, h2, h3").each((_, el) => {
-      const text = $(el).text().trim();
-      const textLower = text.toLowerCase();
-      if ((textLower.includes("mission") || textLower.includes("believe") || textLower.includes("our aim") || textLower.includes("we help")) && 
-          text.length > 30 && text.length < 160 && !mission) {
-        mission = text;
-      }
+    // Call Gemini 2.5 Flash to semantically parse the page text into Brand DNA JSON
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+    const prompt = `You are a world-class Brand Strategist and Analyst. 
+Analyze the scraped website homepage details of a business and compile their structured Brand DNA profile.
+
+Return ONLY a valid JSON object matching the following TypeScript interface structure (no markdown formatting, no backticks, no wrap text, just the raw JSON object):
+interface BrandDna {
+  brandName: string; // The official name of the brand
+  website: string; // Keep as: "${targetUrl}"
+  industry: string; // The main vertical, e.g. "Software Development", "B2B SaaS", "Marketing", "E-Commerce", "Finance"
+  category: string; // More specific descriptor, e.g., "AI Engineering Studio", "D2C Apparel"
+  subCategory: string;
+  businessDescription: string; // Clear, premium explanation of what they do (1-2 sentences)
+  mission: string; // A high-impact, inspiring mission statement (1 sentence)
+  vision: string; // Forward-looking vision statement (1 sentence)
+  usp: string; // The core unique selling proposition / differentiator
+  brandValues: string[]; // Pick 3-4 professional brand values (e.g., Innovation, Trust, Simplicity, Sustainability)
+  products: string[]; // Up to 3 main product offerings found or inferred
+  services: string[]; // Up to 3 main services offered
+  customerPersonas: string; // Description of their primary target audience personas
+  competitors: string[]; // List of 2 likely competitors in their space
+}
+
+Scraped Website Content:
+"""
+${cleanText}
+"""`;
+
+    const geminiResponse = await fetch(geminiUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: {
+          responseMimeType: "application/json"
+        }
+      })
     });
-    if (!mission) {
-      mission = `To deliver superior value and high-quality ${industry.toLowerCase()} solutions to our clients.`;
+
+    if (!geminiResponse.ok) {
+      console.error("Gemini API error:", await geminiResponse.text());
+      throw new Error("Failed to parse website details using AI");
     }
 
-    // 5. Unique Selling Proposition (USP)
-    let usp = "";
-    $("h1, h2").each((_, el) => {
-      const text = $(el).text().trim();
-      const textLower = text.toLowerCase();
-      if ((textLower.includes("only") || textLower.includes("unlike") || textLower.includes("first") || textLower.includes("best")) && 
-          text.length > 20 && text.length < 100 && !usp) {
-        usp = text;
-      }
-    });
-    if (!usp) {
-      usp = `Leading the market with customized ${category.toLowerCase()} systems.`;
+    const resJson = await geminiResponse.json();
+    const responseText = resJson.candidates?.[0]?.content?.parts?.[0]?.text;
+    
+    if (!responseText) {
+      throw new Error("Empty response from AI parser");
     }
 
-    // 6. Values Detection
-    const valueKeywords = [
-      { kw: "trust", label: "Trust" },
-      { kw: "innovat", label: "Innovation" },
-      { kw: "simpl", label: "Simplicity" },
-      { kw: "transparen", label: "Transparency" },
-      { kw: "secur", label: "Security" },
-      { kw: "custom", label: "Customer First" },
-      { kw: "qualit", label: "Premium Quality" },
-    ];
-    const detectedValues: string[] = [];
-    valueKeywords.forEach(({ kw, label }) => {
-      if (bodyText.includes(kw) && detectedValues.length < 4) {
-        detectedValues.push(label);
-      }
-    });
-    if (detectedValues.length === 0) {
-      detectedValues.push("Innovation", "Trust");
-    }
-
-    return NextResponse.json({
-      brandName,
-      website: targetUrl,
-      industry,
-      category,
-      subCategory: category.includes("Agency") ? "Software Agency" : "SaaS Solution",
-      businessDescription,
-      mission,
-      vision: `To lead the future of ${industry.toLowerCase()} by delivering high-impact, scalable solutions.`,
-      usp,
-      brandValues: detectedValues,
-      products: [brandName + " Core Engine"],
-      services: [brandName + " Custom Integration", brandName + " Managed Setup"],
-      customerPersonas: `Primary: Tech-savvy businesses and teams looking for modern ${industry.toLowerCase()} solutions. Secondary: Small-to-medium enterprises needing reliable execution.`,
-      competitors: ["Traditional Competitor A", "Legacy Provider B"],
-    });
+    const brandData = JSON.parse(responseText.trim());
+    return NextResponse.json(brandData);
 
   } catch (error: any) {
     console.error("Scraping handler error:", error);
