@@ -63,6 +63,42 @@ async function callLLMForContent(prompt: string): Promise<GeneratedContentPayloa
   }
 }
 
+async function generateImageWithFal(prompt: string): Promise<string | null> {
+  const falKey = process.env.FAL_API_KEY || process.env.FAL_KEY;
+  if (!falKey) {
+    console.warn("FAL_API_KEY is not configured in .env.local. Skipping image generation.");
+    return null;
+  }
+
+  try {
+    console.log("Triggering Fal.ai Image Generation (SD 3.5 Large) for prompt:", prompt);
+    const response = await fetch("https://fal.run/fal-ai/stable-diffusion-v35-large", {
+      method: "POST",
+      headers: {
+        "Authorization": `Key ${falKey}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        prompt: prompt,
+        image_size: "square_hd",
+        num_inference_steps: 28,
+        enable_safety_checker: true
+      })
+    });
+
+    if (!response.ok) {
+      console.error("Fal.ai API error:", await response.text());
+      return null;
+    }
+
+    const data = await response.json();
+    return data.images?.[0]?.url || null;
+  } catch (err) {
+    console.error("Fal.ai fetch error:", err);
+    return null;
+  }
+}
+
 /**
  * Generates marketing post copy, hooks, CTAs, hashtags, and visual prompts for a scheduled calendar cell.
  */
@@ -154,6 +190,27 @@ interface GeneratedContentPayload {
 }`;
 
   const generated = await callLLMForContent(prompt);
+
+  // === LIVE FAL.AI MEDIA GENERATION INTEGRATION ===
+  if (item.post_type === "static" && generated.visualPrompt) {
+    const imageUrl = await generateImageWithFal(generated.visualPrompt);
+    if (imageUrl) {
+      generated.generatedAssets = { imageUrl };
+    }
+  } else if (item.post_type === "carousel" && generated.generatedAssets?.slides?.[0]) {
+    // Generate a cover image for the first slide of the carousel
+    const coverPrompt = generated.generatedAssets.slides[0].visualDescription || generated.visualPrompt;
+    const imageUrl = await generateImageWithFal(coverPrompt);
+    if (imageUrl) {
+      generated.generatedAssets.coverUrl = imageUrl;
+    }
+  } else if (item.post_type === "video" && generated.visualPrompt) {
+    // Generate a visual storyboard/thumbnail frame for the video
+    const thumbUrl = await generateImageWithFal(generated.visualPrompt);
+    if (thumbUrl) {
+      generated.generatedAssets.thumbnailUrl = thumbUrl;
+    }
+  }
 
   // 5. Save the generated asset to public.brand_posts
   const { data: postResult, error: postError } = await supabase

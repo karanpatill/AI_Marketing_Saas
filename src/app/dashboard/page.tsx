@@ -1371,6 +1371,20 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
+                {/* Live Media Asset Render */}
+                {(viewingAsset.generated_assets?.imageUrl || viewingAsset.generated_assets?.coverUrl || viewingAsset.generated_assets?.thumbnailUrl) && (
+                  <div className="space-y-1">
+                    <label className="text-gray-400 font-bold uppercase tracking-wider text-[9px] block">Generated Media Asset</label>
+                    <div className="relative aspect-video w-full rounded-2xl overflow-hidden border border-gray-250 bg-slate-900 flex items-center justify-center">
+                      <img
+                        src={viewingAsset.generated_assets.imageUrl || viewingAsset.generated_assets.coverUrl || viewingAsset.generated_assets.thumbnailUrl}
+                        alt="AI Generated Content"
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                  </div>
+                )}
+
                 {/* Visual Prompt (for Static/Images or Reels B-rolls) */}
                 <div className="space-y-1">
                   <label className="text-gray-400 font-bold uppercase tracking-wider text-[9px] block">AI Visual Prompt (Stable Diffusion / LongCat)</label>
