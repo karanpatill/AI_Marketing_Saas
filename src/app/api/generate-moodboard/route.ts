@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-// Moodboard style definitions — each style has a full visual system
+// Moodboard style definitions — each has a full visual system
 const MOODBOARD_STYLES: Record<string, {
   name: string;
   tagline: string;
@@ -27,7 +27,7 @@ const MOODBOARD_STYLES: Record<string, {
     gradient: "linear-gradient(135deg, #0D0D0D 0%, #1A1A2E 40%, #2D1B00 100%)",
     accentGradient: "linear-gradient(90deg, #C9A84C, #8B6914)",
     texture: "Fine-grain leather · Gold foil embossing · Black silk",
-    imagePrompt: "Luxury brand moodboard, dark background, gold accents, premium materials, editorial photography style, cinematic lighting",
+    imagePrompt: "Luxury brand editorial moodboard, dark obsidian background, gold leaf accents, champagne highlights, premium materials, cinematic dramatic lighting, high fashion editorial photography, editorial magazine layout composition, ultra premium feel, 16:9",
   },
   minimal: {
     name: "Minimal Pure",
@@ -44,7 +44,7 @@ const MOODBOARD_STYLES: Record<string, {
     gradient: "linear-gradient(135deg, #FAFAFA 0%, #F2EFE9 100%)",
     accentGradient: "linear-gradient(90deg, #1C1C1C, #8C8C8C)",
     texture: "Uncoated matte paper · Thin hairlines · Generous whitespace",
-    imagePrompt: "Minimalist brand moodboard, white space, clean typography, subtle textures, Scandinavian design aesthetic",
+    imagePrompt: "Minimalist brand moodboard, pure white background, generous whitespace, subtle gray tones, Scandinavian design aesthetic, clean geometric forms, uncoated paper textures, calm and focused composition, 16:9",
   },
   premium: {
     name: "Premium Steel",
@@ -61,7 +61,7 @@ const MOODBOARD_STYLES: Record<string, {
     gradient: "linear-gradient(135deg, #0A1628 0%, #1a2744 50%, #0D1F3C 100%)",
     accentGradient: "linear-gradient(90deg, #0066FF, #C0C0C8)",
     texture: "Brushed aluminum · Carbon fiber · Polished steel",
-    imagePrompt: "Premium technology brand moodboard, dark navy, silver chrome accents, corporate excellence, product photography",
+    imagePrompt: "Premium corporate technology brand moodboard, deep navy blue background, silver chrome metallic accents, electric blue highlights, brushed aluminum textures, authoritative and innovative feel, professional corporate photography, 16:9",
   },
   modern: {
     name: "Modern Vivid",
@@ -78,7 +78,7 @@ const MOODBOARD_STYLES: Record<string, {
     gradient: "linear-gradient(135deg, #4F46E5 0%, #06B6D4 100%)",
     accentGradient: "linear-gradient(90deg, #4F46E5, #7C3AED)",
     texture: "Glass morphism · Soft shadows · Gradient mesh",
-    imagePrompt: "Modern digital brand moodboard, violet and cyan gradients, tech startup aesthetic, clean UI components",
+    imagePrompt: "Modern digital startup brand moodboard, vibrant violet and cyan gradient background, glassmorphism UI elements, gradient mesh effects, tech startup aesthetic, digital-first visual language, clean product mockups, 16:9",
   },
   editorial: {
     name: "Editorial",
@@ -95,7 +95,7 @@ const MOODBOARD_STYLES: Record<string, {
     gradient: "linear-gradient(135deg, #FAF9F7 0%, #E8E4DC 100%)",
     accentGradient: "linear-gradient(90deg, #CC2929, #111111)",
     texture: "Newsprint grain · Column grid · Editorial spacing",
-    imagePrompt: "Editorial magazine moodboard, newspaper layout, bold typography, journalistic photography, print design aesthetic",
+    imagePrompt: "Editorial magazine brand moodboard, newsprint cream background, bold black typography, crimson accent details, journalistic photography, structured column grid layout, newspaper and magazine editorial aesthetic, 16:9",
   },
   apple: {
     name: "Apple Style",
@@ -112,7 +112,7 @@ const MOODBOARD_STYLES: Record<string, {
     gradient: "linear-gradient(180deg, #FFFFFF 0%, #F5F5F7 100%)",
     accentGradient: "linear-gradient(90deg, #0071E3, #00A3FF)",
     texture: "Anodized aluminum · Gorilla glass · Liquid Retina",
-    imagePrompt: "Apple-inspired brand moodboard, white minimalism, product photography on white, precision design, silicon valley aesthetic",
+    imagePrompt: "Apple-inspired brand moodboard, pristine white background, product photography on pure white, precision minimal design, silicon valley technology aesthetic, blue accent details, clean geometric product renders, ultra high-end finish, 16:9",
   },
   tesla: {
     name: "Tesla Style",
@@ -129,58 +129,7 @@ const MOODBOARD_STYLES: Record<string, {
     gradient: "linear-gradient(135deg, #101010 0%, #1C1C1C 100%)",
     accentGradient: "linear-gradient(90deg, #CC0000, #880000)",
     texture: "Carbon fiber · Matte finish · Precision engineering",
-    imagePrompt: "Tesla-inspired brand moodboard, dark industrial, electric vehicle aesthetic, minimalist yet powerful, product reveals",
-  },
-  nike: {
-    name: "Nike Style",
-    tagline: "Bold · Motion · Victory",
-    palette: [
-      { name: "Jet Black", hex: "#000000", role: "Primary" },
-      { name: "Signal Orange", hex: "#FF4500", role: "Energy Accent" },
-      { name: "Pure White", hex: "#FFFFFF", role: "Contrast" },
-      { name: "Carbon", hex: "#2A2A2A", role: "Secondary" },
-      { name: "Volt Yellow", hex: "#DFFF00", role: "Speed Highlight" },
-    ],
-    typography: { headline: "Futura PT", body: "Helvetica Neue", style: "Athletic Bold" },
-    keywords: ["Motion", "Power", "Victory", "Ambition", "Relentless"],
-    gradient: "linear-gradient(135deg, #000000 0%, #2A2A2A 100%)",
-    accentGradient: "linear-gradient(90deg, #FF4500, #DFFF00)",
-    texture: "Woven performance fabric · Motion blur · Impact photography",
-    imagePrompt: "Nike-inspired brand moodboard, athletic energy, bold black and orange, motion photography, sports performance aesthetic",
-  },
-  scandinavian: {
-    name: "Scandinavian",
-    tagline: "Hygge · Natural · Balanced",
-    palette: [
-      { name: "Birch White", hex: "#F7F4EF", role: "Background" },
-      { name: "Forest", hex: "#2D4A3E", role: "Primary Text" },
-      { name: "Sage", hex: "#8FAF8F", role: "Natural Accent" },
-      { name: "Warm Linen", hex: "#E8DFD0", role: "Secondary Surface" },
-      { name: "Slate Blue", hex: "#4A6FA5", role: "Calm Accent" },
-    ],
-    typography: { headline: "Josefin Sans", body: "Lato", style: "Nordic Geometric" },
-    keywords: ["Hygge", "Functional Beauty", "Nature", "Calm", "Sustainable"],
-    gradient: "linear-gradient(135deg, #F7F4EF 0%, #E8DFD0 100%)",
-    accentGradient: "linear-gradient(90deg, #2D4A3E, #8FAF8F)",
-    texture: "Raw wood · Linen fabric · Ceramic matte · Natural stone",
-    imagePrompt: "Scandinavian design moodboard, natural materials, warm whites, forest greens, hygge lifestyle photography",
-  },
-  softPastel: {
-    name: "Soft Pastel",
-    tagline: "Gentle · Joyful · Nurturing",
-    palette: [
-      { name: "Blush", hex: "#FDDDE6", role: "Primary Surface" },
-      { name: "Lavender", hex: "#E8D5F5", role: "Secondary Surface" },
-      { name: "Mint", hex: "#D5F5E3", role: "Tertiary" },
-      { name: "Peach", hex: "#FFE4CC", role: "Warm Accent" },
-      { name: "Slate Rose", hex: "#8B5A6A", role: "Text" },
-    ],
-    typography: { headline: "Nunito", body: "Nunito Sans", style: "Soft Rounded" },
-    keywords: ["Warmth", "Gentle", "Creative", "Joyful", "Personal"],
-    gradient: "linear-gradient(135deg, #FDDDE6 0%, #E8D5F5 50%, #D5F5E3 100%)",
-    accentGradient: "linear-gradient(90deg, #FDDDE6, #E8D5F5)",
-    texture: "Watercolor paper · Soft brushstrokes · Delicate patterns",
-    imagePrompt: "Soft pastel brand moodboard, blush pink and lavender, watercolor textures, feminine lifestyle photography, gentle aesthetic",
+    imagePrompt: "Tesla-inspired industrial brand moodboard, space black background, electric red accents, chrome silver metallic reflections, carbon fiber texture details, precision engineering aesthetic, dramatic automotive product photography, minimalist but powerful, 16:9",
   },
   boldStartup: {
     name: "Bold Startup",
@@ -197,7 +146,41 @@ const MOODBOARD_STYLES: Record<string, {
     gradient: "linear-gradient(135deg, #0A0A0A 0%, #1A0A00 100%)",
     accentGradient: "linear-gradient(90deg, #FFD700, #FF2D78)",
     texture: "Street art · Digital noise · Neon glow effects",
-    imagePrompt: "Bold startup brand moodboard, neon colors on black, youth culture, tech energy, disruptive visual language",
+    imagePrompt: "Bold disruptive startup brand moodboard, dark black background, neon yellow and hot pink accents, electric glow effects, youth culture energy, tech startup disruptive aesthetic, neon signage, vibrant urban photography, 16:9",
+  },
+  scandinavian: {
+    name: "Scandinavian",
+    tagline: "Hygge · Natural · Balanced",
+    palette: [
+      { name: "Birch White", hex: "#F7F4EF", role: "Background" },
+      { name: "Forest", hex: "#2D4A3E", role: "Primary Text" },
+      { name: "Sage", hex: "#8FAF8F", role: "Natural Accent" },
+      { name: "Warm Linen", hex: "#E8DFD0", role: "Secondary Surface" },
+      { name: "Slate Blue", hex: "#4A6FA5", role: "Calm Accent" },
+    ],
+    typography: { headline: "Josefin Sans", body: "Lato", style: "Nordic Geometric" },
+    keywords: ["Hygge", "Functional Beauty", "Nature", "Calm", "Sustainable"],
+    gradient: "linear-gradient(135deg, #F7F4EF 0%, #E8DFD0 100%)",
+    accentGradient: "linear-gradient(90deg, #2D4A3E, #8FAF8F)",
+    texture: "Raw wood · Linen fabric · Ceramic matte · Natural stone",
+    imagePrompt: "Scandinavian minimalist brand moodboard, birch white background, forest green and sage accents, natural wood textures, linen fabric details, hygge lifestyle photography, Nordic design aesthetic, warm and calm composition, 16:9",
+  },
+  softPastel: {
+    name: "Soft Pastel",
+    tagline: "Gentle · Joyful · Nurturing",
+    palette: [
+      { name: "Blush", hex: "#FDDDE6", role: "Primary Surface" },
+      { name: "Lavender", hex: "#E8D5F5", role: "Secondary Surface" },
+      { name: "Mint", hex: "#D5F5E3", role: "Tertiary" },
+      { name: "Peach", hex: "#FFE4CC", role: "Warm Accent" },
+      { name: "Slate Rose", hex: "#8B5A6A", role: "Text" },
+    ],
+    typography: { headline: "Nunito", body: "Nunito Sans", style: "Soft Rounded" },
+    keywords: ["Warmth", "Gentle", "Creative", "Joyful", "Personal"],
+    gradient: "linear-gradient(135deg, #FDDDE6 0%, #E8D5F5 50%, #D5F5E3 100%)",
+    accentGradient: "linear-gradient(90deg, #FDDDE6, #E8D5F5)",
+    texture: "Watercolor paper · Soft brushstrokes · Delicate patterns",
+    imagePrompt: "Soft pastel brand moodboard, blush pink and lavender gradient background, watercolor paper textures, gentle botanical illustrations, feminine and nurturing lifestyle photography, soft diffused lighting, delicate floral elements, 16:9",
   },
   corporate: {
     name: "Corporate Pro",
@@ -214,41 +197,7 @@ const MOODBOARD_STYLES: Record<string, {
     gradient: "linear-gradient(135deg, #003580 0%, #1a4d99 100%)",
     accentGradient: "linear-gradient(90deg, #003580, #4A7FC1)",
     texture: "Embossed paper · Clean grid · Professional photography",
-    imagePrompt: "Corporate brand moodboard, professional blue, business photography, clean layout, enterprise aesthetic",
-  },
-  magazine: {
-    name: "Magazine",
-    tagline: "Curated · Visual · Aspirational",
-    palette: [
-      { name: "Rich Black", hex: "#0A0A0A", role: "Cover Background" },
-      { name: "Magazine White", hex: "#FFFEF9", role: "Page Background" },
-      { name: "Accent Red", hex: "#E63946", role: "Pop Color" },
-      { name: "Warm Cream", hex: "#F2E8DC", role: "Paper Tone" },
-      { name: "Mocha", hex: "#6B4F3A", role: "Text Accent" },
-    ],
-    typography: { headline: "Didot", body: "Garamond", style: "High Fashion Serif" },
-    keywords: ["Aspirational", "Curated", "Sophisticated", "Visual Story", "Iconic"],
-    gradient: "linear-gradient(135deg, #0A0A0A 0%, #1a1a1a 100%)",
-    accentGradient: "linear-gradient(90deg, #E63946, #0A0A0A)",
-    texture: "Glossy magazine print · Full-bleed photography · White margin elegance",
-    imagePrompt: "High fashion magazine moodboard, editorial photography, luxury lifestyle, glossy magazine aesthetic, cover-worthy imagery",
-  },
-  fashion: {
-    name: "Fashion House",
-    tagline: "Iconic · Avant-garde · Signature",
-    palette: [
-      { name: "Porcelain", hex: "#F5F0EA", role: "Foundation" },
-      { name: "Onyx", hex: "#1A1A1A", role: "Statement Black" },
-      { name: "Dusty Rose", hex: "#C9978A", role: "Feminine Accent" },
-      { name: "Camel", hex: "#C19A6B", role: "Earthy Luxury" },
-      { name: "Mauve", hex: "#906070", role: "Depth Tone" },
-    ],
-    typography: { headline: "Vogue", body: "Times New Roman", style: "Fashion House Serif" },
-    keywords: ["Iconic", "Avant-garde", "Seasonal", "Signature", "Wearable Art"],
-    gradient: "linear-gradient(135deg, #F5F0EA 0%, #C9978A 100%)",
-    accentGradient: "linear-gradient(90deg, #1A1A1A, #C19A6B)",
-    texture: "Silk fabric · Fashion runway · Couture stitching",
-    imagePrompt: "Fashion brand moodboard, runway photography, haute couture, editorial beauty, luxury fashion aesthetic",
+    imagePrompt: "Corporate professional brand moodboard, deep corporate blue background, clean structured grid layout, professional business photography, global enterprise aesthetic, formal and trustworthy visual language, 16:9",
   },
   lifestyle: {
     name: "Lifestyle",
@@ -265,13 +214,13 @@ const MOODBOARD_STYLES: Record<string, {
     gradient: "linear-gradient(135deg, #FFF8F0 0%, #F4845F 100%)",
     accentGradient: "linear-gradient(90deg, #F4845F, #F6C26A)",
     texture: "Linen textures · Golden hour photography · Real moments",
-    imagePrompt: "Lifestyle brand moodboard, golden hour photography, authentic real moments, warm earthy tones, community and wellness",
+    imagePrompt: "Lifestyle brand moodboard, golden hour warm lighting, sunset orange and cream tones, authentic candid lifestyle photography, real community moments, warm earthy textures, joyful and aspirational visual storytelling, 16:9",
   },
 };
 
 export async function POST(req: Request) {
   try {
-    const { style, brandName, industry, brandPersonality, brandValues, usp } = await req.json();
+    const { style, brandName, industry, brandPersonality, brandValues, usp, generateImage } = await req.json();
 
     if (!style) {
       return NextResponse.json({ error: "Moodboard style is required" }, { status: 400 });
@@ -282,26 +231,80 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid moodboard style" }, { status: 400 });
     }
 
-    // === When API Key is Added: Gemini/Imagen Image Generation ===
-    // Uncomment and replace with actual API call:
-    //
-    // const { GoogleGenerativeAI } = await import("@google/generative-ai");
-    // const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-    // const model = genAI.getGenerativeModel({ model: "imagen-3.0-generate-002" });
-    // const fullPrompt = `${styleDef.imagePrompt} for brand "${brandName}" in the ${industry} industry. 
-    //   Brand personality: ${brandPersonality}. Core values: ${brandValues?.join(", ")}.
-    //   USP: ${usp}. Style: ${styleDef.name}. Keywords: ${styleDef.keywords.join(", ")}.
-    //   High quality, professional moodboard composition, 16:9 aspect ratio.`;
-    // const result = await model.generateImages({ prompt: fullPrompt, ... });
-    // const imageUrl = result.images[0].url;
+    // If generateImage is false (or not provided), just return the style definition
+    if (!generateImage) {
+      return NextResponse.json({
+        style,
+        styleDef,
+        brandName,
+        generatedImageUrl: null,
+        imagePrompt: null,
+        approvedAt: null,
+      });
+    }
 
-    // === Current: Return full mock moodboard system (fully functional UI) ===
+    // === Real Fal.ai Image Generation ===
+    const falApiKey = process.env.FAL_API_KEY;
+    if (!falApiKey) {
+      return NextResponse.json({ error: "FAL_API_KEY is not configured" }, { status: 500 });
+    }
+
+    // Build a rich, brand-specific prompt
+    const brandContext = [
+      brandName ? `Brand: "${brandName}"` : null,
+      industry ? `Industry: ${industry}` : null,
+      brandPersonality ? `Brand personality: ${brandPersonality}` : null,
+      brandValues && Array.isArray(brandValues) && brandValues.length > 0 ? `Core values: ${brandValues.slice(0, 3).join(", ")}` : null,
+      usp ? `USP: ${usp}` : null,
+    ].filter(Boolean).join(". ");
+
+    const fullPrompt = `${styleDef.imagePrompt}. ${brandContext}. ${styleDef.keywords.join(", ")} aesthetic. Professional brand photography, commercial quality, studio lighting, no text overlays, no logos, pure visual mood inspiration.`;
+
+    // Call fal.ai sync endpoint (fal.run for synchronous, queue.fal.run for async)
+    // We use fal.run which waits for result directly
+    const falResponse = await fetch("https://fal.run/fal-ai/flux/dev", {
+      method: "POST",
+      headers: {
+        "Authorization": `Key ${falApiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        prompt: fullPrompt,
+        image_size: "landscape_16_9",
+        num_inference_steps: 28,
+        guidance_scale: 3.5,
+        num_images: 1,
+        enable_safety_checker: true,
+        output_format: "jpeg",
+      }),
+    });
+
+    if (!falResponse.ok) {
+      const errText = await falResponse.text();
+      console.error("Fal.ai API error:", errText);
+      // Return style info without image rather than failing entirely
+      return NextResponse.json({
+        style,
+        styleDef,
+        brandName,
+        generatedImageUrl: null,
+        imagePrompt: fullPrompt,
+        approvedAt: null,
+        error: `Fal.ai generation failed: ${falResponse.status}`,
+      });
+    }
+
+    const falResult = await falResponse.json();
+
+    // fal.ai response structure: { images: [{ url: "...", ... }] }
+    const generatedImageUrl = falResult?.images?.[0]?.url || null;
+
     return NextResponse.json({
       style,
       styleDef,
       brandName,
-      generatedImageUrl: null, // Will be populated when API key is set
-      imagePrompt: styleDef.imagePrompt + ` for ${brandName} in ${industry} industry.`,
+      generatedImageUrl,
+      imagePrompt: fullPrompt,
       approvedAt: null,
     });
 

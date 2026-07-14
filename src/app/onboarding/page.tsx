@@ -8,12 +8,13 @@ import {
   Laptop, Globe, Plus, Trash2, Tag, Key, Info, HelpCircle,
   Loader2, Search, CheckCircle2, ChevronRight, Zap,
   Image as ImageIcon, FileText, Video, Type, Paintbrush,
-  Layers, UploadCloud, Eye, Users
+  Layers, UploadCloud, Eye, Users, Palette, X
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 
 // --- Types ---
 type BrandKit = {
+  kitVariant?: "A" | "B";
   colors: {
     primaryHex: string;
     secondaryHex: string;
@@ -28,12 +29,14 @@ type BrandKit = {
     bodyFont: string;
     usage: string;
   };
-  guidelines: {
+  // guidelines is optional (AI response may not always include it)
+  guidelines?: {
     safeZone: string;
     minSize: string;
     rules: string[];
   };
-  assets: {
+  // assets stored flat from API or under assets key
+  assets?: {
     primaryLogoSvg: string;
     secondaryLogoSvg: string;
     monogramSvg: string;
@@ -42,6 +45,14 @@ type BrandKit = {
     socialIconsSvg: string;
     appIconSvg: string;
   };
+  // API returns these at top level
+  primaryLogoSvg?: string;
+  secondaryLogoSvg?: string;
+  monogramSvg?: string;
+  iconSvg?: string;
+  faviconSvg?: string;
+  socialIconsSvg?: string;
+  appIconSvg?: string;
 };
 
 type MoodboardPalette = { name: string; hex: string; role: string };
@@ -313,16 +324,31 @@ export default function OnboardingPage() {
   // AI Autofill / Upload Loading States
   const [scanningUrl, setScanningUrl] = useState("");
   const [isScanning, setIsScanning] = useState(false);
-  const [isGeneratingLogo, setIsGeneratingLogo] = useState(false);
   const [customValueInput, setCustomValueInput] = useState("");
   const [newProductInput, setNewProductInput] = useState("");
   const [newServiceInput, setNewServiceInput] = useState("");
   const [newCompetitorInput, setNewCompetitorInput] = useState("");
   const [uploadingField, setUploadingField] = useState<string | null>(null);
 
-  // Moodboard Studio states
-  const [moodboardGenerating, setMoodboardGenerating] = useState<string | null>(null);
-  const [moodboardPreviews, setMoodboardPreviews] = useState<Record<string, { generated: boolean }>>({});
+  // ── Brand Logo Studio: 3-phase flow ──
+  // Phase A: Color Decision
+  const [hasDecidedColors, setHasDecidedColors] = useState<boolean | null>(null);
+  const [userPrimaryColor, setUserPrimaryColor] = useState("#0F172A");
+  const [userSecondaryColor, setUserSecondaryColor] = useState("#06B6D4");
+  // Phase B: Generation
+  const [isGeneratingKits, setIsGeneratingKits] = useState(false);
+  const [kitAGenerating, setKitAGenerating] = useState(false);
+  const [kitBGenerating, setKitBGenerating] = useState(false);
+  const [kitAError, setKitAError] = useState<string | null>(null);
+  const [kitBError, setKitBError] = useState<string | null>(null);
+  // Phase C: Selection
+  const [logoKitA, setLogoKitA] = useState<BrandKit | null>(null);
+  const [logoKitB, setLogoKitB] = useState<BrandKit | null>(null);
+  const [selectedKit, setSelectedKit] = useState<"A" | "B" | null>(null);
+
+  // ── Moodboard Studio ──
+  const [moodboardImages, setMoodboardImages] = useState<Record<string, string | null>>({});
+  const [moodboardGeneratingId, setMoodboardGeneratingId] = useState<string | null>(null);
   const [hoveredMood, setHoveredMood] = useState<string | null>(null);
 
   // Load from localStorage
@@ -354,11 +380,11 @@ export default function OnboardingPage() {
     if (step > 1) setStep(step - 1);
   };
 
-  // Generate moodboard preview for a single style
+  // Generate moodboard image via fal.ai for a single style
   const generateMoodboardPreview = async (styleId: string) => {
-    setMoodboardGenerating(styleId);
+    setMoodboardGeneratingId(styleId);
     try {
-      await fetch("/api/generate-moodboard", {
+      const res = await fetch("/api/generate-moodboard", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -368,21 +394,24 @@ export default function OnboardingPage() {
           brandPersonality: data.brandPersonality,
           brandValues: data.brandValues,
           usp: data.usp,
+          generateImage: true, // trigger real fal.ai call
         }),
       });
-      // Mark as generated (image comes when API key is set)
-      setMoodboardPreviews((prev) => ({ ...prev, [styleId]: { generated: true } }));
+      if (!res.ok) throw new Error("Generation failed");
+      const result = await res.json();
+      if (result.generatedImageUrl) {
+        setMoodboardImages((prev) => ({ ...prev, [styleId]: result.generatedImageUrl }));
+      }
     } catch (e) {
-      console.error(e);
+      console.error("Moodboard generation error:", e);
     } finally {
-      setMoodboardGenerating(null);
+      setMoodboardGeneratingId(null);
     }
   };
 
   const approveMoodboard = (styleId: string) => {
     const style = MOODBOARD_STYLES.find((s) => s.id === styleId);
     if (!style) return;
-    // Build full MoodboardStyle object
     const approved = {
       id: style.id,
       name: style.name,
@@ -394,7 +423,7 @@ export default function OnboardingPage() {
       accentGradient: style.accentGradient,
       texture: style.texture,
       imagePrompt: `${style.name} moodboard for ${data.brandName}`,
-      generatedImageUrl: null,
+      generatedImageUrl: moodboardImages[styleId] || null,
     };
     updateData({ approvedMoodboard: approved });
   };
@@ -443,10 +472,105 @@ export default function OnboardingPage() {
     }
   };
 
-  // Local Premium Mock Generator that cycles styles dynamically without server cost
-  const handleGenerateBrandKit = () => {
-    setIsGeneratingLogo(true);
+  // ── Real Dual-Kit Logo Generator (Gemini API) ──
+  const getLogoSvg = (kit: BrandKit, key: string): string => {
+    // API returns SVGs at top level or under .assets
+    return (kit as any)[key] || kit.assets?.[key as keyof NonNullable<BrandKit["assets"]>] || "";
+  };
 
+  const handleGenerateDualKits = async () => {
+    setIsGeneratingKits(true);
+    setKitAGenerating(true);
+    setKitBGenerating(true);
+    setKitAError(null);
+    setKitBError(null);
+    setLogoKitA(null);
+    setLogoKitB(null);
+    setSelectedKit(null);
+
+    const sharedPayload = {
+      brandName: data.brandName,
+      industry: data.industry,
+      businessDescription: data.businessDescription,
+      brandPersonality: data.brandPersonality,
+      brandValues: data.brandValues,
+      usp: data.usp,
+      mission: data.mission,
+      userPrimaryColor: hasDecidedColors ? userPrimaryColor : null,
+      userSecondaryColor: hasDecidedColors ? userSecondaryColor : null,
+    };
+
+    // Run Kit A and Kit B in parallel
+    const [resA, resB] = await Promise.allSettled([
+      fetch("/api/generate-logo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...sharedPayload, kitVariant: "A" }),
+      }).then((r) => r.json()),
+      fetch("/api/generate-logo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...sharedPayload, kitVariant: "B" }),
+      }).then((r) => r.json()),
+    ]);
+
+    if (resA.status === "fulfilled" && !resA.value.error) {
+      setLogoKitA(resA.value as BrandKit);
+    } else {
+      setKitAError(resA.status === "rejected" ? resA.reason?.message : resA.value?.error || "Kit A failed");
+    }
+    setKitAGenerating(false);
+
+    if (resB.status === "fulfilled" && !resB.value.error) {
+      setLogoKitB(resB.value as BrandKit);
+    } else {
+      setKitBError(resB.status === "rejected" ? resB.reason?.message : resB.value?.error || "Kit B failed");
+    }
+    setKitBGenerating(false);
+    setIsGeneratingKits(false);
+  };
+
+  const handleSelectKit = (variant: "A" | "B") => {
+    const kit = variant === "A" ? logoKitA : logoKitB;
+    if (!kit) return;
+    setSelectedKit(variant);
+    // Normalise the kit into brandKitGenerated format
+    const primary = getLogoSvg(kit, "primaryLogoSvg");
+    const secondary = getLogoSvg(kit, "secondaryLogoSvg");
+    const monogram = getLogoSvg(kit, "monogramSvg");
+    const icon = getLogoSvg(kit, "iconSvg");
+    const favicon = getLogoSvg(kit, "faviconSvg");
+    const social = getLogoSvg(kit, "socialIconsSvg");
+    const app = getLogoSvg(kit, "appIconSvg");
+    updateData({
+      brandKitGenerated: {
+        kitVariant: variant,
+        colors: kit.colors,
+        typography: kit.typography || {
+          primaryFont: "Outfit (Headings)",
+          bodyFont: "Inter (Body)",
+          usage: `Use Outfit for display headers for ${data.brandName}. Use Inter for body.`,
+        },
+        guidelines: kit.guidelines || {
+          safeZone: "Safe zone is defined as 20% of logo width/height on all sides.",
+          minSize: "Digital: 32px width | Print: 0.5 inches width.",
+          rules: ["Do not stretch, distort, or rotate the logo.", `Do not alter the primary ${kit.colors.primaryHex} brand color.`],
+        },
+        assets: {
+          primaryLogoSvg: primary,
+          secondaryLogoSvg: secondary,
+          monogramSvg: monogram,
+          iconSvg: icon,
+          faviconSvg: favicon,
+          socialIconsSvg: social,
+          appIconSvg: app,
+        },
+      },
+    });
+  };
+
+  // Legacy mock kept for reference only (not called anymore)
+  const _handleGenerateBrandKit_mock = () => {
     setTimeout(() => {
       // Cycle through 5 beautiful brand style schemes
       const themeIndex = Math.floor(Math.random() * 5);
@@ -603,7 +727,7 @@ export default function OnboardingPage() {
           },
         }
       });
-      setIsGeneratingLogo(false);
+      // legacy mock end
     }, 800);
   };
 
@@ -704,9 +828,9 @@ export default function OnboardingPage() {
       case 4:
         return (data.platforms || []).length > 0 && data.mainGoal !== "";
       case 5:
-        return data.kitType === "generate" 
-          ? data.brandKitGenerated !== null 
-          : (data.logoUrl || "").trim().length > 0;
+        if (data.kitType === "upload") return (data.logoUrl || "").trim().length > 0;
+        // For generate mode: must have selected a kit
+        return data.brandKitGenerated !== null;
       case 6:
         // Moodboard Studio — must approve one moodboard
         return data.approvedMoodboard !== null;
@@ -1462,101 +1586,379 @@ export default function OnboardingPage() {
                 </button>
               </div>
 
-              {/* ── SUB-TAB: AI LOGO STUDIO ── */}
+              {/* ── SUB-TAB: AI LOGO STUDIO (3-Phase Flow) ── */}
               {data.kitType === "generate" && (
-                <div className="space-y-5">
-                  {!data.brandKitGenerated ? (
-                    <div className="bg-gray-50 border border-gray-200 rounded-2xl p-8 text-center space-y-4">
-                      <Sparkles className="w-10 h-10 text-[#06B6D4] mx-auto animate-pulse" />
-                      <div>
-                        <h4 className="text-sm font-bold text-gray-950">One-Click AI Brand Kit Compilation</h4>
-                        <p className="text-xs text-gray-400 max-w-sm mx-auto mt-1">
-                          No extra forms. We compile logos, monograms, color guides, and clearances based on your Brand DNA.
-                        </p>
-                      </div>
-                      <button
-                        onClick={handleGenerateBrandKit}
-                        disabled={isGeneratingLogo}
-                        className="px-6 py-2.5 bg-brand-dark text-white hover:bg-brand-darkHover text-xs font-bold uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-1.5 mx-auto"
-                      >
-                        {isGeneratingLogo ? (
-                          <>
-                            <Loader2 className="w-3.5 h-3.5 animate-spin text-[#06B6D4]" />
-                            Compiling Kit...
-                          </>
-                        ) : (
-                          <>
-                            <Sparkles className="w-3.5 h-3.5 text-[#06B6D4]" />
-                            Generate Style Kit
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-5 text-xs">
-                      {/* Logo previews */}
-                      <div className="md:col-span-2 bg-white border border-gray-100 rounded-xl p-5 space-y-4">
-                        <div className="flex justify-between items-center border-b border-gray-100 pb-2">
-                          <p className="text-[10px] font-bold text-gray-400 uppercase">Compiled Graphics</p>
+                <div className="space-y-6">
+
+                  {/* ── PHASE A: Color Decision ── */}
+                  {hasDecidedColors === null && !logoKitA && !logoKitB && !data.brandKitGenerated && (
+                    <div className="space-y-5">
+                      <div className="bg-gradient-to-br from-gray-950 to-gray-900 border border-gray-800 rounded-2xl p-7 text-center space-y-4">
+                        <div className="w-14 h-14 rounded-2xl bg-[#06B6D4]/10 border border-[#06B6D4]/20 flex items-center justify-center mx-auto">
+                          <Palette className="w-7 h-7 text-[#06B6D4]" />
+                        </div>
+                        <div>
+                          <h4 className="text-base font-bold text-white">Have you decided your brand colors?</h4>
+                          <p className="text-xs text-gray-400 max-w-sm mx-auto mt-1.5 leading-relaxed">
+                            If you already have primary colors in mind, pick them now. Otherwise, our AI will create a premium harmonized palette from your brand DNA.
+                          </p>
+                        </div>
+                        <div className="flex gap-3 justify-center pt-1">
                           <button
-                            onClick={handleGenerateBrandKit}
-                            disabled={isGeneratingLogo}
-                            className="text-[10px] text-[#06B6D4] hover:text-[#06B6D4]/80 font-bold flex items-center gap-1 transition-colors disabled:opacity-50"
+                            onClick={() => setHasDecidedColors(true)}
+                            className="px-5 py-2.5 bg-[#06B6D4] hover:bg-[#06B6D4]/90 text-[#090D16] font-bold text-xs uppercase tracking-wider rounded-xl transition-all flex items-center gap-2 shadow-lg shadow-[#06B6D4]/20"
                           >
-                            {isGeneratingLogo ? (
-                              <Loader2 className="w-3 h-3 animate-spin" />
-                            ) : (
-                              <Sparkles className="w-3 h-3" />
-                            )}
-                            {isGeneratingLogo ? "Regenerating..." : "Regenerate"}
+                            <Check className="w-3.5 h-3.5" />
+                            Yes, I know my colors
+                          </button>
+                          <button
+                            onClick={() => { setHasDecidedColors(false); }}
+                            className="px-5 py-2.5 bg-white/10 hover:bg-white/15 border border-white/20 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all flex items-center gap-2"
+                          >
+                            <Sparkles className="w-3.5 h-3.5" />
+                            Let AI choose
                           </button>
                         </div>
-                        <div className="grid grid-cols-2 gap-3">
-                          <div className="bg-gray-900 rounded-lg p-3 text-center space-y-1">
-                            <span className="text-[8px] text-white/40 block">PRIMARY LOGO</span>
-                            <div className="h-10 flex items-center justify-center" dangerouslySetInnerHTML={{ __html: data.brandKitGenerated.assets.primaryLogoSvg }} />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ── PHASE A: Color Picker (when user says YES) ── */}
+                  {hasDecidedColors === true && !logoKitA && !logoKitB && !data.brandKitGenerated && (
+                    <div className="space-y-5">
+                      <div className="bg-gradient-to-br from-gray-950 to-gray-900 border border-gray-800 rounded-2xl p-7 space-y-5">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h4 className="text-sm font-bold text-white">Select Your Brand Colors</h4>
+                            <p className="text-xs text-gray-400 mt-1">These exact colors will be used across all logo variations.</p>
                           </div>
-                          <div className="bg-white border border-gray-100 rounded-lg p-3 text-center space-y-1">
-                            <span className="text-[8px] text-gray-400 block">SECONDARY LOGO</span>
-                            <div className="h-10 flex items-center justify-center" dangerouslySetInnerHTML={{ __html: data.brandKitGenerated.assets.secondaryLogoSvg }} />
+                          <button onClick={() => setHasDecidedColors(null)} className="text-gray-500 hover:text-gray-300 transition-colors">
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                          {/* Primary Color */}
+                          <div className="space-y-3">
+                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest">Primary Color</label>
+                            <p className="text-[10px] text-gray-500">Main color — backgrounds, dark fills</p>
+                            <div className="flex items-center gap-3">
+                              <div className="relative">
+                                <input
+                                  type="color"
+                                  value={userPrimaryColor}
+                                  onChange={(e) => setUserPrimaryColor(e.target.value)}
+                                  className="w-14 h-14 rounded-xl cursor-pointer border-0 bg-transparent p-0"
+                                  style={{ appearance: "none" }}
+                                />
+                              </div>
+                              <div>
+                                <div className="w-10 h-10 rounded-lg border-2 border-white/20 shadow-lg" style={{ backgroundColor: userPrimaryColor }} />
+                                <span className="text-[10px] font-mono text-gray-300 mt-1 block">{userPrimaryColor.toUpperCase()}</span>
+                              </div>
+                            </div>
                           </div>
-                          <div className="bg-gray-50 border border-gray-100 rounded-lg p-3 flex flex-col justify-between items-center">
-                            <span className="text-[8px] text-gray-400 block mb-1">MONOGRAM</span>
-                            <div className="w-10 h-10" dangerouslySetInnerHTML={{ __html: data.brandKitGenerated.assets.monogramSvg }} />
-                          </div>
-                          <div className="bg-gray-50 border border-gray-100 rounded-lg p-3 flex flex-col justify-between items-center">
-                            <span className="text-[8px] text-gray-400 block mb-1">FAVICON</span>
-                            <div className="w-8 h-8" dangerouslySetInnerHTML={{ __html: data.brandKitGenerated.assets.faviconSvg }} />
+
+                          {/* Secondary / Accent Color */}
+                          <div className="space-y-3">
+                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest">Accent Color</label>
+                            <p className="text-[10px] text-gray-500">Highlight color — icons, glows, CTAs</p>
+                            <div className="flex items-center gap-3">
+                              <div className="relative">
+                                <input
+                                  type="color"
+                                  value={userSecondaryColor}
+                                  onChange={(e) => setUserSecondaryColor(e.target.value)}
+                                  className="w-14 h-14 rounded-xl cursor-pointer border-0 bg-transparent p-0"
+                                  style={{ appearance: "none" }}
+                                />
+                              </div>
+                              <div>
+                                <div className="w-10 h-10 rounded-lg border-2 border-white/20 shadow-lg" style={{ backgroundColor: userSecondaryColor }} />
+                                <span className="text-[10px] font-mono text-gray-300 mt-1 block">{userSecondaryColor.toUpperCase()}</span>
+                              </div>
+                            </div>
                           </div>
                         </div>
+
+                        {/* Preview Swatch */}
+                        <div className="rounded-xl overflow-hidden border border-white/10">
+                          <div className="h-8" style={{ background: `linear-gradient(90deg, ${userPrimaryColor} 50%, ${userSecondaryColor} 100%)` }} />
+                          <div className="bg-white/5 px-4 py-2 flex items-center justify-between">
+                            <span className="text-[10px] text-gray-400">Your Brand Gradient Preview</span>
+                            <div className="flex gap-1.5">
+                              <div className="w-4 h-4 rounded-full border border-white/20" style={{ backgroundColor: userPrimaryColor }} />
+                              <div className="w-4 h-4 rounded-full border border-white/20" style={{ backgroundColor: userSecondaryColor }} />
+                            </div>
+                          </div>
+                        </div>
+
+                        <button
+                          onClick={handleGenerateDualKits}
+                          disabled={isGeneratingKits}
+                          className="w-full py-3 bg-[#06B6D4] hover:bg-[#06B6D4]/90 text-[#090D16] font-black text-xs uppercase tracking-widest rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#06B6D4]/20 disabled:opacity-60"
+                        >
+                          <Sparkles className="w-4 h-4" />
+                          Generate 2 Logo Kits with These Colors
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ── PHASE B: AI Picks Colors — Direct Generate ── */}
+                  {hasDecidedColors === false && !logoKitA && !logoKitB && !data.brandKitGenerated && (
+                    <div className="bg-gradient-to-br from-gray-950 to-gray-900 border border-gray-800 rounded-2xl p-7 text-center space-y-4">
+                      <div className="w-14 h-14 rounded-2xl bg-[#06B6D4]/10 border border-[#06B6D4]/20 flex items-center justify-center mx-auto">
+                        <Sparkles className="w-7 h-7 text-[#06B6D4]" />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-bold text-white">AI-Curated Color Selection</h4>
+                        <p className="text-xs text-gray-400 max-w-sm mx-auto mt-1.5 leading-relaxed">
+                          Our AI will study your brand DNA, industry, and personality to craft two unique premium palettes — one per kit.
+                        </p>
+                      </div>
+                      <div className="flex gap-3 justify-center pt-1">
+                        <button
+                          onClick={handleGenerateDualKits}
+                          disabled={isGeneratingKits}
+                          className="px-6 py-2.5 bg-[#06B6D4] hover:bg-[#06B6D4]/90 text-[#090D16] font-black text-xs uppercase tracking-widest rounded-xl transition-all flex items-center gap-2 shadow-lg shadow-[#06B6D4]/20 disabled:opacity-60"
+                        >
+                          {isGeneratingKits ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                          {isGeneratingKits ? "Generating Kits..." : "Generate 2 Logo Kits"}
+                        </button>
+                        <button onClick={() => setHasDecidedColors(null)} className="px-5 py-2.5 bg-white/10 hover:bg-white/15 border border-white/20 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all">
+                          Back
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ── PHASE B: Generation Loading Indicator ── */}
+                  {isGeneratingKits && (
+                    <div className="grid grid-cols-2 gap-4">
+                      {[{ label: "Kit A — Classic Bold", generating: kitAGenerating }, { label: "Kit B — Modern Gradient", generating: kitBGenerating }].map((k) => (
+                        <div key={k.label} className="bg-gray-950 border border-gray-800 rounded-2xl p-6 text-center space-y-3">
+                          <div className="w-12 h-12 rounded-xl bg-[#06B6D4]/10 border border-[#06B6D4]/20 flex items-center justify-center mx-auto">
+                            {k.generating ? (
+                              <Loader2 className="w-6 h-6 text-[#06B6D4] animate-spin" />
+                            ) : (
+                              <CheckCircle2 className="w-6 h-6 text-emerald-400" />
+                            )}
+                          </div>
+                          <p className="text-xs font-bold text-white">{k.label}</p>
+                          <p className="text-[10px] text-gray-500">{k.generating ? "Compiling with Gemini AI..." : "Ready"}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* ── PHASE C: Kit Selection (2 kits side by side) ── */}
+                  {(logoKitA || logoKitB || kitAError || kitBError) && !isGeneratingKits && !data.brandKitGenerated && (
+                    <div className="space-y-5">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="text-sm font-bold text-gray-900">Choose Your Logo Kit</h4>
+                          <p className="text-xs text-gray-400 mt-0.5">Both kits use your brand DNA. Select the style that feels right.</p>
+                        </div>
+                        <button
+                          onClick={() => { setLogoKitA(null); setLogoKitB(null); setHasDecidedColors(null); setSelectedKit(null); updateData({ brandKitGenerated: null }); }}
+                          className="text-[10px] text-gray-400 hover:text-gray-700 font-bold flex items-center gap-1 border border-gray-200 px-3 py-1.5 rounded-lg transition-colors"
+                        >
+                          <Sparkles className="w-3 h-3" /> Regenerate
+                        </button>
                       </div>
 
-                      {/* Specifications Summary */}
-                      <div className="bg-white border border-gray-100 rounded-xl p-5 space-y-3">
-                        <p className="text-[10px] font-bold text-gray-400 uppercase">Brand Style Guidelines</p>
-                        <div className="space-y-2">
-                          <div>
-                            <span className="text-[9px] text-gray-400 block">PRIMARY COLOR</span>
-                            <div className="flex items-center gap-1.5 font-bold text-gray-800 font-mono">
-                              <span className="w-3.5 h-3.5 rounded border border-gray-200" style={{ backgroundColor: data.brandKitGenerated.colors.primaryHex }} />
-                              {data.brandKitGenerated.colors.primaryHex}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        {(["A", "B"] as const).map((variant) => {
+                          const kit = variant === "A" ? logoKitA : logoKitB;
+                          const err = variant === "A" ? kitAError : kitBError;
+                          const isSelected = selectedKit === variant;
+                          const label = variant === "A" ? "Kit A — Classic Bold" : "Kit B — Modern Gradient";
+
+                          return (
+                            <div
+                              key={variant}
+                              className={`rounded-2xl border-2 transition-all overflow-hidden ${
+                                isSelected
+                                  ? "border-[#06B6D4] shadow-lg shadow-[#06B6D4]/15 scale-[1.01]"
+                                  : "border-gray-200 hover:border-gray-300"
+                              }`}
+                            >
+                              {/* Kit Header */}
+                              <div className="bg-gray-950 px-4 py-3 flex items-center justify-between">
+                                <div>
+                                  <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest">{label}</span>
+                                  {isSelected && (
+                                    <span className="ml-2 text-[8px] font-black text-[#06B6D4] bg-[#06B6D4]/10 px-2 py-0.5 rounded-full uppercase">Selected</span>
+                                  )}
+                                </div>
+                                {kit && (
+                                  <div className="flex gap-1.5">
+                                    <div className="w-4 h-4 rounded-full border-2 border-white/20" style={{ backgroundColor: kit.colors.primaryHex }} title={kit.colors.primaryHex} />
+                                    <div className="w-4 h-4 rounded-full border-2 border-white/20" style={{ backgroundColor: kit.colors.secondaryHex }} title={kit.colors.secondaryHex} />
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Error state */}
+                              {err && (
+                                <div className="p-6 text-center text-xs text-red-500 bg-red-50">
+                                  <p className="font-bold">Generation Failed</p>
+                                  <p className="text-[10px] mt-1 text-red-400">{err}</p>
+                                </div>
+                              )}
+
+                              {/* Kit preview */}
+                              {kit && !err && (
+                                <div className="bg-white p-4 space-y-3">
+                                  {/* Primary Logo */}
+                                  <div>
+                                    <span className="text-[8px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">Primary Logo (Dark)</span>
+                                    <div className="bg-gray-950 rounded-xl p-3 h-16 flex items-center justify-center overflow-hidden">
+                                      <div className="w-full h-full flex items-center justify-center" dangerouslySetInnerHTML={{ __html: getLogoSvg(kit, "primaryLogoSvg") }} />
+                                    </div>
+                                  </div>
+
+                                  {/* Light variant */}
+                                  <div>
+                                    <span className="text-[8px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">Logo (Light Background)</span>
+                                    <div className="bg-gray-50 border border-gray-100 rounded-xl p-3 h-16 flex items-center justify-center overflow-hidden">
+                                      <div className="w-full h-full flex items-center justify-center" dangerouslySetInnerHTML={{ __html: getLogoSvg(kit, "secondaryLogoSvg") }} />
+                                    </div>
+                                  </div>
+
+                                  {/* Icons row */}
+                                  <div className="grid grid-cols-3 gap-2">
+                                    <div className="text-center">
+                                      <span className="text-[7px] font-bold text-gray-400 block mb-1">ICON MARK</span>
+                                      <div className="bg-gray-950 rounded-lg p-2 h-12 flex items-center justify-center overflow-hidden">
+                                        <div className="w-8 h-8" dangerouslySetInnerHTML={{ __html: getLogoSvg(kit, "iconSvg") }} />
+                                      </div>
+                                    </div>
+                                    <div className="text-center">
+                                      <span className="text-[7px] font-bold text-gray-400 block mb-1">MONOGRAM</span>
+                                      <div className="bg-gray-950 rounded-lg p-2 h-12 flex items-center justify-center overflow-hidden">
+                                        <div className="w-8 h-8" dangerouslySetInnerHTML={{ __html: getLogoSvg(kit, "monogramSvg") }} />
+                                      </div>
+                                    </div>
+                                    <div className="text-center">
+                                      <span className="text-[7px] font-bold text-gray-400 block mb-1">FAVICON</span>
+                                      <div className="bg-gray-50 border border-gray-100 rounded-lg p-2 h-12 flex items-center justify-center overflow-hidden">
+                                        <div className="w-7 h-7" dangerouslySetInnerHTML={{ __html: getLogoSvg(kit, "faviconSvg") }} />
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* Color spec */}
+                                  <div className="border-t border-gray-100 pt-3 flex gap-4">
+                                    <div>
+                                      <span className="text-[9px] text-gray-400 block">Primary</span>
+                                      <div className="flex items-center gap-1.5 mt-0.5">
+                                        <div className="w-3.5 h-3.5 rounded border border-gray-200" style={{ backgroundColor: kit.colors.primaryHex }} />
+                                        <span className="text-[10px] font-mono font-bold text-gray-700">{kit.colors.primaryHex}</span>
+                                      </div>
+                                    </div>
+                                    <div>
+                                      <span className="text-[9px] text-gray-400 block">Accent</span>
+                                      <div className="flex items-center gap-1.5 mt-0.5">
+                                        <div className="w-3.5 h-3.5 rounded border border-gray-200" style={{ backgroundColor: kit.colors.secondaryHex }} />
+                                        <span className="text-[10px] font-mono font-bold text-gray-700">{kit.colors.secondaryHex}</span>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* Select button */}
+                                  <button
+                                    onClick={() => handleSelectKit(variant)}
+                                    className={`w-full py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${
+                                      isSelected
+                                        ? "bg-[#06B6D4] text-[#090D16] shadow-md"
+                                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                    }`}
+                                  >
+                                    {isSelected ? (
+                                      <span className="flex items-center justify-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5" /> Kit {variant} Selected</span>
+                                    ) : (
+                                      `Select Kit ${variant}`
+                                    )}
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ── PHASE C: After Selection — Selected Kit Summary ── */}
+                  {data.brandKitGenerated && !isGeneratingKits && (
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+                          <h4 className="text-sm font-bold text-gray-900">
+                            Kit {data.brandKitGenerated.kitVariant} Selected
+                          </h4>
+                        </div>
+                        <button
+                          onClick={() => { setLogoKitA(null); setLogoKitB(null); setHasDecidedColors(null); setSelectedKit(null); updateData({ brandKitGenerated: null }); }}
+                          className="text-[10px] text-gray-400 hover:text-gray-700 font-bold flex items-center gap-1 border border-gray-200 px-3 py-1.5 rounded-lg transition-colors"
+                        >
+                          <Sparkles className="w-3 h-3" /> Change Kit
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="md:col-span-2 bg-gray-950 rounded-xl p-5 space-y-4">
+                          <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest">Compiled Logo Graphics</p>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="bg-gray-900/50 rounded-lg p-3 text-center space-y-1">
+                              <span className="text-[8px] text-white/30 block">PRIMARY LOGO</span>
+                              <div className="h-14 flex items-center justify-center overflow-hidden" dangerouslySetInnerHTML={{ __html: data.brandKitGenerated.assets?.primaryLogoSvg || "" }} />
+                            </div>
+                            <div className="bg-white/5 border border-white/10 rounded-lg p-3 text-center space-y-1">
+                              <span className="text-[8px] text-white/30 block">LIGHT LOGO</span>
+                              <div className="h-14 flex items-center justify-center overflow-hidden" dangerouslySetInnerHTML={{ __html: data.brandKitGenerated.assets?.secondaryLogoSvg || "" }} />
+                            </div>
+                            <div className="bg-gray-900/50 rounded-lg p-3 flex flex-col items-center justify-center gap-1">
+                              <span className="text-[8px] text-white/30 block">MONOGRAM</span>
+                              <div className="w-10 h-10 overflow-hidden" dangerouslySetInnerHTML={{ __html: data.brandKitGenerated.assets?.monogramSvg || "" }} />
+                            </div>
+                            <div className="bg-gray-900/50 rounded-lg p-3 flex flex-col items-center justify-center gap-1">
+                              <span className="text-[8px] text-white/30 block">FAVICON</span>
+                              <div className="w-8 h-8 overflow-hidden" dangerouslySetInnerHTML={{ __html: data.brandKitGenerated.assets?.faviconSvg || "" }} />
                             </div>
                           </div>
-                          <div>
-                            <span className="text-[9px] text-gray-400 block">SECONDARY COLOR</span>
-                            <div className="flex items-center gap-1.5 font-bold text-[#06B6D4] font-mono">
-                              <span className="w-3.5 h-3.5 rounded border border-gray-200" style={{ backgroundColor: data.brandKitGenerated.colors.secondaryHex }} />
-                              {data.brandKitGenerated.colors.secondaryHex}
+                        </div>
+
+                        <div className="bg-white border border-gray-100 rounded-xl p-5 space-y-3">
+                          <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Brand Colors</p>
+                          <div className="space-y-2">
+                            <div>
+                              <span className="text-[9px] text-gray-400 block">PRIMARY</span>
+                              <div className="flex items-center gap-1.5 mt-0.5">
+                                <div className="w-5 h-5 rounded border border-gray-200" style={{ backgroundColor: data.brandKitGenerated.colors.primaryHex }} />
+                                <span className="text-xs font-mono font-bold text-gray-800">{data.brandKitGenerated.colors.primaryHex}</span>
+                              </div>
                             </div>
-                          </div>
-                          <div className="border-t border-gray-100 pt-2 space-y-1 text-[10px] text-gray-400 font-mono">
-                            <div>CMYK: {data.brandKitGenerated.colors.primaryCmyk}</div>
-                            <div>PANTONE: {data.brandKitGenerated.colors.pantoneApprox.split("/")[0]}</div>
+                            <div>
+                              <span className="text-[9px] text-gray-400 block">ACCENT</span>
+                              <div className="flex items-center gap-1.5 mt-0.5">
+                                <div className="w-5 h-5 rounded border border-gray-200" style={{ backgroundColor: data.brandKitGenerated.colors.secondaryHex }} />
+                                <span className="text-xs font-mono font-bold text-gray-800">{data.brandKitGenerated.colors.secondaryHex}</span>
+                              </div>
+                            </div>
+                            <div className="border-t border-gray-100 pt-2 space-y-1 text-[9px] text-gray-400 font-mono">
+                              <div>RGB: {data.brandKitGenerated.colors.primaryRgb}</div>
+                              <div>CMYK: {data.brandKitGenerated.colors.primaryCmyk}</div>
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
                   )}
+
                 </div>
               )}
 
@@ -1899,35 +2301,39 @@ export default function OnboardingPage() {
               {/* Approved Banner */}
               {data.approvedMoodboard && (
                 <div
-                  className="relative overflow-hidden rounded-2xl p-5 border-2 border-[#06B6D4]/30"
+                  className="relative overflow-hidden rounded-2xl border-2 border-[#06B6D4]/30"
                   style={{ background: data.approvedMoodboard.gradient }}
                 >
-                  <div className="absolute inset-0 opacity-20" style={{ background: data.approvedMoodboard.accentGradient }} />
-                  <div className="relative z-10 flex items-center justify-between">
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                        <span className="text-[10px] font-black uppercase tracking-widest text-white/60">Visual Brain Locked In</span>
+                  {/* Approved image preview if generated */}
+                  {data.approvedMoodboard.generatedImageUrl && (
+                    <img
+                      src={data.approvedMoodboard.generatedImageUrl}
+                      alt={data.approvedMoodboard.name}
+                      className="w-full h-40 object-cover opacity-60"
+                    />
+                  )}
+                  <div className="relative z-10 p-5">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                          <span className="text-[10px] font-black uppercase tracking-widest text-white/60">Visual Brain Locked In</span>
+                        </div>
+                        <p className="text-white font-bold text-base">{data.approvedMoodboard.name}</p>
+                        <p className="text-white/70 text-[10px] mt-0.5">{data.approvedMoodboard.tagline}</p>
+                        <div className="flex gap-1.5 mt-2">
+                          {data.approvedMoodboard.palette.slice(0, 4).map((p) => (
+                            <div key={p.hex} className="w-5 h-5 rounded-full border-2 border-white/30 shadow-sm" style={{ backgroundColor: p.hex }} title={p.name} />
+                          ))}
+                        </div>
                       </div>
-                      <p className="text-white font-bold text-base">{data.approvedMoodboard.name}</p>
-                      <p className="text-white/70 text-[10px] mt-0.5">{data.approvedMoodboard.tagline}</p>
-                      <div className="flex gap-1.5 mt-2">
-                        {data.approvedMoodboard.palette.slice(0, 4).map((p) => (
-                          <div
-                            key={p.hex}
-                            className="w-5 h-5 rounded-full border-2 border-white/30 shadow-sm"
-                            style={{ backgroundColor: p.hex }}
-                            title={p.name}
-                          />
-                        ))}
-                      </div>
+                      <button
+                        onClick={() => updateData({ approvedMoodboard: null })}
+                        className="text-white/50 hover:text-white text-[10px] font-bold uppercase tracking-wider border border-white/20 px-3 py-1.5 rounded-lg transition-colors"
+                      >
+                        Change
+                      </button>
                     </div>
-                    <button
-                      onClick={() => updateData({ approvedMoodboard: null })}
-                      className="text-white/50 hover:text-white text-[10px] font-bold uppercase tracking-wider border border-white/20 px-3 py-1.5 rounded-lg transition-colors"
-                    >
-                      Change
-                    </button>
                   </div>
                 </div>
               )}
@@ -1936,40 +2342,38 @@ export default function OnboardingPage() {
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                 {MOODBOARD_STYLES.map((style) => {
                   const isApproved = data.approvedMoodboard?.id === style.id;
-                  const isGenerating = moodboardGenerating === style.id;
+                  const isGenerating = moodboardGeneratingId === style.id;
+                  const generatedImg = moodboardImages[style.id] || null;
                   return (
                     <div
                       key={style.id}
                       onMouseEnter={() => setHoveredMood(style.id)}
                       onMouseLeave={() => setHoveredMood(null)}
-                      className={`relative rounded-xl overflow-hidden cursor-pointer transition-all duration-300 group ${
+                      className={`relative rounded-xl overflow-hidden cursor-pointer transition-all duration-300 ${
                         isApproved
                           ? "ring-2 ring-[#06B6D4] ring-offset-2 scale-[1.02]"
                           : "hover:scale-[1.02] hover:shadow-lg"
                       }`}
                     >
-                      {/* Gradient Visual */}
-                      <div
-                        className="h-28 w-full relative"
-                        style={{ background: style.gradient }}
-                      >
-                        {/* Accent line at bottom */}
-                        <div
-                          className="absolute bottom-0 left-0 right-0 h-1"
-                          style={{ background: style.accentGradient }}
-                        />
+                      {/* Visual Area — generated image or gradient */}
+                      <div className="h-28 w-full relative overflow-hidden">
+                        {generatedImg ? (
+                          <img src={generatedImg} alt={style.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full" style={{ background: style.gradient }} />
+                        )}
 
-                        {/* Color swatches overlay */}
-                        <div className="absolute bottom-3 left-3 flex gap-1">
-                          {style.palette.map((p) => (
-                            <div
-                              key={p.hex}
-                              className="w-4 h-4 rounded-full border border-white/40 shadow-sm"
-                              style={{ backgroundColor: p.hex }}
-                              title={p.name}
-                            />
-                          ))}
-                        </div>
+                        {/* Accent line at bottom */}
+                        <div className="absolute bottom-0 left-0 right-0 h-1" style={{ background: style.accentGradient }} />
+
+                        {/* Color swatches */}
+                        {!generatedImg && (
+                          <div className="absolute bottom-3 left-3 flex gap-1">
+                            {style.palette.map((p) => (
+                              <div key={p.hex} className="w-4 h-4 rounded-full border border-white/40 shadow-sm" style={{ backgroundColor: p.hex }} title={p.name} />
+                            ))}
+                          </div>
+                        )}
 
                         {/* Approved check */}
                         {isApproved && (
@@ -1978,44 +2382,47 @@ export default function OnboardingPage() {
                           </div>
                         )}
 
-                        {/* Emoji badge */}
-                        <div className="absolute top-2 left-2 text-lg leading-none">{style.emoji}</div>
+                        {/* Generating spinner overlay */}
+                        {isGenerating && (
+                          <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center gap-2">
+                            <Loader2 className="w-5 h-5 text-[#06B6D4] animate-spin" />
+                            <span className="text-[9px] font-bold text-white">Generating...</span>
+                          </div>
+                        )}
 
                         {/* Hover overlay with actions */}
-                        <div className={`absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-2 transition-opacity duration-200 ${
-                          hoveredMood === style.id && !isApproved ? "opacity-100" : "opacity-0"
-                        }`}>
-                          <button
-                            onClick={() => approveMoodboard(style.id)}
-                            className="px-3 py-1.5 bg-[#06B6D4] text-white text-[10px] font-black uppercase tracking-wider rounded-lg shadow-lg hover:bg-[#06B6D4]/90 transition-colors"
-                          >
-                            ✓ Approve This
-                          </button>
-                          <button
-                            onClick={() => generateMoodboardPreview(style.id)}
-                            disabled={isGenerating}
-                            className="px-3 py-1 bg-white/10 border border-white/30 text-white text-[9px] font-bold uppercase tracking-wider rounded-lg hover:bg-white/20 transition-colors flex items-center gap-1"
-                          >
-                            {isGenerating ? (
-                              <><Loader2 className="w-2.5 h-2.5 animate-spin" /> Generating...</>
-                            ) : (
-                              <><Sparkles className="w-2.5 h-2.5" /> Preview with AI</>
+                        {!isGenerating && (
+                          <div className={`absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-2 transition-opacity duration-200 ${
+                            hoveredMood === style.id ? "opacity-100" : "opacity-0"
+                          }`}>
+                            <button
+                              onClick={() => approveMoodboard(style.id)}
+                              className="px-3 py-1.5 bg-[#06B6D4] text-white text-[10px] font-black uppercase tracking-wider rounded-lg shadow-lg hover:bg-[#06B6D4]/90 transition-colors"
+                            >
+                              {isApproved ? "✓ Approved" : "✓ Approve This"}
+                            </button>
+                            {!generatedImg && (
+                              <button
+                                onClick={() => generateMoodboardPreview(style.id)}
+                                disabled={moodboardGeneratingId !== null}
+                                className="px-3 py-1 bg-white/10 border border-white/30 text-white text-[9px] font-bold uppercase tracking-wider rounded-lg hover:bg-white/20 transition-colors flex items-center gap-1 disabled:opacity-50"
+                              >
+                                <Sparkles className="w-2.5 h-2.5" /> Generate AI Preview
+                              </button>
                             )}
-                          </button>
-                        </div>
+                          </div>
+                        )}
                       </div>
 
                       {/* Card Info */}
                       <div className="bg-white border border-gray-100 px-2.5 py-2">
                         <p className="text-[11px] font-bold text-gray-900 leading-tight">{style.name}</p>
                         <p className="text-[9px] text-gray-400 mt-0.5 leading-tight">{style.tagline}</p>
-                        <div className="flex flex-wrap gap-0.5 mt-1.5">
-                          {style.keywords.slice(0, 2).map((kw) => (
-                            <span key={kw} className="text-[8px] font-semibold text-gray-500 bg-gray-50 border border-gray-100 px-1.5 py-0.5 rounded-md">
-                              {kw}
-                            </span>
-                          ))}
-                        </div>
+                        {generatedImg && (
+                          <span className="text-[8px] font-bold text-emerald-600 flex items-center gap-0.5 mt-1">
+                            <CheckCircle2 className="w-2.5 h-2.5" /> AI Preview Ready
+                          </span>
+                        )}
                       </div>
                     </div>
                   );
@@ -2045,16 +2452,17 @@ export default function OnboardingPage() {
                 </div>
               )}
 
-              {/* Helper text */}
+              {/* Helper text when nothing selected */}
               {!data.approvedMoodboard && (
-                <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 flex items-start gap-3">
-                  <div className="w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center shrink-0 mt-0.5">
-                    <Eye className="w-3 h-3 text-amber-600" />
+                <div className="bg-[#06B6D4]/5 border border-[#06B6D4]/20 rounded-xl p-4 flex items-start gap-3">
+                  <div className="w-6 h-6 rounded-full bg-[#06B6D4]/10 flex items-center justify-center shrink-0 mt-0.5">
+                    <Eye className="w-3 h-3 text-[#06B6D4]" />
                   </div>
                   <div>
-                    <p className="text-[11px] font-bold text-amber-800">Hover a card to approve or preview with AI</p>
-                    <p className="text-[10px] text-amber-600 mt-0.5">
-                      When your Gemini API key is connected, clicking &ldquo;Preview with AI&rdquo; will generate a real branded moodboard image tailored to {data.brandName || "your brand"}.
+                    <p className="text-[11px] font-bold text-gray-800">Hover any card to approve or generate an AI preview</p>
+                    <p className="text-[10px] text-gray-500 mt-0.5">
+                      &ldquo;Generate AI Preview&rdquo; creates a real photorealistic moodboard image using fal.ai Flux — costs one generation credit.
+                      You can also approve any card directly without generating an image.
                     </p>
                   </div>
                 </div>
@@ -2108,7 +2516,7 @@ export default function OnboardingPage() {
                       <div className="space-y-2">
                         <div>
                           <span className="text-gray-400 block text-[9px]">PRIMARY LOGO MARK</span>
-                          <div className="h-10 w-32 bg-gray-900 rounded p-1 flex items-center justify-center mt-1" dangerouslySetInnerHTML={{ __html: data.brandKitGenerated.assets.primaryLogoSvg }} />
+                          <div className="h-10 w-32 bg-gray-900 rounded p-1 flex items-center justify-center mt-1" dangerouslySetInnerHTML={{ __html: data.brandKitGenerated.assets?.primaryLogoSvg || "" }} />
                         </div>
                         <div className="flex gap-2">
                           <div>
