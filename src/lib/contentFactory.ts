@@ -106,12 +106,25 @@ export async function generateContentForCalendarItem(calendarItemId: string): Pr
   // 1. Fetch calendar item details
   const { data: item, error: itemError } = await supabase
     .from("brand_calendar")
-    .select("*, campaign:campaign_id(*)")
+    .select("*")
     .eq("id", calendarItemId)
     .single();
 
   if (itemError || !item) {
     throw new Error(`Failed to fetch calendar item details: ${itemError?.message}`);
+  }
+
+  // Fetch campaign details in a separate query if campaign_id is present
+  let campaign = null;
+  if (item.campaign_id) {
+    const { data: campData, error: campError } = await supabase
+      .from("brand_campaigns")
+      .select("*")
+      .eq("id", item.campaign_id)
+      .single();
+    if (!campError && campData) {
+      campaign = campData;
+    }
   }
 
   // 2. Fetch Brand Memory
@@ -171,7 +184,7 @@ Post Title: ${item.title}
 Post Type: ${item.post_type}
 Post Concept Brief: ${item.concept_brief}
 Target CTA: ${item.cta || "Visit website"}
-Parent Campaign Details: ${item.campaign ? `${item.campaign.title} - Theme: ${item.campaign.theme}` : "None"}
+Parent Campaign Details: ${campaign ? `${campaign.title} - Theme: ${campaign.theme}` : "None"}
 
 --- BRAND IDENTITY MEMORY ---
 ${brandMemory.systemPromptInjection}
