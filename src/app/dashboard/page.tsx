@@ -8,7 +8,7 @@ import {
   CheckCircle2, ArrowUpRight, Cpu, Radio,
   Loader2, LogOut, ArrowRight, ShieldCheck,
   Tag, Compass, HelpCircle, Users, Eye, Flag,
-  Building, Image, FileText, Video,
+  Building, Image, FileText, Video, Plus,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 
@@ -64,7 +64,38 @@ export default function DashboardPage() {
   const [dna, setDna] = useState<BrandDna | null>(null);
   const [assets, setAssets] = useState<BrandAssets | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"control" | "dna">("control");
+  const [activeTab, setActiveTab] = useState<"control" | "dna" | "campaigns" | "mix">("control");
+
+  // Dynamic Lists for Strategy, Calendar & Mix
+  const [campaigns, setCampaigns] = useState<any[]>([]);
+  const [calendar, setCalendar] = useState<any[]>([]);
+  const [contentMix, setContentMix] = useState<any[]>([]);
+  
+  // Modal & Generation States
+  const [isCampaignModalOpen, setIsCampaignModalOpen] = useState(false);
+  const [campaignTitle, setCampaignTitle] = useState("");
+  const [campaignType, setCampaignType] = useState("Product Launch");
+  const [campaignDesc, setCampaignDesc] = useState("");
+  const [campaignPlatforms, setCampaignPlatforms] = useState<string[]>([]);
+  const [isSubmittingCampaign, setIsSubmittingCampaign] = useState(false);
+  const [viewingAsset, setViewingAsset] = useState<any | null>(null);
+  const [generatingAssetId, setGeneratingAssetId] = useState<string | null>(null);
+
+  // Helper to trigger refetches of dynamic tables
+  const reloadDynamicData = async (dnaId: string) => {
+    try {
+      const campaignsRes = await fetch(`/api/campaigns?brandDnaId=${dnaId}`);
+      if (campaignsRes.ok) setCampaigns(await campaignsRes.json());
+
+      const calendarRes = await fetch(`/api/strategy?brandDnaId=${dnaId}`);
+      if (calendarRes.ok) setCalendar(await calendarRes.json());
+
+      const mixRes = await fetch(`/api/content-mix?brandDnaId=${dnaId}`);
+      if (mixRes.ok) setContentMix(await mixRes.json());
+    } catch (err) {
+      console.error("Failed to reload strategy details", err);
+    }
+  };
 
   // Fetch latest DNA & Assets from Supabase
   useEffect(() => {
@@ -100,6 +131,9 @@ export default function DashboardPage() {
           } else if (assetsData) {
             setAssets(assetsData);
           }
+
+          // Trigger content and campaign fetches
+          await reloadDynamicData(dnaData.id);
         }
       } catch (err) {
         console.error("Initialization error:", err);
@@ -311,6 +345,30 @@ export default function DashboardPage() {
               >
                 <Layers className="w-3.5 h-3.5" />
                 <span>Brand DNA Details</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab("campaigns")}
+                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all text-left
+                  ${activeTab === "campaigns"
+                    ? "bg-brand-dark text-white shadow-sm"
+                    : "text-gray-500 hover:text-gray-800 hover:bg-gray-50"
+                  }`}
+              >
+                <Calendar className="w-3.5 h-3.5" />
+                <span>Campaigns & Calendar</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab("mix")}
+                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all text-left
+                  ${activeTab === "mix"
+                    ? "bg-brand-dark text-white shadow-sm"
+                    : "text-gray-500 hover:text-gray-800 hover:bg-gray-50"
+                  }`}
+              >
+                <Tag className="w-3.5 h-3.5" />
+                <span>Content Mix Plan</span>
               </button>
             </nav>
           </div>
@@ -923,7 +981,468 @@ export default function DashboardPage() {
             </div>
           )}
 
+          {/* Tab 3: Campaigns & Calendar (Phase 5 & 8) */}
+          {activeTab === "campaigns" && (
+            <div className="space-y-6">
+              
+              {/* Campaigns Panel Header */}
+              <div className="bg-white border border-gray-200/80 rounded-2xl p-5 shadow-[0_4px_20px_rgb(0,0,0,0.01)] flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-bold text-gray-900 flex items-center gap-1.5 uppercase tracking-wider">
+                    <Briefcase className="w-4 h-4 text-brand-primary" />
+                    AI Campaigns Planner
+                  </h3>
+                  <p className="text-[11px] text-gray-400 mt-0.5">Automated marketing strategy campaigns and content calendar grids.</p>
+                </div>
+                <button
+                  onClick={() => setIsCampaignModalOpen(true)}
+                  className="px-4 py-2 bg-brand-dark text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-brand-darkHover transition-all flex items-center gap-1.5"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  Plan New Campaign
+                </button>
+              </div>
+
+              {/* Campaigns list and stats */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                
+                {/* Active Campaigns Column */}
+                <div className="md:col-span-1 bg-white border border-gray-200/80 rounded-2xl p-5 space-y-4 shadow-[0_4px_20px_rgb(0,0,0,0.01)]">
+                  <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Active Campaigns ({campaigns.length})</h4>
+                  <div className="space-y-3 overflow-y-auto max-h-[400px] pr-1">
+                    {campaigns.length === 0 ? (
+                      <p className="text-gray-400 italic text-xs py-4 text-center">No campaigns planned yet. Click button to begin.</p>
+                    ) : (
+                      campaigns.map((camp) => (
+                        <div key={camp.id} className="p-3.5 bg-gray-50 border border-gray-150 rounded-xl space-y-2 hover:border-gray-300 transition-colors">
+                          <div className="flex justify-between items-start">
+                            <span className="text-[10px] font-black text-[#06B6D4] uppercase bg-[#06B6D4]/5 px-2 py-0.5 rounded border border-[#06B6D4]/10">{camp.platforms?.[0] || "Campaign"}</span>
+                            <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 text-[8px] px-1.5 py-0.5 rounded capitalize">{camp.status}</span>
+                          </div>
+                          <h5 className="font-bold text-gray-900 text-xs leading-snug">{camp.title}</h5>
+                          <p className="text-[10px] text-gray-500 leading-relaxed line-clamp-3">{camp.description}</p>
+                          {camp.theme && (
+                            <p className="text-[9px] text-[#C9A84C] font-semibold tracking-wide mt-1.5">Theme: {camp.theme}</p>
+                          )}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+
+                {/* Calendar Grid Column */}
+                <div className="md:col-span-2 bg-white border border-gray-200/80 rounded-2xl p-5 space-y-4 shadow-[0_4px_20px_rgb(0,0,0,0.01)] flex flex-col justify-between" style={{ minHeight: "450px" }}>
+                  <div>
+                    <div className="flex justify-between items-center border-b border-gray-100 pb-3 mb-2">
+                      <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Content Calendar Grid (30 Days)</h4>
+                      <span className="text-[10px] font-mono text-gray-400 font-bold">UTC Timeline Mode</span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 overflow-y-auto pr-1" style={{ maxHeight: "360px" }}>
+                      {calendar.length === 0 ? (
+                        <div className="sm:col-span-2 text-center py-12 space-y-3">
+                          <Loader2 className="w-6 h-6 text-brand-secondary animate-spin mx-auto" />
+                          <p className="text-gray-400 italic text-xs font-mono">Compiling strategy calendar timeline...</p>
+                        </div>
+                      ) : (
+                        calendar.map((item) => (
+                          <div key={item.id} className="p-3 bg-gray-50/50 border border-gray-200/80 rounded-xl space-y-2 hover:border-gray-300 transition-colors flex flex-col justify-between">
+                            <div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-[8px] font-mono font-bold text-gray-400">{item.date}</span>
+                                <span className={`text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded
+                                  ${item.post_type === "video" ? "bg-red-50 text-red-600 border border-red-100" :
+                                    item.post_type === "carousel" ? "bg-blue-50 text-blue-600 border border-blue-100" :
+                                    "bg-emerald-50 text-emerald-600 border border-emerald-100"}`}
+                                >
+                                  {item.post_type}
+                                </span>
+                              </div>
+                              <h5 className="font-bold text-gray-800 text-xs truncate mt-1">{item.title}</h5>
+                              <p className="text-[10px] text-gray-500 line-clamp-2 leading-relaxed">{item.concept_brief}</p>
+                            </div>
+
+                            <div className="border-t border-gray-100 pt-2 mt-2 flex items-center justify-between">
+                              {item.status === "completed" && item.post ? (
+                                <button
+                                  onClick={() => setViewingAsset(item.post)}
+                                  className="text-[9px] font-black text-brand-secondary uppercase hover:underline cursor-pointer flex items-center gap-1"
+                                >
+                                  View Assets
+                                </button>
+                              ) : (
+                                <button
+                                  disabled={generatingAssetId === item.id}
+                                  onClick={async () => {
+                                    setGeneratingAssetId(item.id);
+                                    try {
+                                      const res = await fetch("/api/content/generate", {
+                                        method: "POST",
+                                        headers: { "Content-Type": "application/json" },
+                                        body: JSON.stringify({ calendarItemId: item.id })
+                                      });
+                                      if (res.ok) {
+                                        await reloadDynamicData(dna.id);
+                                      } else {
+                                        alert("Generation failed");
+                                      }
+                                    } catch (e) {
+                                      console.error(e);
+                                    } finally {
+                                      setGeneratingAssetId(null);
+                                    }
+                                  }}
+                                  className="text-[9px] font-black text-brand-primary uppercase hover:underline disabled:opacity-50 flex items-center gap-1.5"
+                                >
+                                  {generatingAssetId === item.id ? (
+                                    <>
+                                      <Loader2 className="w-2.5 h-2.5 animate-spin" />
+                                      Generating...
+                                    </>
+                                  ) : (
+                                    "Generate with AI"
+                                  )}
+                                </button>
+                              )}
+                              <span className={`text-[8px] font-bold uppercase ${item.status === "completed" ? "text-emerald-500" : "text-amber-500"}`}>
+                                {item.status}
+                              </span>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+          )}
+
+          {/* Tab 4: Content Mix Configuration (Phase 7) */}
+          {activeTab === "mix" && (
+            <div className="space-y-6 animate-fade-up">
+              
+              {/* Header card */}
+              <div className="bg-white border border-gray-200/80 rounded-2xl p-5 shadow-[0_4px_20px_rgb(0,0,0,0.01)]">
+                <h3 className="text-sm font-bold text-gray-900 flex items-center gap-1.5 uppercase tracking-wider">
+                  <Tag className="w-4 h-4 text-brand-primary" />
+                  Content Mix Recommendations & Overrides
+                </h3>
+                <p className="text-[11px] text-gray-400 mt-0.5">Review AI optimal post ratios and override configurations manually to adjust targets.</p>
+              </div>
+
+              {/* Ratios grids */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {contentMix.length === 0 ? (
+                  <div className="sm:col-span-3 text-center py-12 bg-white border border-gray-200 rounded-2xl">
+                    <Loader2 className="w-6 h-6 text-brand-secondary animate-spin mx-auto" />
+                    <p className="text-gray-400 italic text-xs font-mono mt-2">Loading active content mix rules...</p>
+                  </div>
+                ) : (
+                  contentMix.map((mix, index) => (
+                    <div key={index} className="bg-white border border-gray-200/80 rounded-2xl p-5 shadow-[0_4px_20px_rgb(0,0,0,0.01)] flex flex-col justify-between space-y-4">
+                      <div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest font-mono">{mix.platform}</span>
+                          <span className="text-[9px] font-black uppercase text-brand-secondary bg-brand-secondary/5 px-2 py-0.5 rounded">{mix.postType}</span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4 mt-4 text-center">
+                          <div className="p-3 bg-gray-50 rounded-xl border border-gray-100">
+                            <span className="text-[8px] text-gray-400 block uppercase font-bold">AI Recommended</span>
+                            <span className="text-xl font-black text-gray-800">{mix.recommendedCount}</span>
+                          </div>
+                          <div className="p-3 bg-brand-primary/5 rounded-xl border border-brand-primary/10">
+                            <span className="text-[8px] text-brand-primary block uppercase font-bold">Active Target</span>
+                            <span className="text-xl font-black text-brand-primary">{mix.overrideCount}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Override controls */}
+                      <div className="flex items-center gap-2 border-t border-gray-100 pt-3">
+                        <button
+                          onClick={async () => {
+                            const newCount = Math.max(0, mix.overrideCount - 1);
+                            const updatedMix = contentMix.map((m, i) => i === index ? { ...m, overrideCount: newCount } : m);
+                            setContentMix(updatedMix);
+                            await fetch("/api/content-mix", {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({ brandDnaId: dna.id, action: "override", platform: mix.platform, postType: mix.postType, count: newCount })
+                            });
+                          }}
+                          className="w-8 h-8 rounded-lg bg-gray-50 border border-gray-200 hover:bg-gray-100 flex items-center justify-center font-bold text-gray-600 cursor-pointer animate-scale"
+                        >
+                          -
+                        </button>
+                        <span className="flex-1 text-center font-bold text-xs text-gray-800">{mix.overrideCount} posts</span>
+                        <button
+                          onClick={async () => {
+                            const newCount = mix.overrideCount + 1;
+                            const updatedMix = contentMix.map((m, i) => i === index ? { ...m, overrideCount: newCount } : m);
+                            setContentMix(updatedMix);
+                            await fetch("/api/content-mix", {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({ brandDnaId: dna.id, action: "override", platform: mix.platform, postType: mix.postType, count: newCount })
+                            });
+                          }}
+                          className="w-8 h-8 rounded-lg bg-gray-50 border border-gray-200 hover:bg-gray-100 flex items-center justify-center font-bold text-gray-600 cursor-pointer animate-scale"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+            </div>
+          )}
+
         </main>
+
+        {/* Campaign Planning Modal Overlay */}
+        {isCampaignModalOpen && (
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-white border border-gray-200 rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4">
+              <div>
+                <h3 className="text-base font-bold text-gray-900 flex items-center gap-1.5">
+                  <Sparkles className="w-5 h-5 text-brand-primary" />
+                  Plan Custom AI Campaign
+                </h3>
+                <p className="text-xs text-gray-400 mt-1">AI generates a detailed campaign and schedules 5 target post concepts.</p>
+              </div>
+
+              <div className="space-y-3 text-xs">
+                <div className="space-y-1">
+                  <label className="text-gray-500 font-bold block">Campaign Title</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Launching AI Scraper V2"
+                    value={campaignTitle}
+                    onChange={(e) => setCampaignTitle(e.target.value)}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-gray-800 outline-none focus:border-brand-primary"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-gray-500 font-bold block">Campaign Type</label>
+                  <select
+                    value={campaignType}
+                    onChange={(e) => setCampaignType(e.target.value)}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-gray-800 outline-none focus:border-brand-primary"
+                  >
+                    <option>Product Launch</option>
+                    <option>Sales & Promotion</option>
+                    <option>Educational</option>
+                    <option>Urgency/Awareness</option>
+                    <option>Hiring</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-gray-500 font-bold block">Campaign Brief / Description</label>
+                  <textarea
+                    rows={3}
+                    placeholder="Describe your campaign objectives, USPs to highlight..."
+                    value={campaignDesc}
+                    onChange={(e) => setCampaignDesc(e.target.value)}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-gray-800 outline-none focus:border-brand-primary resize-none"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-gray-500 font-bold block">Target Platforms</label>
+                  <div className="flex flex-wrap gap-2">
+                    {["instagram", "linkedin", "x", "youtube", "facebook"].map(platform => {
+                      const active = campaignPlatforms.includes(platform);
+                      return (
+                        <button
+                          key={platform}
+                          onClick={() => {
+                            if (active) {
+                              setCampaignPlatforms(campaignPlatforms.filter(p => p !== platform));
+                            } else {
+                              setCampaignPlatforms([...campaignPlatforms, platform]);
+                            }
+                          }}
+                          className={`px-3 py-1.5 rounded-lg border font-bold capitalize transition-all
+                            ${active ? "bg-brand-primary/10 border-brand-primary text-brand-primary" : "bg-gray-50 border-gray-200 text-gray-500"}`}
+                        >
+                          {platform}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-3 border-t border-gray-100 pt-4">
+                <button
+                  disabled={isSubmittingCampaign}
+                  onClick={() => setIsCampaignModalOpen(false)}
+                  className="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-500 hover:bg-gray-50 font-bold text-xs uppercase"
+                >
+                  Cancel
+                </button>
+                <button
+                  disabled={isSubmittingCampaign || !campaignTitle || !campaignDesc || campaignPlatforms.length === 0}
+                  onClick={async () => {
+                    setIsSubmittingCampaign(true);
+                    try {
+                      const res = await fetch("/api/campaigns", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          brandDnaId: dna.id,
+                          title: campaignTitle,
+                          campaignType,
+                          description: campaignDesc,
+                          platforms: campaignPlatforms
+                        })
+                      });
+                      if (res.ok) {
+                        setIsCampaignModalOpen(false);
+                        setCampaignTitle("");
+                        setCampaignDesc("");
+                        setCampaignPlatforms([]);
+                        await reloadDynamicData(dna.id);
+                      } else {
+                        alert("Failed to plan campaign");
+                      }
+                    } catch (e) {
+                      console.error(e);
+                    } finally {
+                      setIsSubmittingCampaign(false);
+                    }
+                  }}
+                  className="flex-1 py-2.5 rounded-xl bg-brand-dark hover:bg-brand-darkHover text-white font-bold text-xs uppercase tracking-wider disabled:opacity-50"
+                >
+                  {isSubmittingCampaign ? "AI Planning..." : "Generate Campaign"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Asset Viewer Modal Overlay */}
+        {viewingAsset && (
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-white border border-gray-200 rounded-3xl p-6 max-w-lg w-full shadow-2xl space-y-4 max-h-[85vh] overflow-y-auto">
+              <div className="flex justify-between items-center border-b border-gray-100 pb-3">
+                <div>
+                  <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest font-mono">Assets Preview</span>
+                  <h3 className="text-base font-bold text-gray-900 capitalize">{viewingAsset.post_type} Asset Details</h3>
+                </div>
+                <button
+                  onClick={() => setViewingAsset(null)}
+                  className="w-7 h-7 rounded-full bg-gray-50 border border-gray-200 hover:bg-gray-100 flex items-center justify-center font-bold text-gray-400 hover:text-gray-700 cursor-pointer"
+                >
+                  &times;
+                </button>
+              </div>
+
+              <div className="space-y-4 text-xs">
+                
+                {/* Copy Caption */}
+                <div className="space-y-1">
+                  <label className="text-gray-400 font-bold uppercase tracking-wider text-[9px] block">Social Caption</label>
+                  <div className="p-3 bg-gray-50 border border-gray-150 rounded-xl font-sans text-gray-700 leading-relaxed whitespace-pre-wrap">
+                    {viewingAsset.caption}
+                  </div>
+                </div>
+
+                {/* Hooks & CTAs */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-gray-400 font-bold uppercase tracking-wider text-[9px] block">Alternative Hook Idea</label>
+                    <div className="p-2.5 bg-gray-50 border border-gray-150 rounded-xl text-gray-600 font-medium leading-relaxed italic">
+                      {viewingAsset.hooks?.[0] || "None generated"}
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-gray-400 font-bold uppercase tracking-wider text-[9px] block">Primary CTA</label>
+                    <div className="p-2.5 bg-gray-50 border border-gray-150 rounded-xl text-[#06B6D4] font-bold">
+                      {viewingAsset.ctas?.[0] || "None generated"}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Visual Prompt (for Static/Images or Reels B-rolls) */}
+                <div className="space-y-1">
+                  <label className="text-gray-400 font-bold uppercase tracking-wider text-[9px] block">AI Visual Prompt (Stable Diffusion / LongCat)</label>
+                  <div className="p-3 bg-gray-50 border border-gray-150 rounded-xl font-mono text-[10px] text-slate-600 leading-normal">
+                    {viewingAsset.visual_prompt}
+                  </div>
+                </div>
+
+                {/* Format Specific Details (e.g. Slides JSON or Video Script timings) */}
+                {viewingAsset.post_type === "carousel" && viewingAsset.generated_assets?.slides && (
+                  <div className="space-y-2">
+                    <label className="text-gray-400 font-bold uppercase tracking-wider text-[9px] block">Slides Blueprint ({viewingAsset.generated_assets.slides.length})</label>
+                    <div className="space-y-2">
+                      {viewingAsset.generated_assets.slides.map((slide: any, idx: number) => (
+                        <div key={idx} className="p-3 bg-[#111] border border-white/10 rounded-xl space-y-1 text-white">
+                          <span className="text-[8px] font-black text-[#C9A84C] uppercase tracking-wider font-mono">Slide {slide.slideNumber}</span>
+                          <h4 className="font-bold text-xs text-white">{slide.headline}</h4>
+                          <p className="text-[10px] text-gray-300 leading-normal">{slide.bodyText}</p>
+                          <p className="text-[8px] text-gray-500 italic mt-1">Graphic: {slide.visualDescription}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {viewingAsset.post_type === "video" && viewingAsset.generated_assets?.script && (
+                  <div className="space-y-3">
+                    <div className="space-y-1">
+                      <label className="text-gray-400 font-bold uppercase tracking-wider text-[9px] block">Voiceover Script</label>
+                      <div className="p-2.5 bg-gray-50 border border-gray-150 rounded-xl text-gray-700 italic">
+                        &ldquo;{viewingAsset.generated_assets.script.voiceover}&rdquo;
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-gray-400 font-bold uppercase tracking-wider text-[9px] block">Subtitle Timings</label>
+                      <div className="grid grid-cols-1 gap-1">
+                        {viewingAsset.generated_assets.script.timings?.map((t: any, idx: number) => (
+                          <div key={idx} className="flex justify-between items-center p-2 bg-gray-50 border border-gray-150 rounded-lg">
+                            <span className="font-mono text-[9px] text-[#06B6D4] font-bold shrink-0">{t.time}</span>
+                            <span className="text-gray-600 font-medium text-right ml-4 truncate">{t.subtitles}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Hashtags */}
+                <div className="space-y-1">
+                  <label className="text-gray-400 font-bold uppercase tracking-wider text-[9px] block">Hashtags</label>
+                  <div className="flex flex-wrap gap-1">
+                    {viewingAsset.hashtags?.map((tag: string) => (
+                      <span key={tag} className="px-2 py-0.5 rounded bg-gray-100 border border-gray-200 text-gray-500 font-mono text-[9px] font-semibold">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+              </div>
+
+              <div className="border-t border-gray-100 pt-3 flex">
+                <button
+                  onClick={() => setViewingAsset(null)}
+                  className="flex-1 py-2.5 rounded-xl bg-brand-dark hover:bg-brand-darkHover text-white font-bold text-xs uppercase"
+                >
+                  Close Asset Preview
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
       </div>
 

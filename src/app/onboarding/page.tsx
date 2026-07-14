@@ -782,6 +782,22 @@ export default function OnboardingPage() {
         return;
       }
 
+      // TRANSACTION STEP 3: Auto-trigger initial 30-day strategy & content-mix recommendations
+      try {
+        await fetch("/api/strategy", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ brandDnaId: dnaResult.id })
+        });
+        await fetch("/api/content-mix", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ brandDnaId: dnaResult.id, action: "generate" })
+        });
+      } catch (err) {
+        console.error("Failed to compile initial marketing strategy:", err);
+      }
+
       localStorage.removeItem("automarc_onboarding_v4");
       router.push("/dashboard");
     } catch (e) {
