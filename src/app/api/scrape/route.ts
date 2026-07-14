@@ -24,8 +24,27 @@ export async function POST(req: Request) {
       next: { revalidate: 0 } // Disable caching to fetch fresh site copy
     });
 
+    const emptyFallback = (urlStr: string) => ({
+      brandName: "",
+      website: urlStr,
+      industry: "Technology",
+      category: "",
+      subCategory: "",
+      businessDescription: "",
+      mission: "",
+      vision: "",
+      usp: "",
+      brandValues: [],
+      products: [],
+      services: [],
+      customerPersonas: "",
+      competitors: [],
+      warning: "Website scraping was blocked. Please enter brand details manually."
+    });
+
     if (!response.ok) {
-      return NextResponse.json({ error: `Failed to fetch website contents (HTTP ${response.status})` }, { status: 500 });
+      console.warn(`Scrape request blocked (HTTP ${response.status}). Returning manual entry fallback.`);
+      return NextResponse.json(emptyFallback(targetUrl));
     }
 
     const html = await response.text();
@@ -104,6 +123,25 @@ ${cleanText}
 
   } catch (error: any) {
     console.error("Scraping handler error:", error);
-    return NextResponse.json({ error: error.message || "Failed to process website data" }, { status: 500 });
+    
+    // Fallback template builder in case parameters are missing or failed
+    const finalFallback = {
+      brandName: "",
+      website: "",
+      industry: "Technology",
+      category: "",
+      subCategory: "",
+      businessDescription: "",
+      mission: "",
+      vision: "",
+      usp: "",
+      brandValues: [],
+      products: [],
+      services: [],
+      customerPersonas: "",
+      competitors: [],
+      warning: "Could not scrape the website. Please enter details manually."
+    };
+    return NextResponse.json(finalFallback);
   }
 }
