@@ -91,12 +91,15 @@ ${cleanText}
 
     const resJson = await geminiResponse.json();
     const responseText = resJson.candidates?.[0]?.content?.parts?.[0]?.text;
-    
     if (!responseText) {
       throw new Error("Empty response from AI parser");
     }
+    let jsonText = responseText.trim();
+    if (jsonText.startsWith("```")) {
+      jsonText = jsonText.replace(/^```[a-zA-Z]*\s*/, "").replace(/\s*```$/, "").trim();
+    }
 
-    const brandData = JSON.parse(responseText.trim());
+    const brandData = JSON.parse(jsonText);
     return NextResponse.json(brandData);
 
   } catch (error: any) {
