@@ -79,7 +79,43 @@ export default function DashboardPage() {
   const [campaignPlatforms, setCampaignPlatforms] = useState<string[]>([]);
   const [isSubmittingCampaign, setIsSubmittingCampaign] = useState(false);
   const [viewingAsset, setViewingAsset] = useState<any | null>(null);
+  const [activeSlide, setActiveSlide] = useState<number>(0);
+  const [isVideoPlaying, setIsVideoPlaying] = useState<boolean>(false);
   const [generatingAssetId, setGeneratingAssetId] = useState<string | null>(null);
+  const [videoTimer, setVideoTimer] = useState<number>(0);
+
+  useEffect(() => {
+    let interval: any = null;
+    if (isVideoPlaying) {
+      interval = setInterval(() => {
+        setVideoTimer((prev) => {
+          if (prev >= 30) return 0;
+          return prev + 1;
+        });
+      }, 1000);
+    } else {
+      setVideoTimer(0);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isVideoPlaying]);
+
+  const getActiveSubtitleText = () => {
+    if (!viewingAsset || viewingAsset.post_type !== "video") return "";
+    const timings = viewingAsset.generated_assets?.script?.timings || [];
+    if (timings.length === 0) return "";
+    const active = timings.find((t: any) => {
+      const match = t.time.match(/(\d+)s\s*-\s*(\d+)s/);
+      if (match) {
+        const start = parseInt(match[1]);
+        const end = parseInt(match[2]);
+        return videoTimer >= start && videoTimer <= end;
+      }
+      return false;
+    });
+    return active ? active.subtitles : timings[0]?.subtitles || "";
+  };
 
   // Helper to trigger refetches of dynamic tables
   const reloadDynamicData = async (dnaId: string) => {
@@ -1065,7 +1101,12 @@ export default function DashboardPage() {
                             <div className="border-t border-gray-100 pt-2 mt-2 flex items-center justify-between">
                               {item.status === "completed" && item.post ? (
                                 <button
-                                  onClick={() => setViewingAsset(item.post)}
+                                  onClick={() => {
+                                    setViewingAsset(item.post);
+                                    setActiveSlide(0);
+                                    setIsVideoPlaying(false);
+                                    setVideoTimer(0);
+                                  }}
                                   className="text-[9px] font-black text-brand-secondary uppercase hover:underline cursor-pointer flex items-center gap-1"
                                 >
                                   View Assets
@@ -1372,16 +1413,192 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Live Media Asset Render */}
-                {(viewingAsset.generated_assets?.imageUrl || viewingAsset.generated_assets?.coverUrl || viewingAsset.generated_assets?.thumbnailUrl) && (
-                  <div className="space-y-1">
-                    <label className="text-gray-400 font-bold uppercase tracking-wider text-[9px] block">Generated Media Asset</label>
-                    <div className="relative aspect-video w-full rounded-2xl overflow-hidden border border-gray-250 bg-slate-900 flex items-center justify-center">
-                      <img
-                        src={viewingAsset.generated_assets.imageUrl || viewingAsset.generated_assets.coverUrl || viewingAsset.generated_assets.thumbnailUrl}
-                        alt="AI Generated Content"
-                        className="w-full h-full object-contain"
-                      />
-                    </div>
+                {viewingAsset.generated_assets && (
+                  <div className="space-y-4">
+                    {/* Format 1: Static Post Preview */}
+                    {viewingAsset.post_type === "static" && viewingAsset.generated_assets.imageUrl && (
+                      <div className="space-y-1">
+                        <label className="text-gray-400 font-bold uppercase tracking-wider text-[9px] block">Static Feed Post Preview</label>
+                        <div className="relative aspect-square w-full rounded-2xl overflow-hidden border border-gray-200 bg-slate-900 shadow-inner">
+                          {/* Base Image */}
+                          <img
+                            src={viewingAsset.generated_assets.imageUrl}
+                            alt="AI Background"
+                            className="w-full h-full object-cover opacity-75"
+                          />
+                          {/* Sleek Overlay Branding */}
+                          <div className="absolute inset-0 p-5 flex flex-col justify-between bg-gradient-to-t from-black/80 via-transparent to-black/40">
+                            {/* Header */}
+                            <div className="flex items-center space-x-2">
+                              <div className="w-8 h-8 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center font-bold text-white text-xs">
+                                {dna?.brand_name?.[0] || "A"}
+                              </div>
+                              <div>
+                                <h4 className="font-bold text-white text-xs font-sans tracking-wide leading-none">{dna?.brand_name || "Asenra"}</h4>
+                                <span className="text-[8px] text-gray-300 font-medium font-sans">Sponsored</span>
+                              </div>
+                            </div>
+                            {/* Overlay Content Card */}
+                            <div className="bg-white/10 backdrop-blur-lg border border-white/25 p-4 rounded-xl space-y-1.5 shadow-xl">
+                              <h4 className="font-bold text-white text-sm font-sans tracking-wide leading-tight">
+                                {viewingAsset.title}
+                              </h4>
+                              <p className="text-[10px] text-gray-200 font-medium leading-relaxed line-clamp-3">
+                                {viewingAsset.caption}
+                              </p>
+                              <div className="pt-2 flex justify-between items-center border-t border-white/10">
+                                <span className="text-[9px] text-[#C9A84C] font-bold tracking-wider uppercase font-mono">{viewingAsset.ctas?.[0] || "Learn More"}</span>
+                                <div className="px-3 py-1 bg-white text-black font-bold text-[9px] rounded-lg shadow-sm hover:scale-105 transition-transform uppercase tracking-wider">
+                                  {viewingAsset.ctas?.[0] || "Learn More"}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Format 2: Carousel Post Slider */}
+                    {viewingAsset.post_type === "carousel" && viewingAsset.generated_assets.slides && (
+                      <div className="space-y-1">
+                        <label className="text-gray-400 font-bold uppercase tracking-wider text-[9px] block">Interactive Carousel Post Preview</label>
+                        <div className="relative aspect-square w-full rounded-2xl overflow-hidden border border-gray-200 bg-slate-950 shadow-2xl flex flex-col justify-between p-5">
+                          {/* Background image */}
+                          <img
+                            src={viewingAsset.generated_assets.coverUrl || viewingAsset.generated_assets.imageUrl || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=60"}
+                            alt="Background Texture"
+                            className="absolute inset-0 w-full h-full object-cover opacity-35 pointer-events-none"
+                          />
+                          
+                          {/* Gradient Backdrop */}
+                          <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/70 pointer-events-none" />
+
+                          {/* Header */}
+                          <div className="relative flex justify-between items-center">
+                            <div className="flex items-center space-x-2">
+                              <div className="w-7 h-7 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center font-bold text-white text-[10px]">
+                                {dna?.brand_name?.[0] || "A"}
+                              </div>
+                              <span className="text-[10px] font-bold text-white tracking-wider">{dna?.brand_name || "Asenra"}</span>
+                            </div>
+                            <span className="text-[9px] font-mono bg-white/10 backdrop-blur-md px-2 py-0.5 rounded-full text-white/90 border border-white/10">
+                              {activeSlide + 1} / {viewingAsset.generated_assets.slides.length}
+                            </span>
+                          </div>
+
+                          {/* Animated Slide Content Overlay */}
+                          <div className="relative my-auto py-4 px-2 space-y-3">
+                            <span className="text-[8px] font-black text-[#C9A84C] tracking-widest uppercase font-mono bg-[#C9A84C]/10 border border-[#C9A84C]/25 px-2.5 py-0.5 rounded-full inline-block">
+                              Slide {viewingAsset.generated_assets.slides[activeSlide]?.slideNumber || (activeSlide + 1)}
+                            </span>
+                            <h3 className="text-base font-black text-white leading-tight font-sans tracking-wide">
+                              {viewingAsset.generated_assets.slides[activeSlide]?.headline || "Slide Title"}
+                            </h3>
+                            <p className="text-[10px] text-gray-300 leading-relaxed font-sans font-medium">
+                              {viewingAsset.generated_assets.slides[activeSlide]?.bodyText || "Slide Body Text..."}
+                            </p>
+                          </div>
+
+                          {/* Footer & Navigation Controls */}
+                          <div className="relative flex justify-between items-center border-t border-white/10 pt-3">
+                            <span className="text-[8px] text-[#C9A84C] font-bold uppercase tracking-wider font-mono">Swipe to read</span>
+                            <div className="flex space-x-2">
+                              <button
+                                disabled={activeSlide === 0}
+                                onClick={() => setActiveSlide(prev => Math.max(0, prev - 1))}
+                                className="w-7 h-7 rounded-full bg-white/10 border border-white/10 hover:bg-white/20 text-white flex items-center justify-center font-bold text-xs cursor-pointer disabled:opacity-30 disabled:pointer-events-none transition-all"
+                              >
+                                &larr;
+                              </button>
+                              <button
+                                disabled={activeSlide === viewingAsset.generated_assets.slides.length - 1}
+                                onClick={() => setActiveSlide(prev => Math.min(viewingAsset.generated_assets.slides.length - 1, prev + 1))}
+                                className="w-7 h-7 rounded-full bg-[#C9A84C] hover:bg-[#e0bc58] text-black flex items-center justify-center font-bold text-xs cursor-pointer disabled:opacity-30 disabled:pointer-events-none transition-all"
+                              >
+                                &rarr;
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Format 3: Video Reels Preview */}
+                    {viewingAsset.post_type === "video" && (
+                      <div className="space-y-1">
+                        <label className="text-gray-400 font-bold uppercase tracking-wider text-[9px] block">Video Reels Mock Player</label>
+                        <div className="relative aspect-[9/16] w-full max-w-[280px] mx-auto rounded-3xl overflow-hidden border-4 border-slate-800 bg-black shadow-2xl flex flex-col justify-between p-4">
+                          {/* Background B-roll thumbnail */}
+                          <img
+                            src={viewingAsset.generated_assets.thumbnailUrl || viewingAsset.generated_assets.imageUrl || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=60"}
+                            alt="B-roll Background"
+                            className="absolute inset-0 w-full h-full object-cover opacity-65 pointer-events-none"
+                          />
+
+                          {/* Header overlay */}
+                          <div className="relative flex items-center justify-between text-white text-[10px]">
+                            <span className="font-bold tracking-wider font-sans">Reels</span>
+                            <div className="flex items-center space-x-1.5">
+                              <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-ping" />
+                              <span className="text-[9px] uppercase font-mono tracking-wider font-bold">Preview</span>
+                            </div>
+                          </div>
+
+                          {/* Play overlay / Dynamic subtitle container */}
+                          <div className="relative flex flex-col items-center justify-center my-auto space-y-4 min-h-[120px] w-full">
+                            {!isVideoPlaying ? (
+                              <button
+                                onClick={() => setIsVideoPlaying(true)}
+                                className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md border border-white/40 flex items-center justify-center text-white text-lg hover:scale-110 active:scale-95 transition-all shadow-xl cursor-pointer"
+                              >
+                                &#9654;
+                              </button>
+                            ) : (
+                              <div 
+                                onClick={() => setIsVideoPlaying(false)}
+                                className="absolute inset-0 flex items-center justify-center cursor-pointer"
+                              />
+                            )}
+
+                            {/* Captions Subtitles Overlay */}
+                            {isVideoPlaying && (
+                              <div className="bg-black/75 backdrop-blur-md border border-white/10 px-4 py-3 rounded-2xl max-w-[90%] text-center animate-fade-in shadow-2xl pointer-events-none">
+                                <p className="text-white text-xs font-bold leading-normal tracking-wide font-sans">
+                                  {getActiveSubtitleText()}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Footer Info Overlay */}
+                          <div className="relative space-y-2 text-white">
+                            {/* Brand bar */}
+                            <div className="flex items-center space-x-2">
+                              <div className="w-6 h-6 rounded-full bg-white/10 border border-white/20 flex items-center justify-center font-bold text-[9px]">
+                                {dna?.brand_name?.[0] || "A"}
+                              </div>
+                              <span className="text-[9px] font-bold tracking-wide">{dna?.brand_name || "Asenra"}</span>
+                              <button className="px-2 py-0.5 bg-white/25 rounded-md text-[8px] font-bold uppercase tracking-wider">Follow</button>
+                            </div>
+                            {/* Audio track label */}
+                            <p className="text-[8px] text-gray-300 flex items-center space-x-1 truncate font-mono">
+                              <span>&#9835;</span> <span>Original Audio - {dna?.brand_name || "Asenra"}</span>
+                            </p>
+                            {/* Interactive timeline bar */}
+                            <div className="h-1 bg-white/25 rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-[#C9A84C] transition-all duration-1000 ease-linear"
+                                style={{ width: `${(videoTimer / 30) * 100}%` }}
+                              />
+                            </div>
+                            <div className="flex justify-between items-center text-[7px] text-gray-400 font-mono">
+                              <span>0:{videoTimer < 10 ? `0${videoTimer}` : videoTimer}</span>
+                              <span>0:30</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
