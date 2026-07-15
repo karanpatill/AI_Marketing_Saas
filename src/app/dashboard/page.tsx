@@ -64,7 +64,32 @@ export default function DashboardPage() {
   const [dna, setDna] = useState<BrandDna | null>(null);
   const [assets, setAssets] = useState<BrandAssets | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"control" | "dna" | "campaigns" | "mix">("control");
+  const [activeTab, setActiveTab] = useState<"control" | "dna" | "campaigns" | "mix" | "studio" | "carousel" | "video">("control");
+
+  // Post Generator Studio States
+  const [postPrompt, setPostPrompt] = useState("");
+  const [postAspectRatio, setPostAspectRatio] = useState("square");
+  const [isGeneratingPost, setIsGeneratingPost] = useState(false);
+  const [generatedPostImage, setGeneratedPostImage] = useState<string | null>(null);
+  const [generatedPostPrompt, setGeneratedPostPrompt] = useState<string | null>(null);
+  const [postError, setPostError] = useState<string | null>(null);
+
+  // Carousel Generator Studio States
+  const [carouselPrompt, setCarouselPrompt] = useState("");
+  const [isGeneratingCarousel, setIsGeneratingCarousel] = useState(false);
+  const [generatedCarouselImage, setGeneratedCarouselImage] = useState<string | null>(null);
+  const [generatedCarouselPrompt, setGeneratedCarouselPrompt] = useState<string | null>(null);
+  const [carouselSlides, setCarouselSlides] = useState<any[]>([]);
+  const [carouselError, setCarouselError] = useState<string | null>(null);
+
+  // Video Generator Studio States
+  const [videoPrompt, setVideoPrompt] = useState("");
+  const [videoDuration, setVideoDuration] = useState("10s");
+  const [isGeneratingVideo, setIsGeneratingVideo] = useState(false);
+  const [videoQueueStatus, setVideoQueueStatus] = useState<string | null>(null);
+  const [generatedVideoUrl, setGeneratedVideoUrl] = useState<string | null>(null);
+  const [generatedVideoPrompt, setGeneratedVideoPrompt] = useState<string | null>(null);
+  const [videoError, setVideoError] = useState<string | null>(null);
 
   // Dynamic Lists for Strategy, Calendar & Mix
   const [campaigns, setCampaigns] = useState<any[]>([]);
@@ -133,18 +158,287 @@ export default function DashboardPage() {
     }
   };
 
+  const handleGeneratePost = async () => {
+    if (!postPrompt.trim()) return;
+    setIsGeneratingPost(true);
+    setPostError(null);
+    setGeneratedPostImage(null);
+    setGeneratedPostPrompt(null);
+
+    const activeColors = assets?.logo_studio_data?.colors || {
+      primaryHex: "#0D0D0D",
+      secondaryHex: "#C9A84C"
+    };
+
+    try {
+      const res = await fetch("/api/generate-post", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt: postPrompt,
+          aspectRatio: postAspectRatio,
+          brandName: dna?.brand_name,
+          industry: dna?.industry,
+          businessDescription: dna?.business_description,
+          brandPersonality: dna?.brand_personality,
+          brandValues: dna?.brand_values,
+          usp: dna?.usp,
+          primaryColor: activeColors.primaryHex,
+          secondaryColor: activeColors.secondaryHex,
+          approvedMoodboard: dna?.approved_moodboard,
+          website: dna?.website,
+          category: dna?.category,
+          subCategory: dna?.sub_category,
+          mission: dna?.mission,
+          vision: dna?.vision,
+          products: dna?.products,
+          services: dna?.services,
+          targetAudience: dna?.target_audience,
+          customerPersonas: dna?.customer_personas,
+          competitors: dna?.competitors,
+          logoUrl: assets?.logo_url,
+        }),
+      });
+
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(errText || `Server returned ${res.status}`);
+      }
+
+      const result = await res.json();
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      setGeneratedPostImage(result.imageUrl);
+      setGeneratedPostPrompt(result.fluxPrompt);
+    } catch (e: any) {
+      console.error("Post generation error:", e);
+      setPostError(e.message || "Failed to generate post image.");
+    } finally {
+      setIsGeneratingPost(false);
+    }
+  };
+
+  const handleGenerateCarousel = async () => {
+    if (!carouselPrompt.trim()) return;
+    setIsGeneratingCarousel(true);
+    setCarouselError(null);
+    setGeneratedCarouselImage(null);
+    setGeneratedCarouselPrompt(null);
+    setCarouselSlides([]);
+
+    const activeColors = assets?.logo_studio_data?.colors || {
+      primaryHex: "#0D0D0D",
+      secondaryHex: "#C9A84C"
+    };
+
+    try {
+      const res = await fetch("/api/generate-carousel", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt: carouselPrompt,
+          brandName: dna?.brand_name,
+          industry: dna?.industry,
+          businessDescription: dna?.business_description,
+          brandPersonality: dna?.brand_personality,
+          brandValues: dna?.brand_values,
+          usp: dna?.usp,
+          primaryColor: activeColors.primaryHex,
+          secondaryColor: activeColors.secondaryHex,
+          approvedMoodboard: dna?.approved_moodboard,
+          website: dna?.website,
+          category: dna?.category,
+          subCategory: dna?.sub_category,
+          mission: dna?.mission,
+          vision: dna?.vision,
+          products: dna?.products,
+          services: dna?.services,
+          targetAudience: dna?.target_audience,
+          customerPersonas: dna?.customer_personas,
+          competitors: dna?.competitors,
+          logoUrl: assets?.logo_url,
+        }),
+      });
+
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(errText || `Server returned ${res.status}`);
+      }
+
+      const result = await res.json();
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      setGeneratedCarouselImage(result.imageUrl);
+      setGeneratedCarouselPrompt(result.fluxPrompt);
+      setCarouselSlides(result.slides || []);
+    } catch (e: any) {
+      console.error("Carousel generation error:", e);
+      setCarouselError(e.message || "Failed to generate carousel slides.");
+    } finally {
+      setIsGeneratingCarousel(false);
+    }
+  };
+
+  const handleGenerateVideo = async () => {
+    if (!videoPrompt.trim()) return;
+    setIsGeneratingVideo(true);
+    setVideoError(null);
+    setGeneratedVideoUrl(null);
+    setGeneratedVideoPrompt(null);
+    setVideoQueueStatus("Initiating video creative direction...");
+
+    const activeColors = assets?.logo_studio_data?.colors || {
+      primaryHex: "#0D0D0D",
+      secondaryHex: "#C9A84C"
+    };
+
+    try {
+      // 1. Submit to queue
+      const res = await fetch("/api/generate-video", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt: videoPrompt,
+          duration: videoDuration,
+          brandName: dna?.brand_name,
+          industry: dna?.industry,
+          businessDescription: dna?.business_description,
+          brandPersonality: dna?.brand_personality,
+          brandValues: dna?.brand_values,
+          usp: dna?.usp,
+          primaryColor: activeColors.primaryHex,
+          secondaryColor: activeColors.secondaryHex,
+          approvedMoodboard: dna?.approved_moodboard,
+          website: dna?.website,
+          category: dna?.category,
+          subCategory: dna?.sub_category,
+          mission: dna?.mission,
+          vision: dna?.vision,
+          products: dna?.products,
+          services: dna?.services,
+          targetAudience: dna?.target_audience,
+          customerPersonas: dna?.customer_personas,
+          competitors: dna?.competitors,
+          logoUrl: assets?.logo_url,
+        }),
+      });
+
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(errText || `Server returned ${res.status}`);
+      }
+
+      const submission = await res.json();
+      if (submission.error) {
+        throw new Error(submission.error);
+      }
+
+      const { requestId, videoPrompt: finalPrompt } = submission;
+      setGeneratedVideoPrompt(finalPrompt);
+      setVideoQueueStatus("Added to Meituan LongCat Queue...");
+
+      // 2. Poll status
+      let attempts = 0;
+      const maxAttempts = 120; // Up to 7 minutes
+      const delayMs = 3500;
+
+      while (attempts < maxAttempts) {
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+        
+        try {
+          const statusRes = await fetch("/api/generate-video", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ requestId }),
+          });
+          if (!statusRes.ok) {
+            console.warn(`Transient status check fail (code ${statusRes.status}). Retrying...`);
+            attempts++;
+            continue;
+          }
+
+          const statusData = await statusRes.json();
+          if (statusData.error) {
+            throw new Error(statusData.error.message || "Video generation failed in queue.");
+          }
+
+          const currentStatus = statusData.status;
+          console.log(`LongCat video queue check: ${currentStatus}`);
+
+          if (currentStatus === "COMPLETED") {
+            if (!statusData.videoUrl) {
+              throw new Error("No output video URL was returned from finished request.");
+            }
+            setGeneratedVideoUrl(statusData.videoUrl);
+            setVideoQueueStatus(null);
+            break;
+          } else if (currentStatus === "FAILED") {
+            throw new Error("Video generation processing failed on Fal AI.");
+          } else if (currentStatus === "IN_PROGRESS") {
+            setVideoQueueStatus("Generating frames (Meituan LongCat)...");
+            // Reset attempts so we never time out as long as the GPU is actively rendering
+            attempts = 0;
+          } else {
+            setVideoQueueStatus(`Queue status: ${currentStatus || "IN_QUEUE"}`);
+            attempts++;
+          }
+        } catch (pollErr: any) {
+          console.warn("Transient poll error:", pollErr.message);
+          if (pollErr.message.includes("failed on Fal AI") || pollErr.message.includes("No output video URL")) {
+            throw pollErr;
+          }
+          // Continue polling on transient connection issues
+          attempts++;
+        }
+      }
+
+      if (attempts >= maxAttempts) {
+        throw new Error("Video generation timed out. Please try again.");
+      }
+
+    } catch (e: any) {
+      console.error("Video generation error:", e);
+      setVideoError(e.message || "Failed to generate video.");
+      setVideoQueueStatus(null);
+    } finally {
+      setIsGeneratingVideo(false);
+    }
+  };
+
   // Fetch latest DNA & Assets from Supabase
   useEffect(() => {
     async function fetchWorkspaceData() {
       try {
         const { supabase } = await import("@/lib/supabase");
         
-        const { data: dnaData, error: dnaError } = await supabase
-          .from("brand_dna")
-          .select("*")
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle();
+        const params = new URLSearchParams(window.location.search);
+        const queryId = params.get("id") || params.get("brandDnaId");
+
+        let dnaData = null;
+        let dnaError = null;
+
+        if (queryId) {
+          const res = await supabase
+            .from("brand_dna")
+            .select("*")
+            .eq("id", queryId)
+            .maybeSingle();
+          dnaData = res.data;
+          dnaError = res.error;
+        } else {
+          const res = await supabase
+            .from("brand_dna")
+            .select("*")
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          dnaData = res.data;
+          dnaError = res.error;
+        }
 
         if (dnaError) {
           console.error("Error fetching brand DNA:", dnaError);
@@ -226,14 +520,29 @@ export default function DashboardPage() {
     }
   }
 
+  // --- Resolve Style Concept Presets ---
+  const styleId = moodboard?.id || "";
+  const styleName = moodboard?.name || "";
+  
+  const isDarkPremium = styleId === "option_1" || styleName.toLowerCase().includes("dark") || styleName.toLowerCase().includes("luxury");
+  const isCleanMinimal = styleId === "option_2" || styleName.toLowerCase().includes("minimal") || styleName.toLowerCase().includes("clean");
+  const isVibrantDigital = styleId === "option_3" || styleName.toLowerCase().includes("vibrant") || styleName.toLowerCase().includes("digital") || styleName.toLowerCase().includes("tech");
+
   // --- Dynamic Color System ---
-  const colors = assets?.logo_studio_data?.colors || (moodboard ? {
-    primaryHex: moodboard.palette[0]?.hex || "#0D0D0D",
-    secondaryHex: moodboard.palette[1]?.hex || "#C9A84C",
+  const colors = assets?.logo_studio_data?.colors || (isDarkPremium ? {
+    primaryHex: "#0D0D0D",
+    secondaryHex: "#C9A84C",
     primaryRgb: "13, 13, 13",
     secondaryRgb: "201, 168, 76",
     primaryCmyk: "70%, 50%, 0%, 95%",
-    pantoneApprox: "Pantone Neutral Black"
+    pantoneApprox: "Pantone Black 6 C / Pantone 871 C"
+  } : isCleanMinimal ? {
+    primaryHex: "#111018",
+    secondaryHex: "#A3B19B",
+    primaryRgb: "17, 16, 24",
+    secondaryRgb: "163, 177, 155",
+    primaryCmyk: "30%, 33%, 0%, 91%",
+    pantoneApprox: "Pantone 426 C / Pantone 5635 C"
   } : {
     primaryHex: "#0F172A",
     secondaryHex: "#06B6D4",
@@ -243,10 +552,14 @@ export default function DashboardPage() {
     pantoneApprox: "Pantone 2965 C"
   });
 
-  const typography = assets?.logo_studio_data?.typography || (moodboard ? {
-    primaryFont: moodboard.typography?.headline || "Playfair Display",
-    bodyFont: moodboard.typography?.body || "Cormorant Garamond",
-    usage: `Use ${moodboard.typography?.headline || 'Playfair Display'} for headings and ${moodboard.typography?.body || 'Cormorant Garamond'} for body text.`
+  const typography = assets?.logo_studio_data?.typography || (isDarkPremium ? {
+    primaryFont: "Cinzel",
+    bodyFont: "Montserrat",
+    usage: "Use Cinzel for editorial headlines and Montserrat for details."
+  } : isCleanMinimal ? {
+    primaryFont: "Playfair Display",
+    bodyFont: "Inter",
+    usage: "Use Playfair Display for display text and Inter for body copy."
   } : {
     primaryFont: "Outfit",
     bodyFont: "Inter",
@@ -255,50 +568,38 @@ export default function DashboardPage() {
 
   // --- Fallback Mood Images based on style ---
   const getStyleImages = (styleId: string) => {
-    switch (styleId) {
-      case "luxury":
-        return [
-          "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=400&q=80",
-          "https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=400&q=80",
-          "https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=400&q=80",
-          "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=400&q=80"
-        ];
-      case "minimal":
-        return [
-          "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&q=80",
-          "https://images.unsplash.com/photo-1513694203232-719a280e022f?w=400&q=80",
-          "https://images.unsplash.com/photo-1595428774223-ef52624120d2?w=400&q=80",
-          "https://images.unsplash.com/photo-1517816743773-6e0fd518b4a6?w=400&q=80"
-        ];
-      case "premium":
-        return [
-          "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=400&q=80",
-          "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=400&q=80",
-          "https://images.unsplash.com/photo-1551434678-e076c223a692?w=400&q=80",
-          "https://images.unsplash.com/photo-1563986768609-322da13575f3?w=400&q=80"
-        ];
-      case "scandinavian":
-        return [
-          "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=400&q=80",
-          "https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?w=400&q=80",
-          "https://images.unsplash.com/photo-1448375240586-882707db888b?w=400&q=80",
-          "https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=400&q=80"
-        ];
-      default:
-        return [
-          "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=400&q=80",
-          "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=400&q=80",
-          "https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=400&q=80",
-          "https://images.unsplash.com/photo-1551434678-e076c223a692?w=400&q=80"
-        ];
+    const isOption1 = styleId === "option_1" || isDarkPremium;
+    const isOption2 = styleId === "option_2" || isCleanMinimal;
+    
+    if (isOption1) {
+      return [
+        "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=600&q=80",
+        "https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=600&q=80",
+        "https://images.unsplash.com/photo-1513694203232-719a280e022f?w=600&q=80",
+        "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&q=80"
+      ];
+    } else if (isOption2) {
+      return [
+        "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=600&q=80",
+        "https://images.unsplash.com/photo-1595428774223-ef52624120d2?w=600&q=80",
+        "https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=600&q=80",
+        "https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=600&q=80"
+      ];
+    } else { // Vibrant Digital (option_3)
+      return [
+        "https://images.unsplash.com/photo-1563986768609-322da13575f3?w=600&q=80",
+        "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&q=80",
+        "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=600&q=80",
+        "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=600&q=80"
+      ];
     }
   };
 
   const baseMoodImages = getStyleImages(moodboard?.id || "default");
 
-  // Blend uploaded images into moodboard grid if they exist
+  // Blend approved AI-generated moodboard image as the primary image
   const moodImages = [
-    assets?.office_images?.[0] || baseMoodImages[0],
+    moodboard?.imageUrl || assets?.office_images?.[0] || baseMoodImages[0],
     assets?.product_images?.[0] || baseMoodImages[1],
     assets?.team_photos?.[0] || baseMoodImages[2],
     assets?.office_images?.[1] || baseMoodImages[3]
@@ -311,19 +612,32 @@ export default function DashboardPage() {
     ...(assets?.office_images || [])
   ].slice(0, 5);
 
-  // If no uploaded imagery direction, use baseMoodImages as placeholders
-  const activeImageryList = imageryDirection.length > 0 ? imageryDirection : baseMoodImages;
+  // If no uploaded imagery direction, use baseMoodImages as placeholders, blending the AI moodboard image
+  const activeImageryList = [
+    ...(moodboard?.imageUrl ? [moodboard.imageUrl] : []),
+    ...imageryDirection
+  ].slice(0, 5);
 
-  const gradients = moodboard ? [
-    { name: "Primary Gradient", style: moodboard.gradient },
-    { name: "Accent Gradient", style: moodboard.accentGradient },
+  if (activeImageryList.length === 0) {
+    activeImageryList.push(...baseMoodImages);
+  }
+
+  const styleGradients = isDarkPremium ? {
+    primary: "linear-gradient(135deg, #0A0A0A 0%, #1A1A1A 100%)",
+    accent: "linear-gradient(135deg, #C9A84C 0%, #E5C158 100%)"
+  } : isCleanMinimal ? {
+    primary: "linear-gradient(135deg, #F5F5F5 0%, #E5E5E5 100%)",
+    accent: "linear-gradient(135deg, #A3B19B 0%, #BCC9B5 100%)"
+  } : {
+    primary: "linear-gradient(135deg, #0F172A 0%, #1E293B 100%)",
+    accent: "linear-gradient(135deg, #06B6D4 0%, #0891B2 100%)"
+  };
+
+  const gradients = [
+    { name: "Primary Gradient", style: styleGradients.primary },
+    { name: "Accent Gradient", style: styleGradients.accent },
     { name: "Silk Soft", style: `linear-gradient(135deg, ${colors.primaryHex} 0%, #111827 100%)` },
     { name: "Gold Leather", style: `linear-gradient(135deg, ${colors.secondaryHex} 0%, #374151 100%)` }
-  ] : [
-    { name: "Primary Gradient", style: "linear-gradient(135deg, #0F172A 0%, #1E293B 100%)" },
-    { name: "Accent Gradient", style: "linear-gradient(135deg, #06B6D4 0%, #0891B2 100%)" },
-    { name: "Silk Soft", style: "linear-gradient(135deg, #0F172A 0%, #111827 100%)" },
-    { name: "Gold Leather", style: "linear-gradient(135deg, #06B6D4 0%, #374151 100%)" }
   ];
 
   return (
@@ -405,6 +719,42 @@ export default function DashboardPage() {
               >
                 <Tag className="w-3.5 h-3.5" />
                 <span>Content Mix Plan</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab("studio")}
+                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all text-left
+                  ${activeTab === "studio"
+                    ? "bg-brand-dark text-white shadow-sm"
+                    : "text-gray-500 hover:text-gray-800 hover:bg-gray-50"
+                  }`}
+              >
+                <Image className="w-3.5 h-3.5" />
+                <span>Post Generator Studio</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab("carousel")}
+                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all text-left
+                  ${activeTab === "carousel"
+                    ? "bg-brand-dark text-white shadow-sm"
+                    : "text-gray-500 hover:text-gray-800 hover:bg-gray-50"
+                  }`}
+              >
+                <Plus className="w-3.5 h-3.5 text-[#06B6D4]" />
+                <span>Carousel Studio</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab("video")}
+                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all text-left
+                  ${activeTab === "video"
+                    ? "bg-brand-dark text-white shadow-sm"
+                    : "text-gray-500 hover:text-gray-800 hover:bg-gray-50"
+                  }`}
+              >
+                <Video className="w-3.5 h-3.5 text-[#06B6D4]" />
+                <span>Video Studio</span>
               </button>
             </nav>
           </div>
@@ -576,6 +926,13 @@ export default function DashboardPage() {
                     <div className="relative overflow-hidden bg-gradient-to-b from-transparent to-black" style={{ height: "135px" }}>
                       <img src={moodImages[0]} alt="Post visual" className="w-full h-full object-cover opacity-50 absolute inset-0 pointer-events-none" />
                       
+                      {/* Logo watermark overlay */}
+                      {assets?.logo_url && (
+                        <div className="absolute top-2 right-2 z-20 bg-white/90 border border-white/20 rounded p-1 shadow-sm max-w-[50px] max-h-[22px] flex items-center justify-center overflow-hidden">
+                          <img src={assets.logo_url} alt="Logo Brandmark" className="max-w-full max-h-full object-contain" />
+                        </div>
+                      )}
+
                       {/* Brand Overlay Text */}
                       <div className="absolute inset-0 p-3 flex flex-col justify-between z-10 bg-gradient-to-t from-black/80 via-black/20 to-black/35">
                         <div className="flex justify-between items-center">
@@ -670,13 +1027,27 @@ export default function DashboardPage() {
                 {/* 9. Components Box */}
                 <div className="border border-white/10 bg-white/[0.02] rounded-2xl p-4 space-y-3">
                   <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest block">Components</span>
-                  <div className="bg-gradient-to-br from-gray-900 to-black border border-white/10 rounded-xl p-3 relative overflow-hidden" style={{ minHeight: "68px" }}>
-                    <div className="absolute top-2 right-2 text-[#C9A84C] font-bold text-[8px] tracking-widest uppercase">LV 2026-001</div>
-                    <p className="text-[7px] text-white/50">MEMBER CARD</p>
-                    <p className="text-[10px] font-bold text-white mt-1 tracking-wide">{dna.brand_name.toUpperCase()}</p>
-                    <div className="flex justify-between items-center mt-3 text-[6px] text-white/40">
-                      <span>{dna.main_goal}</span>
-                      <span>Synced DNA</span>
+                  <div className="border border-white/10 rounded-xl p-3 relative overflow-hidden flex flex-col justify-between" 
+                       style={{ minHeight: "72px", background: styleGradients.primary }}>
+                    <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ background: styleGradients.accent }} />
+                    <div className="flex justify-between items-start z-10">
+                      <div>
+                        <p className="text-[6px] text-white/50 tracking-wider">MEMBER CARD</p>
+                        <p className="text-[10px] font-bold text-white tracking-wide mt-0.5" style={{ fontFamily: typography.primaryFont }}>
+                          {dna.brand_name.toUpperCase()}
+                        </p>
+                      </div>
+                      {assets?.logo_url ? (
+                        <div className="bg-white/95 p-1 rounded border border-white/10 max-w-[42px] max-h-[18px] flex items-center justify-center overflow-hidden">
+                          <img src={assets.logo_url} alt="Logo" className="max-w-full max-h-full object-contain" />
+                        </div>
+                      ) : (
+                        <span className="text-[8px] font-black text-white/40 font-mono tracking-widest">{dna.brand_name.charAt(0)}</span>
+                      )}
+                    </div>
+                    <div className="flex justify-between items-center mt-2.5 text-[6px] text-white/50 z-10 pt-1 border-t border-white/5">
+                      <span className="uppercase tracking-widest text-[5px]">{dna.main_goal}</span>
+                      <span className="font-mono">Synced DNA</span>
                     </div>
                   </div>
                 </div>
@@ -849,30 +1220,41 @@ export default function DashboardPage() {
                       <div>
                         <span className="text-gray-400 block mb-1.5 font-semibold">Active Logo Graphic</span>
                         {assets.logo_url ? (
-                          <div className="w-24 h-24 bg-gray-50 border border-gray-200 rounded-xl flex items-center justify-center p-2 shadow-[0_2px_8px_rgb(0,0,0,0.02)]">
-                            <img src={assets.logo_url} alt="Brand Logo" className="max-w-full max-h-full object-contain" />
-                          </div>
+                          (() => {
+                            const activeFontName = typography.primaryFont || "Outfit";
+                            const f = activeFontName.toLowerCase();
+                            const activeFontStyle = f.includes("cinzel") 
+                              ? "tracking-[0.15em] font-black uppercase text-[10px]"
+                              : f.includes("syne")
+                              ? "tracking-wider font-extrabold uppercase text-[10px]"
+                              : f.includes("montserrat")
+                              ? "tracking-[0.2em] font-light uppercase text-[8px]"
+                              : f.includes("playfair")
+                              ? "tracking-wider font-extrabold italic text-[10px]"
+                              : "tracking-widest font-black uppercase text-[10px]";
+                            const displayActiveBrandName = f.includes("montserrat") 
+                              ? dna.brand_name.toUpperCase() 
+                              : dna.brand_name;
+                            return (
+                              <div className="w-32 h-32 bg-white border border-gray-200 rounded-xl flex flex-col items-center justify-center p-4 relative overflow-hidden shadow-inner bg-gradient-to-b from-white to-gray-50/30">
+                                <div className="flex-1 flex items-center justify-center w-full">
+                                  <img src={assets.logo_url} alt="Symbol Mark" className="max-h-[55%] max-w-[55%] object-contain" />
+                                </div>
+                                <div className="pt-1 text-center">
+                                  <span 
+                                    className={`text-gray-900 ${activeFontStyle}`}
+                                    style={{ fontFamily: activeFontName }}
+                                  >
+                                    {displayActiveBrandName}
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          })()
                         ) : assets.logo_studio_data?.assets?.primaryLogoSvg ? (
                           <div className="w-24 h-24 bg-gray-950 rounded-xl flex items-center justify-center p-2 shadow-sm" dangerouslySetInnerHTML={{ __html: assets.logo_studio_data.assets.primaryLogoSvg }} />
                         ) : (
                           <span className="text-gray-400 italic text-[10px]">No logo uploaded or generated</span>
-                        )}
-                      </div>
-
-                      <div className="pt-1">
-                        <span className="text-gray-400 block mb-1.5 font-semibold">Brand Stylebook / Guidelines</span>
-                        {assets.brand_guidelines ? (
-                          <a
-                            href={assets.brand_guidelines}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex items-center gap-1.5 px-3 py-2 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-700 font-bold rounded-lg transition-colors"
-                          >
-                            <FileText className="w-3.5 h-3.5 text-brand-secondary" />
-                            View Guidelines PDF
-                          </a>
-                        ) : (
-                          <span className="text-gray-400 italic text-[10px] block">No guidelines document uploaded</span>
                         )}
                       </div>
                     </div>
@@ -983,6 +1365,179 @@ export default function DashboardPage() {
                     </div>
 
                   </div>
+
+                  {/* Logo Variations Suite Grid */}
+                  {assets && (
+                    (() => {
+                      const logoSource = assets.logo_url || assets.logo_studio_data?.imageUrl || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=200&q=80";
+                      
+                      const getFontImport = (fontName: string) => {
+                        const f = (fontName || "").toLowerCase();
+                        if (f.includes("cinzel")) {
+                          return "@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&display=swap');";
+                        }
+                        if (f.includes("syne")) {
+                          return "@import url('https://fonts.googleapis.com/css2?family=Syne:wght@800&display=swap');";
+                        }
+                        if (f.includes("montserrat")) {
+                          return "@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@200;400;700&display=swap');";
+                        }
+                        if (f.includes("playfair")) {
+                          return "@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;950&display=swap');";
+                        }
+                        return "@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@800;900&display=swap');";
+                      };
+
+                      const getFontStyle = (fontName: string) => {
+                        const f = (fontName || "").toLowerCase();
+                        if (f.includes("cinzel")) {
+                          return "tracking-[0.15em] font-black uppercase text-[10px]";
+                        }
+                        if (f.includes("syne")) {
+                          return "tracking-wider font-extrabold uppercase text-[10px]";
+                        }
+                        if (f.includes("montserrat")) {
+                          return "tracking-[0.2em] font-light uppercase text-[8px]";
+                        }
+                        if (f.includes("playfair")) {
+                          return "tracking-wider font-extrabold italic text-[10px]";
+                        }
+                        return "tracking-widest font-black uppercase text-[10px]";
+                      };
+
+                      const displayBrandName = (typography.primaryFont || "").toLowerCase().includes("montserrat") 
+                        ? dna.brand_name.toUpperCase() 
+                        : dna.brand_name;
+
+                      return (
+                        <div className="border-t border-gray-100 pt-5 mt-5">
+                          <style dangerouslySetInnerHTML={{ __html: getFontImport(typography.primaryFont) }} />
+                          <span className="text-gray-400 block mb-3 font-bold uppercase tracking-wider text-[10px]">
+                            Dynamic Logo Variations Suite (12+ Custom Layouts & Formats)
+                          </span>
+                          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
+                            {/* 1. Primary Full Color */}
+                            <div className="bg-gray-50 border border-gray-150 rounded-xl p-3 flex flex-col justify-between items-center text-center shadow-sm">
+                              <div className="w-14 h-14 flex items-center justify-center p-1 bg-white rounded-lg border border-gray-100">
+                                <img src={logoSource} alt="Primary" className="max-w-full max-h-full object-contain" />
+                              </div>
+                              <span className="text-[8px] font-bold text-gray-500 mt-2 block">Primary Full Color</span>
+                            </div>
+
+                            {/* 2. Solid Black Silhouette */}
+                            <div className="bg-white border border-gray-150 rounded-xl p-3 flex flex-col justify-between items-center text-center shadow-sm">
+                              <div className="w-14 h-14 flex items-center justify-center p-1 bg-white rounded-lg">
+                                <img src={logoSource} alt="Solid Black" className="max-w-full max-h-full object-contain" style={{ filter: "grayscale(1) contrast(1000%)" }} />
+                              </div>
+                              <span className="text-[8px] font-bold text-gray-500 mt-2 block">Black Version</span>
+                            </div>
+
+                            {/* 3. Solid White (Inverted) */}
+                            <div className="bg-gray-950 border border-gray-800 rounded-xl p-3 flex flex-col justify-between items-center text-center shadow-sm">
+                              <div className="w-14 h-14 flex items-center justify-center p-1 bg-black rounded-lg">
+                                <img src={logoSource} alt="Solid White" className="max-w-full max-h-full object-contain" style={{ filter: "grayscale(1) contrast(1000%) invert(1)" }} />
+                              </div>
+                              <span className="text-[8px] font-bold text-gray-400 mt-2 block">White Inverted</span>
+                            </div>
+
+                            {/* 4. Grayscale */}
+                            <div className="bg-gray-50 border border-gray-150 rounded-xl p-3 flex flex-col justify-between items-center text-center shadow-sm">
+                              <div className="w-14 h-14 flex items-center justify-center p-1 bg-white rounded-lg border border-gray-100">
+                                <img src={logoSource} alt="Grayscale" className="max-w-full max-h-full object-contain" style={{ filter: "grayscale(1)" }} />
+                              </div>
+                              <span className="text-[8px] font-bold text-gray-500 mt-2 block">Grayscale</span>
+                            </div>
+
+                            {/* 5. Watermark */}
+                            <div className="bg-gray-50 border border-gray-150 rounded-xl p-3 flex flex-col justify-between items-center text-center shadow-sm">
+                              <div className="w-14 h-14 flex items-center justify-center p-1 bg-white rounded-lg border border-gray-100 relative">
+                                <img src={logoSource} alt="Watermark" className="max-w-full max-h-full object-contain opacity-20" />
+                              </div>
+                              <span className="text-[8px] font-bold text-gray-500 mt-2 block">Watermark (20% Op)</span>
+                            </div>
+
+                            {/* 6. Favicon / Icon Version */}
+                            <div className="bg-gray-50 border border-gray-150 rounded-xl p-3 flex flex-col justify-between items-center text-center shadow-sm">
+                              <div className="w-14 h-14 flex items-center justify-center">
+                                <div className="w-7 h-7 rounded-lg bg-gray-900 border border-white/10 flex items-center justify-center p-0.5 overflow-hidden shadow-sm">
+                                  <img src={logoSource} alt="Favicon" className="max-w-full max-h-full object-contain" />
+                                </div>
+                              </div>
+                              <span className="text-[8px] font-bold text-gray-500 mt-2 block">Favicon / App Icon</span>
+                            </div>
+
+                            {/* 7. Wordmark / Typographic */}
+                            <div className="bg-gray-50 border border-gray-150 rounded-xl p-3 flex flex-col justify-between items-center text-center shadow-sm">
+                              <div className="w-14 h-14 flex items-center justify-center">
+                                <span 
+                                  className={`text-[10px] text-gray-900 text-center font-bold ${getFontStyle(typography.primaryFont)}`}
+                                  style={{ fontFamily: typography.primaryFont }}
+                                >
+                                  {displayBrandName}
+                                </span>
+                              </div>
+                              <span className="text-[8px] font-bold text-gray-500 mt-2 block">Wordmark / Text</span>
+                            </div>
+
+                            {/* 8. Horizontal Layout */}
+                            <div className="bg-gray-50 border border-gray-150 rounded-xl p-3 flex flex-col justify-between items-center text-center shadow-sm col-span-2 sm:col-span-1">
+                              <div className="w-full h-14 flex items-center justify-center gap-1.5 px-1 bg-white rounded-lg border border-gray-100">
+                                <img src={logoSource} alt="Icon" className="w-4 h-4 object-contain" style={{ filter: "grayscale(1) contrast(1000%)" }} />
+                                <span 
+                                  className="text-[8px] font-bold text-gray-900 uppercase truncate max-w-[50px]"
+                                  style={{ fontFamily: typography.primaryFont }}
+                                >
+                                  {displayBrandName}
+                                </span>
+                              </div>
+                              <span className="text-[8px] font-bold text-gray-500 mt-2 block">Horizontal Layout</span>
+                            </div>
+
+                            {/* 9. Stacked / Vertical Layout */}
+                            <div className="bg-gray-50 border border-gray-150 rounded-xl p-3 flex flex-col justify-between items-center text-center shadow-sm">
+                              <div className="w-14 h-14 flex flex-col items-center justify-center gap-0.5 bg-white rounded-lg border border-gray-100">
+                                <img src={logoSource} alt="Icon" className="w-4 h-4 object-contain" style={{ filter: "grayscale(1) contrast(1000%)" }} />
+                                <span 
+                                  className="text-[7px] font-bold text-gray-900 max-w-[45px] truncate text-center uppercase"
+                                  style={{ fontFamily: typography.primaryFont }}
+                                >
+                                  {displayBrandName}
+                                </span>
+                              </div>
+                              <span className="text-[8px] font-bold text-gray-500 mt-2 block">Vertical Stacked</span>
+                            </div>
+
+                            {/* 10. Vintage Style */}
+                            <div className="bg-[#FAF6EE] border border-[#EBE3D5] rounded-xl p-3 flex flex-col justify-between items-center text-center shadow-sm">
+                              <div className="w-14 h-14 flex items-center justify-center p-1 bg-[#FAF6EE] rounded-lg">
+                                <img src={logoSource} alt="Vintage" className="max-w-full max-h-full object-contain" style={{ filter: "sepia(0.8) contrast(1.2)" }} />
+                              </div>
+                              <span className="text-[8px] font-bold text-amber-800 mt-2 block">Vintage / Retro</span>
+                            </div>
+
+                            {/* 11. Minimalist Style */}
+                            <div className="bg-gray-50 border border-gray-150 rounded-xl p-3 flex flex-col justify-between items-center text-center shadow-sm">
+                              <div className="w-14 h-14 flex items-center justify-center p-1 bg-white rounded-lg border border-gray-100">
+                                <img src={logoSource} alt="Minimalist" className="max-w-full max-h-full object-contain" style={{ filter: "contrast(1.5) brightness(1.05)" }} />
+                              </div>
+                              <span className="text-[8px] font-bold text-gray-500 mt-2 block">Minimalist</span>
+                            </div>
+
+                            {/* 12. Emblem / Badge Layout */}
+                            <div className="bg-gray-50 border border-gray-150 rounded-xl p-3 flex flex-col justify-between items-center text-center shadow-sm">
+                              <div className="w-14 h-14 flex items-center justify-center">
+                                <div className="w-9 h-9 rounded-full border-2 border-dashed border-gray-400 flex items-center justify-center p-1 overflow-hidden">
+                                  <img src={logoSource} alt="Emblem" className="max-w-full max-h-full object-contain" />
+                                </div>
+                              </div>
+                              <span className="text-[8px] font-bold text-gray-500 mt-2 block">Emblem Badge</span>
+                            </div>
+
+                          </div>
+                        </div>
+                      );
+                    })()
+                  ) || null}
 
                   {/* If generated via AI Logo Studio, show colors & typographies specifications */}
                   {assets.logo_studio_data?.colors && (
@@ -1240,6 +1795,633 @@ export default function DashboardPage() {
                 )}
               </div>
 
+            </div>
+          )}
+          {/* Tab 5: Post Generator Studio */}
+          {activeTab === "studio" && (
+            <div className="space-y-6 animate-fade-up">
+              {/* Header */}
+              <div className="bg-white border border-gray-200/80 rounded-2xl p-5 shadow-[0_4px_20px_rgb(0,0,0,0.01)] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-sm font-bold text-gray-900 flex items-center gap-1.5 uppercase tracking-wider">
+                    <Image className="w-4 h-4 text-[#06B6D4]" />
+                    Post Generator Studio
+                  </h3>
+                  <p className="text-[11px] text-gray-400 mt-0.5">
+                    Generate premium, brand-consistent marketing graphics using Flux Schnell.
+                  </p>
+                </div>
+                {/* Active Brand Visual Indicator */}
+                <div className="flex items-center gap-2 bg-[#0D0D0D] px-3.5 py-2 rounded-xl border border-gray-800 text-[10px] text-gray-400">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span>Brand Guidelines Active</span>
+                  <div className="flex items-center gap-1 ml-1.5 border-l border-gray-800 pl-2">
+                    <span className="w-3.5 h-3.5 rounded-full border border-white/10" style={{ backgroundColor: assets?.logo_studio_data?.colors?.primaryHex || "#0D0D0D" }} />
+                    <span className="w-3.5 h-3.5 rounded-full border border-white/10" style={{ backgroundColor: assets?.logo_studio_data?.colors?.secondaryHex || "#C9A84C" }} />
+                  </div>
+                </div>
+              </div>
+
+              {/* Main Studio Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                
+                {/* Left panel: Prompt & Settings (5 Cols) */}
+                <div className="lg:col-span-5 bg-white border border-gray-200 rounded-2xl p-5 shadow-sm space-y-5">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
+                      Describe your post topic / idea
+                    </label>
+                    <textarea
+                      value={postPrompt}
+                      onChange={(e) => setPostPrompt(e.target.value)}
+                      placeholder="e.g. A premium, minimal advertisement post showcasing a luxury watch with sleek metallic textures and dark dramatic lighting..."
+                      className="w-full h-32 px-3 py-2.5 rounded-xl border border-gray-200 focus:border-[#06B6D4] text-xs bg-white text-gray-900 outline-none resize-none leading-relaxed"
+                    />
+                  </div>
+
+                  {/* Ratio Selector */}
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
+                      Aspect Ratio
+                    </label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {[
+                        { id: "square", label: "Square (1:1)", desc: "Feed Posts" },
+                        { id: "portrait", label: "Portrait (9:16)", desc: "Stories / Reels" },
+                        { id: "landscape", label: "Landscape (16:9)", desc: "Banners" },
+                      ].map((r) => {
+                        const active = postAspectRatio === r.id;
+                        return (
+                          <button
+                            key={r.id}
+                            type="button"
+                            onClick={() => setPostAspectRatio(r.id)}
+                            className={`p-2.5 rounded-xl border text-center transition-all flex flex-col items-center justify-center gap-0.5
+                              ${active
+                                ? "bg-[#090D16] border-[#090D16] text-white"
+                                : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
+                              }`}
+                          >
+                            <span className="text-xs font-bold">{r.label}</span>
+                            <span className="text-[8px] opacity-75">{r.desc}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Submit Button */}
+                  <button
+                    type="button"
+                    onClick={handleGeneratePost}
+                    disabled={isGeneratingPost || !postPrompt.trim()}
+                    className="w-full py-3 bg-[#06B6D4] hover:bg-[#06B6D4]/90 text-[#090D16] font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-[#06B6D4]/15 flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    {isGeneratingPost ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Generating Post...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-4 h-4" />
+                        Generate Custom Graphic
+                      </>
+                    )}
+                  </button>
+
+                  {/* Brand Guidelines alignment card */}
+                  {dna && (
+                    <div className="bg-gray-50 border border-gray-100 rounded-xl p-3.5 text-[10px] text-gray-500 space-y-1.5">
+                      <p className="font-bold text-gray-700 uppercase tracking-wider">Brand DNA Context (Locked-in)</p>
+                      <div className="grid grid-cols-2 gap-2 text-[9px] pt-1">
+                        <div>
+                          <span className="text-gray-400 uppercase tracking-wider block">Personality</span>
+                          <span className="font-semibold text-gray-700 capitalize">{dna.brand_personality}</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-400 uppercase tracking-wider block">Industry</span>
+                          <span className="font-semibold text-gray-700">{dna.industry}</span>
+                        </div>
+                        {dna.approved_moodboard && (
+                          <div className="col-span-2">
+                            <span className="text-gray-400 uppercase tracking-wider block">Visual Direction</span>
+                            <span className="font-semibold text-gray-700">{dna.approved_moodboard.name}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {postError && (
+                    <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-[10px] text-red-600 leading-normal">
+                      {postError}
+                    </div>
+                  )}
+                </div>
+
+                {/* Right panel: Post Preview Canvas (7 Cols) */}
+                <div className="lg:col-span-7 bg-[#0D0D0D] border border-gray-800 rounded-2xl p-5 flex flex-col items-center justify-center relative min-h-[460px] overflow-hidden shadow-2xl">
+                  {isGeneratingPost ? (
+                    <div className="text-center space-y-3">
+                      <Loader2 className="w-8 h-8 text-[#06B6D4] animate-spin mx-auto" />
+                      <div className="space-y-1">
+                        <p className="text-xs font-bold text-white uppercase tracking-wider">Rendering Brand Asset...</p>
+                        <p className="text-[10px] text-gray-500">Injecting color swatches, visual styles, and moodboard rules.</p>
+                      </div>
+                    </div>
+                  ) : generatedPostImage ? (
+                    <div className="w-full flex flex-col gap-4">
+                      {/* Social post frame */}
+                      <div className="bg-[#111111] border border-gray-800 rounded-2xl overflow-hidden shadow-xl max-w-md mx-auto w-full">
+                        {/* Header */}
+                        <div className="p-3 flex items-center justify-between border-b border-gray-900">
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-full bg-[#06B6D4]/10 border border-[#06B6D4]/30 flex items-center justify-center text-xs font-black text-white">
+                              {(dna?.brand_name || "B").charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                              <p className="text-xs font-bold text-white">{dna?.brand_name || "Aethera"}</p>
+                              <p className="text-[8px] text-gray-500">Sponsored</p>
+                            </div>
+                          </div>
+                          <span className="text-gray-600 text-xs">•••</span>
+                        </div>
+
+                        {/* Image body */}
+                        <div className="w-full overflow-hidden bg-black flex items-center justify-center">
+                          <img
+                            src={generatedPostImage}
+                            alt="Generated Campaign Post"
+                            className="w-full h-auto object-contain"
+                          />
+                        </div>
+
+                        {/* Footer action buttons */}
+                        <div className="p-3 flex items-center justify-between text-gray-400 border-t border-gray-900">
+                          <div className="flex items-center gap-4 text-xs">
+                            <span className="cursor-pointer hover:text-white">♥</span>
+                            <span className="cursor-pointer hover:text-white">💬</span>
+                            <span className="cursor-pointer hover:text-white">✈</span>
+                          </div>
+                          <span className="text-[10px] text-[#06B6D4] font-bold">Learn More</span>
+                        </div>
+                      </div>
+
+                      {/* Download / Info block */}
+                      <div className="bg-black/40 border border-gray-900 rounded-xl p-3.5 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest">Post Generation Details</span>
+                          <a
+                            href={generatedPostImage}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[9px] font-bold bg-[#06B6D4] text-gray-950 px-3 py-1.5 rounded-lg hover:bg-[#06B6D4]/80 transition-all uppercase tracking-wider"
+                          >
+                            Open High-Res
+                          </a>
+                        </div>
+                        {generatedPostPrompt && (
+                          <div className="space-y-1">
+                            <span className="text-[8px] text-gray-600 uppercase tracking-wider">Compiled AI Prompt</span>
+                            <p className="text-[10px] text-gray-400 leading-relaxed font-mono bg-black/60 p-2.5 rounded-lg border border-gray-800 max-h-24 overflow-y-auto">
+                              {generatedPostPrompt}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center space-y-4 max-w-sm px-6">
+                      <div className="w-14 h-14 rounded-2xl bg-gray-900 border border-gray-800 flex items-center justify-center mx-auto text-gray-600">
+                        <Image className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-bold text-white uppercase tracking-wider">Post Generation Canvas</h4>
+                        <p className="text-[10px] text-gray-500 mt-1.5 leading-relaxed">
+                          Enter a description on the left side and press generate to create a visual post. The image will render here inside a live feed preview mockup.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+              </div>
+            </div>
+          )}
+
+          {/* Tab 6: Carousel Generator Studio */}
+          {activeTab === "carousel" && (
+            <div className="space-y-6 animate-fade-up">
+              {/* Header */}
+              <div className="bg-white border border-gray-200/80 rounded-2xl p-5 shadow-[0_4px_20px_rgb(0,0,0,0.01)] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-sm font-bold text-gray-900 flex items-center gap-1.5 uppercase tracking-wider">
+                    <Plus className="w-4 h-4 text-[#06B6D4]" />
+                    Carousel Studio
+                  </h3>
+                  <p className="text-[11px] text-gray-400 mt-0.5">
+                    Generate visual slide decks with matching background graphics & custom HTML overlays.
+                  </p>
+                </div>
+                {/* Visual guidelines indicator */}
+                <div className="flex items-center gap-2 bg-[#0D0D0D] px-3.5 py-2 rounded-xl border border-gray-800 text-[10px] text-gray-400">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#06B6D4] animate-pulse" />
+                  <span>Fluid Image Treatment Active</span>
+                </div>
+              </div>
+
+              {/* Main Workspace */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                
+                {/* Input Panel */}
+                <div className="lg:col-span-5 bg-white border border-gray-200 rounded-2xl p-5 shadow-sm space-y-5">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
+                      Carousel Objective / Concept
+                    </label>
+                    <textarea
+                      value={carouselPrompt}
+                      onChange={(e) => setCarouselPrompt(e.target.value)}
+                      placeholder="e.g. 5 steps to curate the perfect weekend getaway. Focus on slow-living travel, nature escapes, and mental wellness..."
+                      className="w-full h-32 px-3 py-2.5 rounded-xl border border-gray-200 focus:border-[#06B6D4] text-xs bg-white text-gray-900 outline-none resize-none leading-relaxed"
+                    />
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleGenerateCarousel}
+                    disabled={isGeneratingCarousel || !carouselPrompt.trim()}
+                    className="w-full py-3 bg-[#06B6D4] hover:bg-[#06B6D4]/90 text-[#090D16] font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-[#06B6D4]/15 flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    {isGeneratingCarousel ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Generating Carousel & Slide Art...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-4 h-4" />
+                        Generate Carousel Deck
+                      </>
+                    )}
+                  </button>
+
+                  {carouselError && (
+                    <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-[10px] text-red-600">
+                      {carouselError}
+                    </div>
+                  )}
+
+                  {/* Settings specs info */}
+                  <div className="bg-gray-50 border border-gray-100 rounded-xl p-3.5 text-[9px] text-gray-500 space-y-2">
+                    <p className="font-bold text-gray-700 uppercase tracking-wider">CAROUSEL MECHANICS</p>
+                    <ul className="space-y-1 list-disc pl-3.5 leading-relaxed">
+                      <li>Generates a unified, matching visual backdrop using FLUX.</li>
+                      <li>Backdrop image is uniquely transformed on every slide (rotation shifts, scale variations, and custom vignetting).</li>
+                      <li>Renders crisp, high-fidelity brand typography and logo watermarks directly in HTML layer.</li>
+                    </ul>
+                  </div>
+                </div>
+
+                {/* Carousel Viewer/Canvas (7 Cols) */}
+                <div className="lg:col-span-7 bg-[#0D0D0D] border border-gray-800 rounded-2xl p-6 flex flex-col min-h-[500px] justify-between relative shadow-2xl overflow-hidden">
+                  
+                  {isGeneratingCarousel ? (
+                    <div className="my-auto text-center space-y-3">
+                      <Loader2 className="w-8 h-8 text-[#06B6D4] animate-spin mx-auto" />
+                      <div className="space-y-1">
+                        <p className="text-xs font-bold text-white uppercase tracking-wider">Synthesizing Slide Assets...</p>
+                        <p className="text-[10px] text-gray-500">Writing HTML copy, extracting logo marks, and rendering backdrop variations.</p>
+                      </div>
+                    </div>
+                  ) : carouselSlides.length > 0 && generatedCarouselImage ? (
+                    <div className="space-y-6 w-full">
+                      {/* Swipeable View Container */}
+                      <div className="flex items-center justify-between">
+                        <span className="text-[9px] font-black text-[#06B6D4] uppercase tracking-widest">
+                          Slide Preview (Slide {activeSlide + 1} of {carouselSlides.length})
+                        </span>
+                        <div className="flex gap-2">
+                          <button
+                            disabled={activeSlide === 0}
+                            onClick={() => setActiveSlide(prev => Math.max(0, prev - 1))}
+                            className="px-2.5 py-1 bg-white/5 border border-white/10 rounded-lg text-white hover:bg-white/10 text-xs disabled:opacity-30 disabled:cursor-not-allowed"
+                          >
+                            Prev
+                          </button>
+                          <button
+                            disabled={activeSlide === carouselSlides.length - 1}
+                            onClick={() => setActiveSlide(prev => Math.min(carouselSlides.length - 1, prev + 1))}
+                            className="px-2.5 py-1 bg-[#06B6D4] text-gray-950 rounded-lg font-bold text-xs hover:bg-[#06B6D4]/80 disabled:opacity-30 disabled:cursor-not-allowed"
+                          >
+                            Next
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Live slide viewport */}
+                      <div className="relative aspect-square w-full max-w-sm mx-auto bg-black rounded-2xl overflow-hidden border border-gray-800 shadow-2xl flex flex-col justify-between p-6">
+                        
+                        {/* 1. Dynamic background image layout with rotation, scale, and vignette filter */}
+                        {(() => {
+                          const slide = carouselSlides[activeSlide];
+                          return (
+                            <div 
+                              className="absolute inset-0 transition-all duration-700 ease-out"
+                              style={{
+                                backgroundImage: `url(${generatedCarouselImage})`,
+                                backgroundSize: "cover",
+                                backgroundPosition: "center",
+                                transform: `scale(${slide?.backgroundConfig?.scale || 1.15}) rotate(${slide?.backgroundConfig?.rotation || 0}deg)`,
+                                filter: `brightness(${slide?.backgroundConfig?.brightness || 0.65}) contrast(${slide?.backgroundConfig?.contrast || 1.1}) saturate(${slide?.backgroundConfig?.saturation || 0.9})`,
+                              }}
+                            />
+                          );
+                        })()}
+
+                        {/* Vignette overlay */}
+                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_30%,rgba(0,0,0,0.85)_100%)] pointer-events-none" />
+
+                        {/* 2. Premium HTML overlay layer */}
+                        {(() => {
+                          const slide = carouselSlides[activeSlide];
+                          const activeColors = assets?.logo_studio_data?.colors || {
+                            primaryHex: "#0D0D0D",
+                            secondaryHex: "#C9A84C"
+                          };
+                          return (
+                            <div className="relative z-10 h-full w-full flex flex-col justify-between pointer-events-none select-none">
+                              {/* Slide Header: Logo + index */}
+                              <div className="flex items-center justify-between w-full">
+                                <div className="flex items-center gap-2">
+                                  {assets?.logo_url ? (
+                                    <img src={assets.logo_url} alt="Logo" className="w-5 h-5 object-contain" />
+                                  ) : assets?.logo_studio_data?.assets?.faviconSvg ? (
+                                    <div className="w-5 h-5 [&>svg]:w-full [&>svg]:h-full" dangerouslySetInnerHTML={{ __html: assets.logo_studio_data.assets.faviconSvg }} />
+                                  ) : (
+                                    <div className="w-5 h-5 rounded-full bg-[#06B6D4]/20 border border-[#06B6D4]/40 flex items-center justify-center text-[10px] text-white font-bold">
+                                      {dna?.brand_name?.charAt(0).toUpperCase()}
+                                    </div>
+                                  )}
+                                  <span className="text-[10px] font-bold text-white/95 font-sans tracking-wide uppercase">{dna?.brand_name || "Aethera"}</span>
+                                </div>
+                                <span className="text-[10px] font-mono font-bold text-white/60">0{activeSlide + 1}</span>
+                              </div>
+
+                              {/* Slide Body Content */}
+                              <div className="space-y-3.5 my-auto max-w-[90%]">
+                                {slide?.badge && (
+                                  <span 
+                                    className="inline-block text-[8px] font-black uppercase tracking-[0.2em] px-2 py-0.5 rounded-full border"
+                                    style={{
+                                      borderColor: `${activeColors.secondaryHex}50`,
+                                      backgroundColor: `${activeColors.secondaryHex}15`,
+                                      color: activeColors.secondaryHex,
+                                    }}
+                                  >
+                                    {slide.badge}
+                                  </span>
+                                )}
+                                <h2 
+                                  className="text-lg md:text-xl font-extrabold text-white leading-tight font-sans tracking-tight drop-shadow-md"
+                                  style={{ fontFamily: assets?.logo_studio_data?.typography?.primaryFont || "inherit" }}
+                                >
+                                  {slide?.title}
+                                </h2>
+                                <p 
+                                  className="text-xs text-white/80 leading-relaxed font-medium drop-shadow"
+                                  style={{ fontFamily: assets?.logo_studio_data?.typography?.bodyFont || "inherit" }}
+                                >
+                                  {slide?.description}
+                                </p>
+                              </div>
+
+                              {/* Slide Footer: Action CTA */}
+                              <div className="flex items-center justify-between w-full pt-2">
+                                <span className="text-[8px] text-white/40 uppercase tracking-widest font-bold">Swipe for details →</span>
+                                {slide?.cta && (
+                                  <span 
+                                    className="text-[9px] font-black uppercase tracking-wider px-3 py-1.5 rounded-lg border border-white/20 bg-black/60 text-white shadow-lg backdrop-blur-sm"
+                                  >
+                                    {slide.cta}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })()}
+
+                      </div>
+
+                      {/* Detailed info logs */}
+                      <div className="bg-black/40 border border-gray-900 rounded-xl p-3.5 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest">Slide Configuration Specs</span>
+                          <a
+                            href={generatedCarouselImage}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[9px] font-bold bg-[#06B6D4] text-gray-950 px-3 py-1.5 rounded-lg hover:bg-[#06B6D4]/80 transition-all uppercase tracking-wider"
+                          >
+                            Open Backdrop Image
+                          </a>
+                        </div>
+                        {generatedCarouselPrompt && (
+                          <div className="space-y-1">
+                            <span className="text-[8px] text-gray-600 uppercase tracking-wider">Compiled Backdrop AI Prompt</span>
+                            <p className="text-[10px] text-gray-400 leading-relaxed font-mono bg-black/60 p-2.5 rounded-lg border border-gray-800 max-h-24 overflow-y-auto">
+                              {generatedCarouselPrompt}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+
+                    </div>
+                  ) : (
+                    <div className="text-center space-y-4 max-w-sm px-6 my-auto mx-auto">
+                      <div className="w-14 h-14 rounded-2xl bg-gray-900 border border-gray-800 flex items-center justify-center mx-auto text-gray-600">
+                        <Plus className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-bold text-white uppercase tracking-wider">Carousel Studio Canvas</h4>
+                        <p className="text-[10px] text-gray-500 mt-1.5 leading-relaxed font-sans">
+                          Describe the topic of your carousel presentation. The AI will generate a beautiful backdrop image and construct the individual slides overlaid in premium HTML layouts.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Tab 7: Video Generator Studio */}
+          {activeTab === "video" && (
+            <div className="space-y-6 animate-fade-up">
+              {/* Header */}
+              <div className="bg-white border border-gray-200/80 rounded-2xl p-5 shadow-[0_4px_20px_rgb(0,0,0,0.01)] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-sm font-bold text-gray-900 flex items-center gap-1.5 uppercase tracking-wider">
+                    <Video className="w-4 h-4 text-[#06B6D4]" />
+                    Video Studio
+                  </h3>
+                  <p className="text-[11px] text-gray-400 mt-0.5">
+                    Generate cinematic social ads & video campaigns using the LongCat-Video 13.6B generation engine.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 bg-[#0D0D0D] px-3.5 py-2 rounded-xl border border-gray-800 text-[10px] text-gray-400">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                  <span>Meituan LongCat Engine Active</span>
+                </div>
+              </div>
+
+              {/* Main Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                
+                {/* Input Panel */}
+                <div className="lg:col-span-5 bg-white border border-gray-200 rounded-2xl p-5 shadow-sm space-y-5">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
+                      Video Scene / Concept Description
+                    </label>
+                    <textarea
+                      value={videoPrompt}
+                      onChange={(e) => setVideoPrompt(e.target.value)}
+                      placeholder="e.g. A panning cinematic shot of a luxury boutique resort room in Maharashtra with sunlight casting long shadows. A hot cup of tea steaming gently on a low wooden table..."
+                      className="w-full h-32 px-3 py-2.5 rounded-xl border border-gray-200 focus:border-[#06B6D4] text-xs bg-white text-gray-900 outline-none resize-none leading-relaxed"
+                    />
+                  </div>
+
+                  {/* Duration Selector */}
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
+                      Duration Scale (Meituan Long Video)
+                    </label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {["10s", "20s", "30s"].map((dur) => (
+                        <button
+                          key={dur}
+                          type="button"
+                          onClick={() => setVideoDuration(dur)}
+                          className={`py-2 rounded-xl text-xs font-bold transition-all border uppercase tracking-wider
+                            ${videoDuration === dur
+                              ? "bg-[#06B6D4] text-[#090D16] border-[#06B6D4]"
+                              : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+                            }`}
+                        >
+                          {dur}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleGenerateVideo}
+                    disabled={isGeneratingVideo || !videoPrompt.trim()}
+                    className="w-full py-3 bg-[#06B6D4] hover:bg-[#06B6D4]/90 text-[#090D16] font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-[#06B6D4]/15 flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    {isGeneratingVideo ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        {videoQueueStatus || "Generating video..."}
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-4 h-4" />
+                        Generate Video Clip
+                      </>
+                    )}
+                  </button>
+
+                  {videoError && (
+                    <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-[10px] text-red-600">
+                      {videoError}
+                    </div>
+                  )}
+
+                  {/* Mechanics Details */}
+                  <div className="bg-gray-50 border border-gray-100 rounded-xl p-3.5 text-[9px] text-gray-500 space-y-2">
+                    <p className="font-bold text-gray-700 uppercase tracking-wider">LONG CAT VIDEO SPECS</p>
+                    <ul className="space-y-1 list-disc pl-3.5 leading-relaxed">
+                      <li>Uses a 13.6B parameter Dense Transformer model.</li>
+                      <li>Calculates smooth camera shifts & volumetric lighting matching your primary color ({assets?.logo_studio_data?.colors?.primaryHex || "#0D0D0D"}) and accent color ({assets?.logo_studio_data?.colors?.secondaryHex || "#C9A84C"}).</li>
+                      <li>Ensures temporal coherence and subject appearance stability across all generated frames.</li>
+                    </ul>
+                  </div>
+                </div>
+
+                {/* Video Preview Canvas */}
+                <div className="lg:col-span-7 bg-[#0D0D0D] border border-gray-800 rounded-2xl p-6 flex flex-col min-h-[500px] justify-between relative shadow-2xl overflow-hidden">
+                  
+                  {isGeneratingVideo ? (
+                    <div className="my-auto text-center space-y-3">
+                      <Loader2 className="w-8 h-8 text-[#06B6D4] animate-spin mx-auto" />
+                      <div className="space-y-1">
+                        <p className="text-xs font-bold text-white uppercase tracking-wider">{videoQueueStatus || "Processing Video..."}</p>
+                        <p className="text-[10px] text-gray-500">Compiling visual context, computing frame sequences, and generating video stream.</p>
+                      </div>
+                    </div>
+                  ) : generatedVideoUrl ? (
+                    <div className="space-y-6 w-full">
+                      <span className="text-[9px] font-black text-[#06B6D4] uppercase tracking-widest block">
+                        Cinematic Feed Preview
+                      </span>
+
+                      {/* Video Player */}
+                      <div className="relative aspect-video w-full max-w-lg mx-auto bg-black rounded-2xl overflow-hidden border border-gray-800 shadow-2xl">
+                        <video
+                          src={generatedVideoUrl}
+                          controls
+                          autoPlay
+                          loop
+                          playsInline
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+
+                      {/* Info & Prompts */}
+                      <div className="bg-black/40 border border-gray-900 rounded-xl p-3.5 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest">Video Output Details</span>
+                          <a
+                            href={generatedVideoUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[9px] font-bold bg-[#06B6D4] text-gray-950 px-3 py-1.5 rounded-lg hover:bg-[#06B6D4]/80 transition-all uppercase tracking-wider"
+                          >
+                            Download Video
+                          </a>
+                        </div>
+                        {generatedVideoPrompt && (
+                          <div className="space-y-1">
+                            <span className="text-[8px] text-gray-600 uppercase tracking-wider">Compiled Video Motion Prompt</span>
+                            <p className="text-[10px] text-gray-400 leading-relaxed font-mono bg-black/60 p-2.5 rounded-lg border border-gray-800 max-h-24 overflow-y-auto">
+                              {generatedVideoPrompt}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+
+                    </div>
+                  ) : (
+                    <div className="text-center space-y-4 max-w-sm px-6 my-auto mx-auto">
+                      <div className="w-14 h-14 rounded-2xl bg-gray-900 border border-gray-800 flex items-center justify-center mx-auto text-gray-600">
+                        <Video className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-bold text-white uppercase tracking-wider">Video Studio Canvas</h4>
+                        <p className="text-[10px] text-gray-500 mt-1.5 leading-relaxed font-sans">
+                          Describe the scene motion, camera path, and visual setting. The model will compile a rich video prompt aligned with your brand details and render a premium cinematic marketing clip.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                </div>
+              </div>
             </div>
           )}
 

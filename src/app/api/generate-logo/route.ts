@@ -1,25 +1,5 @@
 import { NextResponse } from "next/server";
 
-// Kit A = Classic / Wordmark style — structured, timeless, geometric
-// Kit B = Modern / Gradient style — dynamic, layered, electric
-const KIT_STYLE_GUIDE: Record<"A" | "B", string> = {
-  A: `Kit Style: CLASSIC BOLD WORDMARK
-- Design philosophy: Structured, authoritative, geometric precision
-- Icon style: Geometric precision — clean polygon/hexagon/shield with sharp contrast
-- Color treatment: Solid fills, no gradients on the icon; one strong accent pop
-- Typography style: Heavy weight, spaced, commanding. Use bold slab or geometric sans
-- Metaphor: Inspired by agencies like Pentagram, Wolff Olins — timeless mark
-- Feel: Premium, built-to-last, institutional credibility`,
-
-  B: `Kit Style: MODERN GRADIENT ELECTRIC
-- Design philosophy: Dynamic, fluid, future-forward, digital-native
-- Icon style: Abstract overlapping curves, flowing lines, gradient mesh, layered orbs
-- Color treatment: Rich linear/radial gradients across all elements; luminous glow effects
-- Typography style: Modern variable weight, thin-to-bold mix, ultra-clean sans-serif
-- Metaphor: Inspired by Stripe, Linear, Vercel — expressive and technical
-- Feel: Startup energy, digital excellence, motion-aware`,
-};
-
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -30,33 +10,25 @@ export async function POST(req: Request) {
     const brandValues: string[] = Array.isArray(body.brandValues) ? body.brandValues : [];
     const usp = String(body.usp || "");
     const mission = String(body.mission || "");
-
-    // Kit variant — "A" (classic) or "B" (modern gradient)
     const kitVariant: "A" | "B" = body.kitVariant === "B" ? "B" : "A";
 
-    // User-specified brand colors (optional — if not provided, AI chooses)
     const userPrimaryColor: string | null = body.userPrimaryColor || null;
     const userSecondaryColor: string | null = body.userSecondaryColor || null;
 
-    const colorInstruction = userPrimaryColor && userSecondaryColor
-      ? `MANDATORY COLOR CONSTRAINT: You MUST use EXACTLY these brand colors throughout ALL SVGs:
-- Primary color (deep tone, backgrounds, text): "${userPrimaryColor}"
-- Accent/Secondary color (highlights, icon fill, glows): "${userSecondaryColor}"
-Do NOT invent other colors. Use only these two plus white/near-white for contrast.`
-      : `COLOR GENERATION: Generate a premium, harmonized 2-color palette appropriate for the brand.
-- "primaryHex": A deep, sophisticated tone (obsidian, midnight blue, forest, slate, wine — never plain black)
-- "secondaryHex": A vibrant, memorable accent (electric cyan, neon emerald, vivid violet, coral, amber)`;
+    const geminiApiKey = process.env.GEMINI_API_KEY;
+    const falApiKey = process.env.FAL_API_KEY;
 
-    const styleGuide = KIT_STYLE_GUIDE[kitVariant];
-
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
+    if (!geminiApiKey) {
       return NextResponse.json({ error: "Gemini API key is not configured." }, { status: 500 });
     }
+    if (!falApiKey) {
+      return NextResponse.json({ error: "FAL_API_KEY is not configured." }, { status: 500 });
+    }
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
-
-    const promptText = `You are a world-class brand identity designer — the creative director of a top-tier design agency. Your task is to generate a complete, production-grade SVG brand kit.
+    const promptText = `You are a world-class brand strategist and creative director of a top-tier design agency.
+Your task is to:
+1. Generate a premium brand identity palette (primary/secondary colors, typography).
+2. Write a highly customized, ultra-premium image generation prompt for a text-to-image model (like FLUX) to generate the brand's logo symbol mark/icon.
 
 BRAND BRIEF:
 - Brand Name: "${brandName}"
@@ -67,88 +39,97 @@ BRAND BRIEF:
 - Brand Values: ${brandValues.length > 0 ? brandValues.join(", ") : "N/A"}
 - Brand Personality: "${brandPersonality}"
 
-${styleGuide}
+PROMPT WRITING GUIDELINES for the Logo Symbol Mark:
+- Must request a clean vector-style, modern, high-end standalone symbol/icon/mark.
+- Must explicitly state: "NO text, NO letters, NO words, NO typography, PURE symbol mark only".
+- Must specify a clean background (e.g., "on a solid black background" or "on a clean dark grey background") to make the icon pop.
+- Describe the abstract shapes, geometric alignment, premium materials/textures (matte finish, subtle glow, gradient depth), and modern agency design style (inspired by Wolff Olins, Pentagram, Stripe, or Vercel).
+- Incorporate the brand colors (${userPrimaryColor || "premium dark brand tone"} and ${userSecondaryColor || "luminous accent tone"}) into the prompt description.
 
-${colorInstruction}
+You must respond with a single, valid JSON object containing exactly these fields:
+{
+  "fluxPrompt": "A detailed custom prompt for FLUX to generate the logo symbol mark. MUST start with: 'A premium professional logo icon/symbol mark for...'",
+  "colors": {
+    "primaryHex": "${userPrimaryColor || "AI suggested deep color hex"}",
+    "secondaryHex": "${userSecondaryColor || "AI suggested vibrant color hex"}",
+    "primaryRgb": "e.g. 9, 13, 22",
+    "secondaryRgb": "e.g. 6, 182, 212",
+    "primaryCmyk": "e.g. 70%, 50%, 0%, 90%",
+    "secondaryCmyk": "e.g. 95%, 0%, 0%, 15%",
+    "pantoneApprox": "e.g. Pantone Black 6 C"
+  },
+  "typography": {
+    "primaryFont": "Cabinet Grotesk or Cinzel or Outfit",
+    "bodyFont": "Montserrat or Inter or Outfit",
+    "usage": "Use primaryFont for bold display headings, bodyFont for clean UI layouts"
+  }
+}`;
 
-SVG QUALITY REQUIREMENTS (strictly enforced):
-1. BESPOKE MARK — NOT a letter inside a shape. The icon must be an original abstract symbol that conceptually relates to the brand's industry or values.
-   - For tech/SaaS: flowing data nodes, circuit paths, abstract hexagonal mesh
-   - For fashion: flowing silhouette lines, abstract leaf/petal geometry  
-   - For finance: precision grid patterns, shield-orbit hybrids, column/bar abstractions
-   - For lifestyle: organic flowing curves, sun/wave/bloom abstractions
-2. GRADIENTS — Use <defs> with <linearGradient> or <radialGradient> elements for rich depth
-3. FILTERS — Use <filter> with feDropShadow or feGaussianBlur for premium glow effect
-4. TYPOGRAPHY — Use font-family="'Cabinet Grotesk', 'Outfit', 'Montserrat', sans-serif" with font-weight="800" for bold impact
-5. VIEWBOX — All SVGs MUST use viewBox instead of hardcoded width/height
-6. ALL TAGS MUST BE PROPERLY CLOSED — validate every opening tag has a closing tag
-7. NO MARKDOWN — Output raw SVG strings. Never wrap in backtick code blocks.
+    let model = "gemini-2.5-pro";
+    let geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiApiKey}`;
 
-REQUIRED ASSETS:
-- "primaryLogoSvg": Horizontal lockup (viewBox="0 0 280 80") — abstract icon mark LEFT + brand name text RIGHT. Dark background.
-- "secondaryLogoSvg": Horizontal lockup (viewBox="0 0 280 80") — same mark + name on light/white background  
-- "iconSvg": Standalone abstract symbol (viewBox="0 0 100 100") — NO text, icon only on dark background
-- "monogramSvg": Artistic monogram (viewBox="0 0 100 100") — stylized first letter of "${brandName}" blended into geometric form
-- "faviconSvg": Micro icon (viewBox="0 0 32 32") — simplified for tiny display, max legibility
-- "socialIconsSvg": Circle-cropped version (viewBox="0 0 100 100") — icon fits perfectly inside a circle boundary
-- "appIconSvg": Rounded square (viewBox="0 0 512 512") — icon at large scale with premium rounded square background
+    const promptPayload = {
+      contents: [{ parts: [{ text: promptText }] }],
+      generationConfig: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: "OBJECT",
+          properties: {
+            fluxPrompt: { type: "STRING" },
+            colors: {
+              type: "OBJECT",
+              properties: {
+                primaryHex:     { type: "STRING" },
+                secondaryHex:   { type: "STRING" },
+                primaryRgb:     { type: "STRING" },
+                secondaryRgb:   { type: "STRING" },
+                primaryCmyk:    { type: "STRING" },
+                secondaryCmyk:  { type: "STRING" },
+                pantoneApprox:  { type: "STRING" },
+              },
+              required: ["primaryHex", "secondaryHex", "primaryRgb", "secondaryRgb", "primaryCmyk", "secondaryCmyk", "pantoneApprox"],
+            },
+            typography: {
+              type: "OBJECT",
+              properties: {
+                primaryFont: { type: "STRING" },
+                bodyFont:    { type: "STRING" },
+                usage:       { type: "STRING" },
+              },
+              required: ["primaryFont", "bodyFont", "usage"],
+            },
+          },
+          required: ["fluxPrompt", "colors", "typography"],
+        },
+      },
+    };
 
-Respond with a single, valid JSON object only. No other text before or after it.`;
-
-    const response = await fetch(url, {
+    let geminiResponse = await fetch(geminiUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: promptText }] }],
-        generationConfig: {
-          responseMimeType: "application/json",
-          responseSchema: {
-            type: "OBJECT",
-            properties: {
-              primaryLogoSvg:    { type: "STRING" },
-              secondaryLogoSvg:  { type: "STRING" },
-              iconSvg:           { type: "STRING" },
-              monogramSvg:       { type: "STRING" },
-              faviconSvg:        { type: "STRING" },
-              socialIconsSvg:    { type: "STRING" },
-              appIconSvg:        { type: "STRING" },
-              colors: {
-                type: "OBJECT",
-                properties: {
-                  primaryHex:     { type: "STRING" },
-                  secondaryHex:   { type: "STRING" },
-                  primaryRgb:     { type: "STRING" },
-                  secondaryRgb:   { type: "STRING" },
-                  primaryCmyk:    { type: "STRING" },
-                  secondaryCmyk:  { type: "STRING" },
-                  pantoneApprox:  { type: "STRING" },
-                },
-                required: ["primaryHex", "secondaryHex", "primaryRgb", "secondaryRgb", "primaryCmyk", "secondaryCmyk", "pantoneApprox"],
-              },
-              typography: {
-                type: "OBJECT",
-                properties: {
-                  primaryFont: { type: "STRING" },
-                  bodyFont:    { type: "STRING" },
-                  usage:       { type: "STRING" },
-                },
-                required: ["primaryFont", "bodyFont", "usage"],
-              },
-            },
-            required: ["primaryLogoSvg", "secondaryLogoSvg", "iconSvg", "monogramSvg", "faviconSvg", "socialIconsSvg", "appIconSvg", "colors", "typography"],
-          },
-        },
-      }),
+      body: JSON.stringify(promptPayload),
     });
 
-    if (!response.ok) {
-      const errText = await response.text();
-      console.error("Gemini API Error:", errText);
-      throw new Error(`Gemini API returned status ${response.status}`);
+    // Automatic fallback to gemini-2.5-flash if pro is rate limited (status 429)
+    if (!geminiResponse.ok && geminiResponse.status === 429) {
+      console.warn("Gemini 2.5 Pro rate limited (429). Falling back to Gemini 2.5 Flash.");
+      model = "gemini-2.5-flash";
+      geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiApiKey}`;
+      geminiResponse = await fetch(geminiUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(promptPayload),
+      });
     }
 
-    const resJson = await response.json();
-    const generatedText = resJson.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!geminiResponse.ok) {
+      const errText = await geminiResponse.text();
+      console.error("Gemini API Error:", errText);
+      throw new Error(`Gemini API returned status ${geminiResponse.status}`);
+    }
+
+    const geminiResJson = await geminiResponse.json();
+    const generatedText = geminiResJson.candidates?.[0]?.content?.parts?.[0]?.text;
 
     if (!generatedText) {
       throw new Error("No output generated from Gemini API");
@@ -162,16 +143,58 @@ Respond with a single, valid JSON object only. No other text before or after it.
 
     const kitData = JSON.parse(jsonText);
 
-    // If user specified colors, override any AI-generated colors to ensure consistency
+    // Override colors if user specified them
     if (userPrimaryColor && userSecondaryColor && kitData.colors) {
       kitData.colors.primaryHex = userPrimaryColor;
       kitData.colors.secondaryHex = userSecondaryColor;
     }
 
-    // Attach kit variant label
-    kitData.kitVariant = kitVariant;
+    const fluxPrompt = String(kitData.fluxPrompt || `A premium professional logo icon/symbol mark for ${brandName}, a ${industry} brand. Standalone symbol mark, clean vector design, solid background, modern tech-forward shape, rich color scheme, no text, no letters.`);
 
-    return NextResponse.json(kitData);
+    // ── STEP 2: Call fal.ai Flux Schnell to generate the high-quality logo image ──
+    const falResponse = await fetch("https://fal.run/fal-ai/flux/schnell", {
+      method: "POST",
+      headers: {
+        Authorization: `Key ${falApiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        prompt: fluxPrompt,
+        image_size: "square",
+        num_inference_steps: 4,
+        num_images: 1,
+        enable_safety_checker: true,
+        output_format: "png",
+      }),
+    });
+
+    if (!falResponse.ok) {
+      const errText = await falResponse.text();
+      console.error("Fal Logo generation failed:", errText);
+      throw new Error(`fal.ai logo generation returned status ${falResponse.status}`);
+    }
+
+    const falResJson = await falResponse.json();
+    const imageUrl = falResJson.images?.[0]?.url || null;
+
+    if (!imageUrl) {
+      throw new Error("No image URL returned from fal.ai");
+    }
+
+    // Build the logos[] array the page expects
+    const logos = [
+      {
+        id: `kit_${kitVariant}_primary`,
+        name: kitVariant === "A" ? "Classic Bold Mark" : "Modern Gradient Mark",
+        description: fluxPrompt,
+        svgContent: null,
+        imageUrl: imageUrl, // Flux image URL from Fal
+        error: null,
+        kitData: { ...kitData, kitVariant },
+      },
+    ];
+
+    return NextResponse.json({ logos, kitData: { ...kitData, kitVariant } });
   } catch (error: any) {
     console.error("Logo generation API error:", error);
     return NextResponse.json({ error: error.message || "Failed to generate logo kit." }, { status: 500 });

@@ -1,330 +1,278 @@
 import { NextResponse } from "next/server";
 
-// Moodboard style definitions — each has a full visual system
-const MOODBOARD_STYLES: Record<string, {
-  name: string;
-  tagline: string;
-  palette: { name: string; hex: string; role: string }[];
-  typography: { headline: string; body: string; style: string };
-  keywords: string[];
-  gradient: string;
-  accentGradient: string;
-  texture: string;
-  imagePrompt: string;
-}> = {
-  luxury: {
-    name: "Dark Luxury",
-    tagline: "Opulent · Exclusive · Timeless",
-    palette: [
-      { name: "Obsidian", hex: "#0D0D0D", role: "Primary Background" },
-      { name: "Gold Leaf", hex: "#C9A84C", role: "Primary Accent" },
-      { name: "Champagne", hex: "#F5E6C8", role: "Text / Highlight" },
-      { name: "Midnight", hex: "#1A1A2E", role: "Secondary Background" },
-      { name: "Bronze", hex: "#8B6914", role: "Deep Accent" },
-    ],
-    typography: { headline: "Playfair Display", body: "Cormorant Garamond", style: "Elegant Serif" },
-    keywords: ["Exclusive", "Refined", "Heritage", "Prestige", "Curated"],
-    gradient: "linear-gradient(135deg, #0D0D0D 0%, #1A1A2E 40%, #2D1B00 100%)",
-    accentGradient: "linear-gradient(90deg, #C9A84C, #8B6914)",
-    texture: "Fine-grain leather · Gold foil embossing · Black silk",
-    imagePrompt: "Luxury brand editorial moodboard, dark obsidian background, gold leaf accents, champagne highlights, premium materials, cinematic dramatic lighting, high fashion editorial photography, editorial magazine layout composition, ultra premium feel, 16:9",
-  },
-  minimal: {
-    name: "Minimal Pure",
-    tagline: "Clean · Breathable · Essential",
-    palette: [
-      { name: "Snow", hex: "#FAFAFA", role: "Primary Background" },
-      { name: "Graphite", hex: "#1C1C1C", role: "Primary Text" },
-      { name: "Warm Gray", hex: "#8C8C8C", role: "Secondary Text" },
-      { name: "Ivory", hex: "#F2EFE9", role: "Surface" },
-      { name: "Stone", hex: "#D4CFC8", role: "Borders" },
-    ],
-    typography: { headline: "Inter", body: "Inter", style: "Clean Sans-Serif" },
-    keywords: ["Clarity", "Breathing Room", "Precision", "Intentional", "Pure"],
-    gradient: "linear-gradient(135deg, #FAFAFA 0%, #F2EFE9 100%)",
-    accentGradient: "linear-gradient(90deg, #1C1C1C, #8C8C8C)",
-    texture: "Uncoated matte paper · Thin hairlines · Generous whitespace",
-    imagePrompt: "Minimalist brand moodboard, pure white background, generous whitespace, subtle gray tones, Scandinavian design aesthetic, clean geometric forms, uncoated paper textures, calm and focused composition, 16:9",
-  },
-  premium: {
-    name: "Premium Steel",
-    tagline: "Sharp · Confident · Authority",
-    palette: [
-      { name: "Navy Depths", hex: "#0A1628", role: "Primary Background" },
-      { name: "Silver Chrome", hex: "#C0C0C8", role: "Primary Accent" },
-      { name: "Electric Blue", hex: "#0066FF", role: "CTA Accent" },
-      { name: "Slate", hex: "#2D3748", role: "Secondary BG" },
-      { name: "Ice White", hex: "#F0F4FF", role: "Text" },
-    ],
-    typography: { headline: "Montserrat", body: "Source Sans Pro", style: "Modern Geometric" },
-    keywords: ["Authority", "Innovation", "Precision", "Technology", "Forward"],
-    gradient: "linear-gradient(135deg, #0A1628 0%, #1a2744 50%, #0D1F3C 100%)",
-    accentGradient: "linear-gradient(90deg, #0066FF, #C0C0C8)",
-    texture: "Brushed aluminum · Carbon fiber · Polished steel",
-    imagePrompt: "Premium corporate technology brand moodboard, deep navy blue background, silver chrome metallic accents, electric blue highlights, brushed aluminum textures, authoritative and innovative feel, professional corporate photography, 16:9",
-  },
-  modern: {
-    name: "Modern Vivid",
-    tagline: "Dynamic · Fresh · Digital-First",
-    palette: [
-      { name: "Deep Violet", hex: "#4F46E5", role: "Primary Brand" },
-      { name: "Electric Cyan", hex: "#06B6D4", role: "Secondary Accent" },
-      { name: "Pure White", hex: "#FFFFFF", role: "Background" },
-      { name: "Soft Lavender", hex: "#EEF2FF", role: "Surface" },
-      { name: "Near Black", hex: "#0F172A", role: "Text" },
-    ],
-    typography: { headline: "Plus Jakarta Sans", body: "DM Sans", style: "Modern Variable" },
-    keywords: ["Vibrant", "Digital", "Connected", "Scalable", "Fluid"],
-    gradient: "linear-gradient(135deg, #4F46E5 0%, #06B6D4 100%)",
-    accentGradient: "linear-gradient(90deg, #4F46E5, #7C3AED)",
-    texture: "Glass morphism · Soft shadows · Gradient mesh",
-    imagePrompt: "Modern digital startup brand moodboard, vibrant violet and cyan gradient background, glassmorphism UI elements, gradient mesh effects, tech startup aesthetic, digital-first visual language, clean product mockups, 16:9",
-  },
-  editorial: {
-    name: "Editorial",
-    tagline: "Structured · Journalistic · Authoritative",
-    palette: [
-      { name: "Newsprint White", hex: "#FAF9F7", role: "Background" },
-      { name: "Press Black", hex: "#111111", role: "Primary Text" },
-      { name: "Crimson", hex: "#CC2929", role: "Pull Quote Accent" },
-      { name: "Warm Beige", hex: "#E8E4DC", role: "Secondary Surface" },
-      { name: "Ink Gray", hex: "#555555", role: "Body Text" },
-    ],
-    typography: { headline: "Libre Baskerville", body: "Merriweather", style: "Classic Editorial Serif" },
-    keywords: ["Credibility", "Depth", "Voice", "Narrative", "Structure"],
-    gradient: "linear-gradient(135deg, #FAF9F7 0%, #E8E4DC 100%)",
-    accentGradient: "linear-gradient(90deg, #CC2929, #111111)",
-    texture: "Newsprint grain · Column grid · Editorial spacing",
-    imagePrompt: "Editorial magazine brand moodboard, newsprint cream background, bold black typography, crimson accent details, journalistic photography, structured column grid layout, newspaper and magazine editorial aesthetic, 16:9",
-  },
-  apple: {
-    name: "Apple Style",
-    tagline: "Precise · Human · Magical",
-    palette: [
-      { name: "Pure White", hex: "#FFFFFF", role: "Primary Background" },
-      { name: "SF Black", hex: "#1D1D1F", role: "Primary Text" },
-      { name: "Apple Blue", hex: "#0071E3", role: "CTA Blue" },
-      { name: "Frost", hex: "#F5F5F7", role: "Section Surface" },
-      { name: "Mid Gray", hex: "#86868B", role: "Secondary Text" },
-    ],
-    typography: { headline: "SF Pro Display", body: "SF Pro Text", style: "Apple Human Interface" },
-    keywords: ["Simplicity", "Details", "Craftsmanship", "Delight", "Intuitive"],
-    gradient: "linear-gradient(180deg, #FFFFFF 0%, #F5F5F7 100%)",
-    accentGradient: "linear-gradient(90deg, #0071E3, #00A3FF)",
-    texture: "Anodized aluminum · Gorilla glass · Liquid Retina",
-    imagePrompt: "Apple-inspired brand moodboard, pristine white background, product photography on pure white, precision minimal design, silicon valley technology aesthetic, blue accent details, clean geometric product renders, ultra high-end finish, 16:9",
-  },
-  tesla: {
-    name: "Tesla Style",
-    tagline: "Future · Electric · Inevitable",
-    palette: [
-      { name: "Space Black", hex: "#101010", role: "Primary Background" },
-      { name: "Tesla Red", hex: "#CC0000", role: "Brand Red" },
-      { name: "Chrome Silver", hex: "#E8E8E8", role: "Metallic Accent" },
-      { name: "Charcoal", hex: "#1C1C1C", role: "Secondary BG" },
-      { name: "Stark White", hex: "#F8F8F8", role: "Text" },
-    ],
-    typography: { headline: "Gotham", body: "Inter", style: "Industrial Geometric" },
-    keywords: ["Electrified", "Engineered", "Inevitable", "Revolutionary", "Pure"],
-    gradient: "linear-gradient(135deg, #101010 0%, #1C1C1C 100%)",
-    accentGradient: "linear-gradient(90deg, #CC0000, #880000)",
-    texture: "Carbon fiber · Matte finish · Precision engineering",
-    imagePrompt: "Tesla-inspired industrial brand moodboard, space black background, electric red accents, chrome silver metallic reflections, carbon fiber texture details, precision engineering aesthetic, dramatic automotive product photography, minimalist but powerful, 16:9",
-  },
-  boldStartup: {
-    name: "Bold Startup",
-    tagline: "Disruptive · Energetic · Fearless",
-    palette: [
-      { name: "Electric Yellow", hex: "#FFD700", role: "Primary Brand" },
-      { name: "Night Black", hex: "#0A0A0A", role: "Background" },
-      { name: "Hot Pink", hex: "#FF2D78", role: "Secondary Accent" },
-      { name: "Electric Green", hex: "#39FF14", role: "Highlight" },
-      { name: "Off White", hex: "#F5F5F5", role: "Text" },
-    ],
-    typography: { headline: "Space Grotesk", body: "Space Mono", style: "Techno Bold" },
-    keywords: ["Disruptive", "Fearless", "Hype", "Energy", "Culture"],
-    gradient: "linear-gradient(135deg, #0A0A0A 0%, #1A0A00 100%)",
-    accentGradient: "linear-gradient(90deg, #FFD700, #FF2D78)",
-    texture: "Street art · Digital noise · Neon glow effects",
-    imagePrompt: "Bold disruptive startup brand moodboard, dark black background, neon yellow and hot pink accents, electric glow effects, youth culture energy, tech startup disruptive aesthetic, neon signage, vibrant urban photography, 16:9",
-  },
-  scandinavian: {
-    name: "Scandinavian",
-    tagline: "Hygge · Natural · Balanced",
-    palette: [
-      { name: "Birch White", hex: "#F7F4EF", role: "Background" },
-      { name: "Forest", hex: "#2D4A3E", role: "Primary Text" },
-      { name: "Sage", hex: "#8FAF8F", role: "Natural Accent" },
-      { name: "Warm Linen", hex: "#E8DFD0", role: "Secondary Surface" },
-      { name: "Slate Blue", hex: "#4A6FA5", role: "Calm Accent" },
-    ],
-    typography: { headline: "Josefin Sans", body: "Lato", style: "Nordic Geometric" },
-    keywords: ["Hygge", "Functional Beauty", "Nature", "Calm", "Sustainable"],
-    gradient: "linear-gradient(135deg, #F7F4EF 0%, #E8DFD0 100%)",
-    accentGradient: "linear-gradient(90deg, #2D4A3E, #8FAF8F)",
-    texture: "Raw wood · Linen fabric · Ceramic matte · Natural stone",
-    imagePrompt: "Scandinavian minimalist brand moodboard, birch white background, forest green and sage accents, natural wood textures, linen fabric details, hygge lifestyle photography, Nordic design aesthetic, warm and calm composition, 16:9",
-  },
-  softPastel: {
-    name: "Soft Pastel",
-    tagline: "Gentle · Joyful · Nurturing",
-    palette: [
-      { name: "Blush", hex: "#FDDDE6", role: "Primary Surface" },
-      { name: "Lavender", hex: "#E8D5F5", role: "Secondary Surface" },
-      { name: "Mint", hex: "#D5F5E3", role: "Tertiary" },
-      { name: "Peach", hex: "#FFE4CC", role: "Warm Accent" },
-      { name: "Slate Rose", hex: "#8B5A6A", role: "Text" },
-    ],
-    typography: { headline: "Nunito", body: "Nunito Sans", style: "Soft Rounded" },
-    keywords: ["Warmth", "Gentle", "Creative", "Joyful", "Personal"],
-    gradient: "linear-gradient(135deg, #FDDDE6 0%, #E8D5F5 50%, #D5F5E3 100%)",
-    accentGradient: "linear-gradient(90deg, #FDDDE6, #E8D5F5)",
-    texture: "Watercolor paper · Soft brushstrokes · Delicate patterns",
-    imagePrompt: "Soft pastel brand moodboard, blush pink and lavender gradient background, watercolor paper textures, gentle botanical illustrations, feminine and nurturing lifestyle photography, soft diffused lighting, delicate floral elements, 16:9",
-  },
-  corporate: {
-    name: "Corporate Pro",
-    tagline: "Trustworthy · Structured · Global",
-    palette: [
-      { name: "Corporate Blue", hex: "#003580", role: "Primary Brand" },
-      { name: "Warm White", hex: "#FDFCFB", role: "Background" },
-      { name: "Steel Blue", hex: "#4A7FC1", role: "Secondary Accent" },
-      { name: "Charcoal", hex: "#2C3E50", role: "Text" },
-      { name: "Sky Gray", hex: "#ECF3FB", role: "Surface" },
-    ],
-    typography: { headline: "Arial", body: "Georgia", style: "Corporate Standard" },
-    keywords: ["Professional", "Global", "Reliable", "Structured", "Leadership"],
-    gradient: "linear-gradient(135deg, #003580 0%, #1a4d99 100%)",
-    accentGradient: "linear-gradient(90deg, #003580, #4A7FC1)",
-    texture: "Embossed paper · Clean grid · Professional photography",
-    imagePrompt: "Corporate professional brand moodboard, deep corporate blue background, clean structured grid layout, professional business photography, global enterprise aesthetic, formal and trustworthy visual language, 16:9",
-  },
-  lifestyle: {
-    name: "Lifestyle",
-    tagline: "Real · Warm · Community",
-    palette: [
-      { name: "Sunset Orange", hex: "#F4845F", role: "Energy Color" },
-      { name: "Earth Brown", hex: "#6B4226", role: "Grounded Text" },
-      { name: "Golden Hour", hex: "#F6C26A", role: "Warm Accent" },
-      { name: "Cream", hex: "#FFF8F0", role: "Background" },
-      { name: "Deep Teal", hex: "#1B6CA8", role: "Cool Balance" },
-    ],
-    typography: { headline: "Poppins", body: "Open Sans", style: "Friendly Modern" },
-    keywords: ["Authentic", "Aspirational", "Real Moments", "Community", "Everyday Joy"],
-    gradient: "linear-gradient(135deg, #FFF8F0 0%, #F4845F 100%)",
-    accentGradient: "linear-gradient(90deg, #F4845F, #F6C26A)",
-    texture: "Linen textures · Golden hour photography · Real moments",
-    imagePrompt: "Lifestyle brand moodboard, golden hour warm lighting, sunset orange and cream tones, authentic candid lifestyle photography, real community moments, warm earthy textures, joyful and aspirational visual storytelling, 16:9",
-  },
-};
-
 export async function POST(req: Request) {
   try {
-    const { style, brandName, industry, brandPersonality, brandValues, usp, generateImage } = await req.json();
+    const body = await req.json();
+    const brandName    = String(body.brandName    || "Brand");
+    const industry     = String(body.industry     || "Technology");
+    const brandPersonality = Array.isArray(body.brandPersonality)
+      ? (body.brandPersonality as string[]).join(", ")
+      : String(body.brandPersonality || "Professional");
+    const brandValues: string[] = Array.isArray(body.brandValues) ? body.brandValues : [];
+    const usp          = String(body.usp          || "");
+    const website      = String(body.website      || "");
+    const mission      = String(body.mission      || "");
+    const vision       = String(body.vision       || "");
+    const tagline      = String(body.tagline      || usp);
+    const targetAudience = String(body.targetAudience   || "");
+    const customerPersonas = String(body.customerPersonas || "");
+    const competitors: string[] = Array.isArray(body.competitors) ? body.competitors : [];
+    const primaryColor   = String(body.primaryColor   || "#1A0A00");
+    const secondaryColor = String(body.secondaryColor || "#C9A84C");
 
-    if (!style) {
-      return NextResponse.json({ error: "Moodboard style is required" }, { status: 400 });
-    }
-
-    const styleDef = MOODBOARD_STYLES[style];
-    if (!styleDef) {
-      return NextResponse.json({ error: "Invalid moodboard style" }, { status: 400 });
-    }
-
-    // If generateImage is false (or not provided), just return the style definition
-    if (!generateImage) {
-      return NextResponse.json({
-        style,
-        styleDef,
-        brandName,
-        generatedImageUrl: null,
-        imagePrompt: null,
-        approvedAt: null,
-      });
-    }
-
-    // === Real Fal.ai Image Generation ===
     const falApiKey = process.env.FAL_API_KEY;
     if (!falApiKey) {
       return NextResponse.json({ error: "FAL_API_KEY is not configured" }, { status: 500 });
     }
 
-    // Build a rich, brand-specific prompt
-    const brandContext = [
-      brandName ? `Brand: "${brandName}"` : null,
-      industry ? `Industry: ${industry}` : null,
-      brandPersonality ? `Brand personality: ${brandPersonality}` : null,
-      brandValues && Array.isArray(brandValues) && brandValues.length > 0 ? `Core values: ${brandValues.slice(0, 3).join(", ")}` : null,
-      usp ? `USP: ${usp}` : null,
-    ].filter(Boolean).join(". ");
+    const geminiApiKey = process.env.GEMINI_API_KEY;
+    let moodboardPrompt = "";
 
-    const fullPrompt = `${styleDef.imagePrompt}. ${brandContext}. ${styleDef.keywords.join(", ")} aesthetic. Professional brand photography, commercial quality, studio lighting, no text overlays, no logos, pure visual mood inspiration.`;
+    if (geminiApiKey) {
+      try {
+        // ── Gemini is instructed to write the EXACT visual description for the fal.ai board ──
+        const promptGenerationInput = `You are an award-winning Brand Strategist, Creative Director, and Social Media Art Director.
 
-    // Call fal.ai sync endpoint (fal.run for synchronous, queue.fal.run for async)
-    // We use fal.run which waits for result directly
-    const falResponse = await fetch("https://fal.run/fal-ai/flux/dev", {
-      method: "POST",
-      headers: {
-        "Authorization": `Key ${falApiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        prompt: fullPrompt,
-        image_size: "landscape_16_9",
-        num_inference_steps: 28,
-        guidance_scale: 3.5,
-        num_images: 1,
-        enable_safety_checker: true,
-        output_format: "jpeg",
-      }),
-    });
+Your task is to write a SINGLE, detailed image-generation prompt for FLUX.1 (a diffusion model) that will produce a PREMIUM BRAND MARKETING & SOCIAL MEDIA MOODBOARD PRESENTATION BOARD that looks exactly like a professional agency strategy document.
 
-    if (!falResponse.ok) {
-      const errText = await falResponse.text();
-      console.error("Fal.ai API error:", errText);
-      // Return style info without image rather than failing entirely
-      return NextResponse.json({
-        style,
-        styleDef,
-        brandName,
-        generatedImageUrl: null,
-        imagePrompt: fullPrompt,
-        approvedAt: null,
-        error: `Fal.ai generation failed: ${falResponse.status}`,
-      });
+BRAND INFORMATION:
+- Company Name: ${brandName}
+- Tagline / USP: ${tagline || usp}
+- Industry: ${industry}
+- Website: ${website}
+- Mission: ${mission}
+- Vision: ${vision}
+- Brand Personality: ${brandPersonality}
+- Core Values: ${brandValues.slice(0, 5).join(", ")}
+- Target Audience: ${targetAudience}
+- Customer Persona: ${customerPersonas}
+- Competitors: ${competitors.slice(0, 3).join(", ")}
+- Primary Color: ${primaryColor}
+- Secondary Color: ${secondaryColor}
+
+REQUIRED BOARD LAYOUT (must include ALL 20 sections, arranged in a dense multi-row grid exactly like a Pentagram / Collins / La Vivenzia agency brand book):
+
+VISUAL STYLE MANDATE:
+- Dark black/obsidian background (#0D0A06 or similar near-black warm dark)
+- Thin gold/bronze hairline dividers between all sections
+- Gold and cream typography (no white — use warm cream #F5ECD7 and gold #C9A84C)
+- Overall feel: luxury editorial, cinematic, invitation-only, world-class
+- Resolution: ultra-detailed 8K presentation graphic, photorealistic photography inserts
+- Format: Wide landscape presentation board, densely packed with information
+
+TOP LEFT BLOCK — Brand Identity Header:
+- Large gold monogram/crest logo mark in top left corner (abstract or letter-based)
+- Brand name "${brandName}" in elegant serif or luxury sans below the mark
+- Tagline "${tagline || usp}" in small italic caption below brand name
+- One evocative brand positioning line in small body copy
+
+SECTION 1 — Brand Personality Grid (top-center):
+- Section header "1. BRAND PERSONALITY" in gold uppercase tracking
+- 2-column grid of personality words relevant to ${brandPersonality} and ${industry}
+- Words styled as clean uppercase labels — luxury, cinematic, authoritative, etc.
+- A highlighted brand mission strip below the words
+
+SECTION 2 — Visual Identity & Photography Direction (top-right):
+- Section header "2. VISUAL IDENTITY & PHOTOGRAPHY DIRECTION"
+- 3 high-end editorial photographs arranged in a masonry grid
+- Photos must match brand industry: ${industry} — ${brandPersonality} aesthetics
+- Images: one wide cinematic shot, one detail/texture shot, one lifestyle/product shot
+- All dramatically lit, moody, and ultra-premium
+
+SECTION 3 — Photography Direction (left column):
+- "3. PHOTOGRAPHY DIRECTION"
+- DO column: 7 checkmark bullet points (wide cinematic shots, human emotion, natural luxury, golden lighting, reflections, premium interiors, brand textures)
+- DON'T column: 5 ✗ bullet points (stock photos, over-edited HDR, smiling at camera, crowded tourist places, bright flashy colors)
+
+SECTION 4 — Instagram / Content Feed Preview (center):
+- "4. INSTAGRAM FEED PREVIEW"
+- 3×3 or 4×4 mock grid of square content tiles
+- Mix: 2 quote cards in ${primaryColor}, 4 moody editorial photos, 1 reel cover tile, 1 carousel preview, 1 product/detail tile
+- Labels below: QUOTE, TRAVEL, EXPERIENCE, LIFESTYLE, ARCHITECTURE, FOOD, MEMBER STORY, DESTINATION, REEL COVER
+
+SECTION 5 — Post Categories (right column):
+- "5. POST CATEGORIES"
+- 10 icon-labeled content types with small icons
+- Relevant to ${industry}: Experience Stories, Destination Highlights, Member Stories, Expert Tips, Behind the Scenes, Founder Notes, Product/Service Spotlight, Hidden Gems, Premium Lifestyle, Seasonal Collections
+
+SECTION 6 — Carousel Style (bottom-left):
+- "6. CAROUSEL STYLE"
+- 5 mini slide mockups in a horizontal row labeled 01–05
+- Slide 01: Hero headline slide (bold discovery headline)
+- Slide 02: Destination/product detail with bullet points
+- Slide 03: Quote slide with attribution
+- Slide 04: Brand philosophy statement
+- Slide 05: CTA slide ("BECOME A MEMBER" or relevant action)
+- Each slide has the brand logo mark watermark bottom-right
+
+SECTION 7 — Reel Direction (right):
+- "7. REEL DIRECTION"
+- Storyboard strip: HOOK (0–3 sec), TRANSITION, DETAIL SHOT, DRONE VIEW, SLOW MOTION, ELEGANT ENDING
+- 6 mini video frame thumbnails in a horizontal strip
+- Music style tags: PIANO · ORCHESTRAL · AMBIENT · LUXURY LOUNGE · CINEMATIC
+
+SECTION 8 — Typography System (bottom-left):
+- "8. TYPOGRAPHY IN USE"
+- Large display heading example in enormous serif: "THE WORLD BEYOND ORDINARY"
+- Below it: BODY TEXT example paragraph, CAPTION EXAMPLE, STORY HEADLINE, PRICE ANNOUNCEMENT (styled with separator and per-unit label), QUOTE STYLE in italic
+
+SECTION 9 — Social Media Templates (center):
+- "9. SOCIAL TEMPLATES"
+- 8 mini platform mockups: Instagram Post 4:5, Instagram Story 9:16, LinkedIn Banner, LinkedIn Carousel, Pinterest Pin 2:3, YouTube Thumbnail, Email Banner, Facebook Cover, WhatsApp Story
+- Each is a tiny dark-themed card with brand logo and sample layout
+
+SECTION 10 — Copywriting Tone (right):
+- "10. COPYWRITING TONE"
+- Two-column comparison: INSTEAD OF → SAY THIS INSTEAD
+- 5 rows showing transformation from generic to luxury brand voice
+- Relevant to ${industry} and ${brandPersonality}
+
+SECTION 11 — Iconography (bottom row):
+- "11. ICONOGRAPHY"
+- 8 line-icon circles showing brand-relevant custom icons
+- Labels below each icon
+
+SECTION 12 — Motion Direction (left):
+- "12. MOTION DIRECTION"
+- 5 animation style tags: FADE IN/OUT, SLOW ZOOM, PARALLAX EFFECT, SMOOTH TRANSITIONS, GOLD SHIMMER, FLOATING TEXT
+- Small stacked label list
+
+SECTION 13 — Content Pillars (center):
+- "13. CONTENT PILLARS"
+- Donut/ring chart in gold and dark tones showing content split percentages
+- 4–5 pillars: Experiences 40%, Destinations 25%, Lifestyle 15%, Behind The Scenes 10%, Offers 10%
+- Percentages and labels in cream text
+
+SECTION 14 — Campaign Concepts (center):
+- "14. CAMPAIGN CONCEPTS"
+- 4 mini editorial campaign mood cards in a 2×2 grid
+- Each card: campaign name, 1 editorial image, and subtitle
+- Names relevant to brand: SUMMER ESCAPE, WINTER COLLECTION, HIDDEN EUROPE, etc.
+
+SECTION 15 — Hashtag Strategy (right):
+- "15. HASHTAG STRATEGY"
+- 3 categories: LUXURY · TRAVEL/INDUSTRY · LOCATION · NICHE
+- 3–4 hashtags each category in small monospace text
+- All brand-relevant
+
+SECTION 16 — CTA System (far right):
+- "16. CTA SYSTEM"
+- 5 styled call-to-action button mockups stacked vertically
+- Button styles: DISCOVER MORE (filled), BECOME A MEMBER (gold), EXPLORE EXPERIENCES (outline), REQUEST CONCIERGE (dark), RESERVE YOUR JOURNEY (minimal text link)
+
+SECTION 17 — Color Usage (bottom-left):
+- "17. COLOR USAGE"
+- 3 large color swatches with hex values and percentage usage
+- Primary ${primaryColor} at 85%, Accent ${secondaryColor} at 10%, Highlight/cream at 5%
+- Labels: BACKGROUND, ACCENT, HIGHLIGHT
+
+SECTION 18 — Brand Voice (bottom-center):
+- "18. BRAND VOICE"
+- Two columns: WE ARE (positive attributes) vs WE ARE NOT (negative attributes)
+- 5 words each in elegant stacked list
+- Brand logo watermark embedded
+
+SECTION 19 — Content Ratio (bottom):
+- "19. CONTENT RATIO"
+- Horizontal bar chart or stacked bars
+- Content type ratios: Lifestyle 40%, Destinations 25%, Luxury Details 15%, Member Stories 10%, Brand 10%
+
+SECTION 20 — Mood Summary / Brand Manifesto (bottom-right):
+- "20. MOOD SUMMARY"
+- 3–4 sentence brand manifesto paragraph
+- Poetic, luxury, aspirational tone matching ${brandPersonality}
+- Footer: "${brandName} — ${tagline || usp}" in gold small caps
+
+BOTTOM FOOTER:
+- Full-width thin gold hairline above footer
+- Footer: "${brandName} — ${tagline || usp}" centered in gold uppercase tracking
+- Brand logo mark far right
+
+OUTPUT RULES:
+- Return ONLY the image prompt text starting with: "A premium professional brand marketing and social media strategy moodboard presentation board for ${brandName}..."
+- The prompt must be extremely detailed, describing every visual element, color, typography, layout, photography direction
+- No markdown, no explanations, no section headers — just one long flowing descriptive prompt
+- Describe textures, lighting, mood, and typography precisely
+- The board must look like a real $50,000 agency deliverable`;
+
+        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`;
+        const geminiResponse = await fetch(geminiUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: promptGenerationInput }] }],
+            generationConfig: {
+              temperature: 1.0,
+              maxOutputTokens: 1500,
+            },
+          }),
+        });
+
+        if (geminiResponse.ok) {
+          const resJson = await geminiResponse.json();
+          moodboardPrompt = resJson.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
+        }
+      } catch (err) {
+        console.error("Gemini moodboard prompt generation failed, using fallback:", err);
+      }
     }
 
-    const falResult = await falResponse.json();
+    // ── Fallback: dense manual prompt if Gemini fails ──
+    if (!moodboardPrompt) {
+      moodboardPrompt = `A premium professional brand marketing and social media strategy moodboard presentation board for ${brandName}, a ${industry} brand with ${brandPersonality} personality. Dark warm obsidian black background with thin hairline gold dividers separating 20 distinct labeled sections arranged in a dense multi-row editorial grid layout. Top-left: gold monogram crest logo mark for ${brandName} with tagline "${tagline || usp}" in ivory serif. Top-center: Brand Personality section with two-column grid of uppercase luxury words. Top-right: Visual Identity photography direction with three dramatic cinematic ${industry} editorial photographs in moody golden lighting. Left column: Photography direction DO/DON'T checklist in cream text. Center: Instagram feed mock grid with 9 square content tiles mixing editorial photos, gold quote cards, and reel covers. Right: 10 post categories with icons. Second row left: Carousel style mockup showing 5 slides numbered 01-05. Center: Reel direction storyboard with 6 video frame thumbnails and music style tags. Third row: Typography system with giant serif "THE WORLD BEYOND ORDINARY" display heading and body text specimens. Social templates section showing 9 platform card mockups. Copywriting tone comparison table. Fourth row: Iconography icons, Motion direction tags, Content pillars donut chart in gold, Campaign concept cards. Bottom row: Color swatches (${primaryColor} 85%, ${secondaryColor} 10%, cream 5%), Brand voice WE ARE/NOT table, Content ratio bar chart, Mood summary manifesto paragraph. Full footer in gold: "${brandName} — ${tagline || usp}". Ultra-detailed 8K resolution, photorealistic photography inserts, luxury editorial design, $50000 branding agency quality presentation.`;
+    }
 
-    // fal.ai response structure: { images: [{ url: "...", ... }] }
-    const generatedImageUrl = falResult?.images?.[0]?.url || null;
+    // ── Call fal.ai Flux Schnell to render the board ──
+    let imageUrl: string | null = null;
+    let genError: string | null = null;
+
+    try {
+      const res = await fetch("https://fal.run/fal-ai/flux/schnell", {
+        method: "POST",
+        headers: {
+          Authorization: `Key ${falApiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          prompt: moodboardPrompt,
+          image_size: "landscape_16_9",
+          num_inference_steps: 4,
+          num_images: 1,
+          enable_safety_checker: true,
+          output_format: "png",
+        }),
+      });
+
+      if (!res.ok) {
+        const errText = await res.text();
+        console.error("Fal moodboard generation failed:", errText);
+        genError = `fal.ai returned status ${res.status}`;
+      } else {
+        const result = await res.json();
+        imageUrl = result?.images?.[0]?.url || null;
+      }
+    } catch (e: any) {
+      console.error("Fal moodboard generation exception:", e.message);
+      genError = e.message;
+    }
+
+    const singleMood = {
+      id: "option_1",
+      name: "Bespoke Brand Strategy Board",
+      tagline: `Premium visual identity & social strategy for ${brandName}`,
+      prompt: moodboardPrompt,
+      imageUrl,
+      error: genError,
+    };
 
     return NextResponse.json({
-      style,
-      styleDef,
+      moodboards: [singleMood],
+      successful: imageUrl ? 1 : 0,
+      total: 1,
       brandName,
-      generatedImageUrl,
-      imagePrompt: fullPrompt,
-      approvedAt: null,
     });
-
   } catch (error: any) {
     console.error("Moodboard generation error:", error);
     return NextResponse.json({ error: error.message || "Failed to generate moodboard" }, { status: 500 });
   }
-}
-
-export async function GET() {
-  // Return all available style definitions for the picker
-  return NextResponse.json({
-    styles: Object.entries(MOODBOARD_STYLES).map(([id, style]) => ({
-      id,
-      name: style.name,
-      tagline: style.tagline,
-      gradient: style.gradient,
-      accentGradient: style.accentGradient,
-      palette: style.palette.slice(0, 3),
-      keywords: style.keywords,
-    })),
-  });
 }
