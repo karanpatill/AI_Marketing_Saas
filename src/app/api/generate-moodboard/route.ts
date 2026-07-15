@@ -1,5 +1,28 @@
 import { NextResponse } from "next/server";
 
+async function callGeminiWithRetry(
+  url: string,
+  payload: object,
+  maxRetries = 3,
+  delayMs = 4000
+): Promise<Response> {
+  let lastResponse: Response | null = null;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    if (attempt > 0) {
+      console.warn(`Gemini 429 rate limit. Waiting ${delayMs}ms before retry ${attempt}/${maxRetries}...`);
+      await new Promise((r) => setTimeout(r, delayMs));
+    }
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (res.status !== 429) return res;
+    lastResponse = res;
+  }
+  return lastResponse!;
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -195,20 +218,24 @@ OUTPUT RULES:
 - Describe textures, lighting, mood, and typography precisely
 - The board must look like a real $50,000 agency deliverable`;
 
-        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`;
-        const geminiResponse = await fetch(geminiUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: promptGenerationInput }] }],
-            generationConfig: {
-              temperature: 1.0,
-              maxOutputTokens: 1500,
-            },
-          }),
-        });
+        const models = ["gemini-2.5-flash", "gemini-1.5-flash"];
+        const geminiPayload = {
+          contents: [{ parts: [{ text: promptGenerationInput }] }],
+          generationConfig: {
+            temperature: 1.0,
+            maxOutputTokens: 1500,
+          },
+        };
 
-        if (geminiResponse.ok) {
+        let geminiResponse: Response | null = null;
+        for (const model of models) {
+          const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiApiKey}`;
+          geminiResponse = await callGeminiWithRetry(geminiUrl, geminiPayload);
+          if (geminiResponse.status !== 429) break;
+          console.warn(`Model ${model} still 429 after retries. Trying next model...`);
+        }
+
+        if (geminiResponse && geminiResponse.ok) {
           const resJson = await geminiResponse.json();
           moodboardPrompt = resJson.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
         }

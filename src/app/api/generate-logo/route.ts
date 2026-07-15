@@ -1,5 +1,29 @@
 import { NextResponse } from "next/server";
 
+// Retry Gemini call up to maxRetries times on 429 rate limit
+async function callGeminiWithRetry(
+  url: string,
+  payload: object,
+  maxRetries = 3,
+  delayMs = 4000
+): Promise<Response> {
+  let lastResponse: Response | null = null;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    if (attempt > 0) {
+      console.warn(`Gemini 429 rate limit. Waiting ${delayMs}ms before retry ${attempt}/${maxRetries}...`);
+      await new Promise((r) => setTimeout(r, delayMs));
+    }
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (res.status !== 429) return res;
+    lastResponse = res;
+  }
+  return lastResponse!;
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -65,9 +89,6 @@ You must respond with a single, valid JSON object containing exactly these field
   }
 }`;
 
-    let model = "gemini-2.5-pro";
-    let geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiApiKey}`;
-
     const promptPayload = {
       contents: [{ parts: [{ text: promptText }] }],
       generationConfig: {
@@ -104,28 +125,22 @@ You must respond with a single, valid JSON object containing exactly these field
       },
     };
 
-    let geminiResponse = await fetch(geminiUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(promptPayload),
-    });
+    // Use Flash first (10 RPM free tier), retry on 429, then fall back to 1.5-flash
+    const models = ["gemini-2.5-flash", "gemini-1.5-flash"];
+    let geminiResponse: Response | null = null;
 
-    // Automatic fallback to gemini-2.5-flash if pro is rate limited (status 429)
-    if (!geminiResponse.ok && geminiResponse.status === 429) {
-      console.warn("Gemini 2.5 Pro rate limited (429). Falling back to Gemini 2.5 Flash.");
-      model = "gemini-2.5-flash";
-      geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiApiKey}`;
-      geminiResponse = await fetch(geminiUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(promptPayload),
-      });
+    for (const model of models) {
+      const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiApiKey}`;
+      geminiResponse = await callGeminiWithRetry(geminiUrl, promptPayload);
+      if (geminiResponse.ok) break;
+      if (geminiResponse.status !== 429) break; // non-rate-limit error, don't try next model
+      console.warn(`${model} still rate limited after retries. Trying next model...`);
     }
 
-    if (!geminiResponse.ok) {
-      const errText = await geminiResponse.text();
+    if (!geminiResponse || !geminiResponse.ok) {
+      const errText = await geminiResponse?.text();
       console.error("Gemini API Error:", errText);
-      throw new Error(`Gemini API returned status ${geminiResponse.status}`);
+      throw new Error(`Gemini API returned status ${geminiResponse?.status}`);
     }
 
     const geminiResJson = await geminiResponse.json();
