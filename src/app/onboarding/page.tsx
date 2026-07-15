@@ -404,6 +404,7 @@ export default function OnboardingPage() {
   const [taglineSuggestions, setTaglineSuggestions] = useState<string[]>([]);
   const [taglineError, setTaglineError] = useState<string | null>(null);
   const [showTaglinePicker, setShowTaglinePicker] = useState(false);
+  const [hasTagline, setHasTagline] = useState<"yes" | "no" | null>(null);
 
   useEffect(() => {
     // Wipe stale keys from all old schema versions
@@ -416,6 +417,9 @@ export default function OnboardingPage() {
         const parsed = JSON.parse(saved);
         if (parsed && parsed.brandName && parsed.brandName.trim().length > 0) {
           setData(parsed);
+          if (parsed.usp && parsed.usp.trim().length > 0) {
+            setHasTagline("yes");
+          }
           if (parsed.selectedLogo) {
             setIsLogoApproved(true);
             setLogoOptions([parsed.selectedLogo]);
@@ -1062,71 +1066,134 @@ export default function OnboardingPage() {
                     />
                   </div>
 
-                  {/* ── Brand Tagline / USP — with AI generator ── */}
-                  <div className="md:col-span-2 space-y-2">
-                    <div className="flex items-center justify-between">
+                  {/* ── Brand Tagline / USP — Choice toggle ── */}
+                  <div className="md:col-span-2 space-y-4 border-t border-gray-100 pt-4">
+                    <div className="space-y-2">
                       <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                        Brand Tagline / USP *
+                        Do you already have a brand tagline or USP? *
                       </label>
-                      <button
-                        type="button"
-                        onClick={handleGenerateTaglines}
-                        disabled={isGeneratingTaglines || !data.brandName}
-                        className="flex items-center gap-1.5 text-[10px] font-bold text-[#06B6D4] hover:text-[#06B6D4]/80 border border-[#06B6D4]/30 hover:border-[#06B6D4]/60 px-2.5 py-1 rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-                      >
-                        {isGeneratingTaglines ? (
-                          <><Loader2 className="w-3 h-3 animate-spin" /> Generating…</>
-                        ) : (
-                          <><Sparkles className="w-3 h-3" /> AI Generate 5 Taglines</>
-                        )}
-                      </button>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setHasTagline("yes");
+                            setShowTaglinePicker(false);
+                          }}
+                          className={`flex-1 py-2 px-4 rounded-xl text-xs font-bold border transition-all ${
+                            hasTagline === "yes"
+                              ? "bg-slate-900 text-white border-slate-900"
+                              : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+                          }`}
+                        >
+                          Yes, I have one
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setHasTagline("no");
+                            updateData({ usp: "" });
+                          }}
+                          className={`flex-1 py-2 px-4 rounded-xl text-xs font-bold border transition-all ${
+                            hasTagline === "no"
+                              ? "bg-slate-900 text-white border-slate-900"
+                              : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+                          }`}
+                        >
+                          No, generate one with AI
+                        </button>
+                      </div>
                     </div>
 
-                    <input
-                      type="text"
-                      placeholder="e.g. Schedule-free autopilot campaign flow"
-                      value={data.usp}
-                      onChange={(e) => updateData({ usp: e.target.value })}
-                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-[#06B6D4] text-sm bg-white text-gray-900 outline-none"
-                    />
+                    {hasTagline === "yes" && (
+                      <div className="space-y-1.5 animate-fade-down">
+                        <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                          Enter your Tagline / USP *
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="e.g. Schedule-free autopilot campaign flow"
+                          value={data.usp}
+                          onChange={(e) => updateData({ usp: e.target.value })}
+                          className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-[#06B6D4] text-sm bg-white text-gray-900 outline-none"
+                        />
+                      </div>
+                    )}
 
-                    {/* ── Tagline suggestions picker ── */}
-                    {showTaglinePicker && (
-                      <div className="border border-gray-200 rounded-xl overflow-hidden bg-white shadow-lg">
-                        <div className="flex items-center justify-between px-3 py-2 border-b border-gray-100 bg-gray-50">
-                          <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">
-                            {isGeneratingTaglines ? "Generating AI taglines…" : "Pick a tagline or type your own"}
-                          </span>
+                    {hasTagline === "no" && (
+                      <div className="space-y-2.5 animate-fade-down">
+                        <div className="flex items-center justify-between">
+                          <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                            Generated AI Tagline *
+                          </label>
                           <button
-                            onClick={() => { setShowTaglinePicker(false); setTaglineSuggestions([]); }}
-                            className="text-gray-400 hover:text-gray-700"
+                            type="button"
+                            onClick={handleGenerateTaglines}
+                            disabled={isGeneratingTaglines || !data.brandName}
+                            className="flex items-center gap-1.5 text-[10px] font-bold text-[#06B6D4] hover:text-[#06B6D4]/80 border border-[#06B6D4]/30 hover:border-[#06B6D4]/60 px-2.5 py-1 rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                           >
-                            <X className="w-3.5 h-3.5" />
+                            {isGeneratingTaglines ? (
+                              <><Loader2 className="w-3 h-3 animate-spin" /> Generating…</>
+                            ) : (
+                              <><Sparkles className="w-3 h-3" /> AI Generate 5 Taglines</>
+                            )}
                           </button>
                         </div>
-                        {isGeneratingTaglines ? (
-                          <div className="p-4 flex items-center gap-2 text-xs text-gray-400">
-                            <Loader2 className="w-4 h-4 animate-spin text-[#06B6D4]" />
-                            Crafting 5 unique taglines for {data.brandName}…
-                          </div>
-                        ) : taglineError ? (
-                          <div className="p-4 text-xs text-red-500">{taglineError}</div>
-                        ) : (
-                          <div className="divide-y divide-gray-50">
-                            {taglineSuggestions.map((t, i) => (
+
+                        <input
+                          type="text"
+                          readOnly
+                          placeholder="Click 'AI Generate' above to create options, then pick one"
+                          value={data.usp}
+                          onClick={() => {
+                            if (taglineSuggestions.length > 0) {
+                              setShowTaglinePicker(true);
+                            } else {
+                              handleGenerateTaglines();
+                            }
+                          }}
+                          className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-[#06B6D4] text-sm bg-gray-50 text-gray-900 outline-none cursor-pointer"
+                        />
+
+                        {/* ── Tagline suggestions picker ── */}
+                        {showTaglinePicker && (
+                          <div className="border border-gray-200 rounded-xl overflow-hidden bg-white shadow-lg">
+                            <div className="flex items-center justify-between px-3 py-2 border-b border-gray-100 bg-gray-50">
+                              <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">
+                                {isGeneratingTaglines ? "Generating AI taglines…" : "Select one of these 5 AI taglines"}
+                              </span>
                               <button
-                                key={i}
-                                onClick={() => {
-                                  updateData({ usp: t });
-                                  setShowTaglinePicker(false);
-                                  setTaglineSuggestions([]);
-                                }}
-                                className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-[#06B6D4]/5 hover:text-[#06B6D4] transition-colors flex items-center justify-between group"
+                                onClick={() => { setShowTaglinePicker(false); setTaglineSuggestions([]); }}
+                                className="text-gray-400 hover:text-gray-700"
                               >
-                                <span className="italic">"{t}"</span>
-                                <span className="text-[9px] font-bold text-gray-300 group-hover:text-[#06B6D4] uppercase tracking-wider shrink-0 ml-2">Select</span>
+                                <X className="w-3.5 h-3.5" />
                               </button>
-                            ))}
+                            </div>
+                            {isGeneratingTaglines ? (
+                              <div className="p-4 flex items-center gap-2 text-xs text-gray-400">
+                                <Loader2 className="w-4 h-4 animate-spin text-[#06B6D4]" />
+                                Crafting 5 unique taglines for {data.brandName}…
+                              </div>
+                            ) : taglineError ? (
+                              <div className="p-4 text-xs text-red-500">{taglineError}</div>
+                            ) : (
+                              <div className="divide-y divide-gray-50">
+                                {taglineSuggestions.map((t, i) => (
+                                  <button
+                                    key={i}
+                                    type="button"
+                                    onClick={() => {
+                                      updateData({ usp: t });
+                                      setShowTaglinePicker(false);
+                                      setTaglineSuggestions([]);
+                                    }}
+                                    className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-[#06B6D4]/5 hover:text-[#06B6D4] transition-colors flex items-center justify-between group"
+                                  >
+                                    <span className="italic">"{t}"</span>
+                                    <span className="text-[9px] font-bold text-gray-300 group-hover:text-[#06B6D4] uppercase tracking-wider shrink-0 ml-2">Select</span>
+                                  </button>
+                                ))}
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>

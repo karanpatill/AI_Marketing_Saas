@@ -1,5 +1,27 @@
 import { NextResponse } from "next/server";
 
+async function callGeminiWithRetry(
+  url: string,
+  payload: object,
+  maxRetries = 3,
+  delayMs = 4000
+): Promise<Response> {
+  let lastResponse: Response | null = null;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    if (attempt > 0) {
+      console.warn(`Gemini 429 rate limit. Waiting ${delayMs}ms before retry ${attempt}/${maxRetries}...`);
+      await new Promise((r) => setTimeout(r, delayMs));
+    }
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (res.status !== 429) return res;
+    lastResponse = res;
+  }
+  return lastResponse!;
+}
 
 // POST handler to submit video generation to queue
 export async function POST(req: Request) {
@@ -141,9 +163,7 @@ OUTPUT FORMAT: Return ONLY the final detailed text prompt. No introduction, no m
 
     let videoPromptText = "";
     try {
-      let model = "gemini-2.5-flash";
-      let geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiApiKey}`;
-
+      const models = ["gemini-2.5-flash", "gemini-1.5-flash"];
       const promptPayload = {
         contents: [{ parts: [{ text: promptGenerationInput }] }],
         generationConfig: {
@@ -152,26 +172,17 @@ OUTPUT FORMAT: Return ONLY the final detailed text prompt. No introduction, no m
         },
       };
 
-      let geminiResponse = await fetch(geminiUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(promptPayload),
-      });
-
-      if (!geminiResponse.ok && geminiResponse.status === 429) {
-        console.warn("Gemini 2.5 Flash rate limited (429). Falling back to Gemini 2.5 Pro.");
-        model = "gemini-2.5-pro";
-        geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiApiKey}`;
-        geminiResponse = await fetch(geminiUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(promptPayload),
-        });
+      let geminiResponse: Response | null = null;
+      for (const model of models) {
+        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiApiKey}`;
+        geminiResponse = await callGeminiWithRetry(geminiUrl, promptPayload);
+        if (geminiResponse.status !== 429) break;
+        console.warn(`Model ${model} still 429 after retries. Trying next model...`);
       }
 
-      if (!geminiResponse.ok) {
-        const errText = await geminiResponse.text();
-        throw new Error(`Gemini API returned status ${geminiResponse.status}: ${errText}`);
+      if (!geminiResponse || !geminiResponse.ok) {
+        const errText = geminiResponse ? await geminiResponse.text() : "No response";
+        throw new Error(`Gemini API returned status ${geminiResponse?.status}: ${errText}`);
       }
 
       const geminiResJson = await geminiResponse.json();

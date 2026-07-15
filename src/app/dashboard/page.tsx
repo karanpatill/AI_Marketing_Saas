@@ -59,6 +59,41 @@ type BrandAssets = {
   logo_studio_data: any;
 };
 
+function injectBgIntoHtml(
+  html: string | undefined, 
+  imageUrl: string | null | undefined, 
+  opacity: number = 0.08,
+  loadedPrimary?: string,
+  loadedBg?: string,
+  currentPrimary?: string,
+  currentBg?: string
+): string {
+  if (!html) return "";
+  let processed = html;
+
+  processed = processed.replaceAll("font-cormorant", "brand-font-heading");
+  processed = processed.replaceAll("font-syne", "brand-font-heading");
+  processed = processed.replaceAll("font-bricolage", "brand-font-heading");
+  processed = processed.replaceAll("font-space", "brand-font-heading");
+  processed = processed.replaceAll("font-outfit", "brand-font-body");
+  processed = processed.replaceAll("font-sans", "brand-font-body");
+
+  if (loadedPrimary && currentPrimary && loadedPrimary.toLowerCase() !== currentPrimary.toLowerCase()) {
+    const escaped = loadedPrimary.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    processed = processed.replace(new RegExp(escaped, "gi"), currentPrimary);
+  }
+  if (loadedBg && currentBg && loadedBg.toLowerCase() !== currentBg.toLowerCase()) {
+    const escaped = loadedBg.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    processed = processed.replace(new RegExp(escaped, "gi"), currentBg);
+  }
+
+  const imgReplacement = imageUrl ? `url('${imageUrl}')` : "none";
+  processed = processed.replaceAll("var(--bg-image)", imgReplacement);
+  processed = processed.replaceAll("var(--bg-opacity, 0.08)", opacity.toString());
+  processed = processed.replaceAll("var(--bg-opacity)", opacity.toString());
+  return processed;
+}
+
 export default function DashboardPage() {
   const router = useRouter();
   const [dna, setDna] = useState<BrandDna | null>(null);
@@ -2094,97 +2129,110 @@ export default function DashboardPage() {
                       </div>
 
                       {/* Live slide viewport */}
-                      <div className="relative aspect-square w-full max-w-sm mx-auto bg-black rounded-2xl overflow-hidden border border-gray-800 shadow-2xl flex flex-col justify-between p-6">
-                        
-                        {/* 1. Dynamic background image layout with rotation, scale, and vignette filter */}
-                        {(() => {
-                          const slide = carouselSlides[activeSlide];
-                          return (
-                            <div 
-                              className="absolute inset-0 transition-all duration-700 ease-out"
-                              style={{
-                                backgroundImage: `url(${generatedCarouselImage})`,
-                                backgroundSize: "cover",
-                                backgroundPosition: "center",
-                                transform: `scale(${slide?.backgroundConfig?.scale || 1.15}) rotate(${slide?.backgroundConfig?.rotation || 0}deg)`,
-                                filter: `brightness(${slide?.backgroundConfig?.brightness || 0.65}) contrast(${slide?.backgroundConfig?.contrast || 1.1}) saturate(${slide?.backgroundConfig?.saturation || 0.9})`,
-                              }}
-                            />
-                          );
-                        })()}
-
-                        {/* Vignette overlay */}
-                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_30%,rgba(0,0,0,0.85)_100%)] pointer-events-none" />
-
-                        {/* 2. Premium HTML overlay layer */}
+                      <div className="relative aspect-square w-full max-w-sm mx-auto bg-black rounded-2xl overflow-hidden border border-gray-800 shadow-2xl">
+                        <style dangerouslySetInnerHTML={{ __html: `
+                          @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Syne:wght@400;750;800&family=Bricolage+Grotesque:wght@300;500;800&family=Space+Grotesk:wght@400;700&family=Outfit:wght@300;400;600;800&family=Plus+Jakarta+Sans:wght@300;400;600;800&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Montserrat:wght@300;400;700&family=Cinzel:wght@400;700;900&family=Inter:wght@300;400;600;700&display=swap');
+                          
+                          .brand-font-heading {
+                            font-family: '${assets?.logo_studio_data?.typography?.primaryFont || "inherit"}', sans-serif !important;
+                          }
+                          .brand-font-body {
+                            font-family: '${assets?.logo_studio_data?.typography?.bodyFont || "inherit"}', sans-serif !important;
+                          }
+                        `}} />
                         {(() => {
                           const slide = carouselSlides[activeSlide];
                           const activeColors = assets?.logo_studio_data?.colors || {
                             primaryHex: "#0D0D0D",
                             secondaryHex: "#C9A84C"
                           };
-                          return (
-                            <div className="relative z-10 h-full w-full flex flex-col justify-between pointer-events-none select-none">
-                              {/* Slide Header: Logo + index */}
-                              <div className="flex items-center justify-between w-full">
-                                <div className="flex items-center gap-2">
-                                  {assets?.logo_url ? (
-                                    <img src={assets.logo_url} alt="Logo" className="w-5 h-5 object-contain" />
-                                  ) : assets?.logo_studio_data?.assets?.faviconSvg ? (
-                                    <div className="w-5 h-5 [&>svg]:w-full [&>svg]:h-full" dangerouslySetInnerHTML={{ __html: assets.logo_studio_data.assets.faviconSvg }} />
-                                  ) : (
-                                    <div className="w-5 h-5 rounded-full bg-[#06B6D4]/20 border border-[#06B6D4]/40 flex items-center justify-center text-[10px] text-white font-bold">
-                                      {dna?.brand_name?.charAt(0).toUpperCase()}
-                                    </div>
-                                  )}
-                                  <span className="text-[10px] font-bold text-white/95 font-sans tracking-wide uppercase">{dna?.brand_name || "Aethera"}</span>
+                          // If it is the old style (plain text model data), fall back gracefully
+                          if (!slide?.html) {
+                            return (
+                              <div className="relative h-full w-full flex flex-col justify-between p-6 z-10 select-none">
+                                {/* 1. Dynamic background image layout with rotation, scale, and vignette filter */}
+                                <div 
+                                  className="absolute inset-0 transition-all duration-700 ease-out z-0"
+                                  style={{
+                                    backgroundImage: `url(${generatedCarouselImage})`,
+                                    backgroundSize: "cover",
+                                    backgroundPosition: "center",
+                                    transform: `scale(${slide?.backgroundConfig?.scale || 1.15}) rotate(${slide?.backgroundConfig?.rotation || 0}deg)`,
+                                    filter: `brightness(${slide?.backgroundConfig?.brightness || 0.65}) contrast(${slide?.backgroundConfig?.contrast || 1.1}) saturate(${slide?.backgroundConfig?.saturation || 0.9})`,
+                                  }}
+                                />
+                                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_30%,rgba(0,0,0,0.85)_100%)] z-0 pointer-events-none" />
+
+                                {/* Slide Header: Logo + index */}
+                                <div className="relative flex items-center justify-between w-full z-10">
+                                  <div className="flex items-center gap-2">
+                                    {assets?.logo_url ? (
+                                      <img src={assets.logo_url} alt="Logo" className="w-5 h-5 object-contain" />
+                                    ) : assets?.logo_studio_data?.assets?.faviconSvg ? (
+                                      <div className="w-5 h-5 [&>svg]:w-full [&>svg]:h-full" dangerouslySetInnerHTML={{ __html: assets.logo_studio_data.assets.faviconSvg }} />
+                                    ) : (
+                                      <div className="w-5 h-5 rounded-full bg-[#06B6D4]/20 border border-[#06B6D4]/40 flex items-center justify-center text-[10px] text-white font-bold">
+                                        {dna?.brand_name?.charAt(0).toUpperCase()}
+                                      </div>
+                                    )}
+                                    <span className="text-[10px] font-bold text-white/95 font-sans tracking-wide uppercase">{dna?.brand_name || "Aethera"}</span>
+                                  </div>
+                                  <span className="text-[10px] font-mono font-bold text-white/60">0{activeSlide + 1}</span>
                                 </div>
-                                <span className="text-[10px] font-mono font-bold text-white/60">0{activeSlide + 1}</span>
-                              </div>
 
-                              {/* Slide Body Content */}
-                              <div className="space-y-3.5 my-auto max-w-[90%]">
-                                {slide?.badge && (
-                                  <span 
-                                    className="inline-block text-[8px] font-black uppercase tracking-[0.2em] px-2 py-0.5 rounded-full border"
-                                    style={{
-                                      borderColor: `${activeColors.secondaryHex}50`,
-                                      backgroundColor: `${activeColors.secondaryHex}15`,
-                                      color: activeColors.secondaryHex,
-                                    }}
+                                {/* Slide Body Content */}
+                                <div className="relative space-y-3.5 my-auto max-w-[90%] z-10">
+                                  {slide?.badge && (
+                                    <span 
+                                      className="inline-block text-[8px] font-black uppercase tracking-[0.2em] px-2 py-0.5 rounded-full border"
+                                      style={{
+                                        borderColor: `${activeColors.secondaryHex}50`,
+                                        backgroundColor: `${activeColors.secondaryHex}15`,
+                                        color: activeColors.secondaryHex,
+                                      }}
+                                    >
+                                      {slide.badge}
+                                    </span>
+                                  )}
+                                  <h2 
+                                    className="text-lg md:text-xl font-extrabold text-white leading-tight font-sans tracking-tight drop-shadow-md"
+                                    style={{ fontFamily: assets?.logo_studio_data?.typography?.primaryFont || "inherit" }}
                                   >
-                                    {slide.badge}
-                                  </span>
-                                )}
-                                <h2 
-                                  className="text-lg md:text-xl font-extrabold text-white leading-tight font-sans tracking-tight drop-shadow-md"
-                                  style={{ fontFamily: assets?.logo_studio_data?.typography?.primaryFont || "inherit" }}
-                                >
-                                  {slide?.title}
-                                </h2>
-                                <p 
-                                  className="text-xs text-white/80 leading-relaxed font-medium drop-shadow"
-                                  style={{ fontFamily: assets?.logo_studio_data?.typography?.bodyFont || "inherit" }}
-                                >
-                                  {slide?.description}
-                                </p>
-                              </div>
+                                    {slide?.title}
+                                  </h2>
+                                  <p 
+                                    className="text-xs text-white/80 leading-relaxed font-medium drop-shadow"
+                                    style={{ fontFamily: assets?.logo_studio_data?.typography?.bodyFont || "inherit" }}
+                                  >
+                                    {slide?.description}
+                                  </p>
+                                </div>
 
-                              {/* Slide Footer: Action CTA */}
-                              <div className="flex items-center justify-between w-full pt-2">
-                                <span className="text-[8px] text-white/40 uppercase tracking-widest font-bold">Swipe for details →</span>
-                                {slide?.cta && (
-                                  <span 
-                                    className="text-[9px] font-black uppercase tracking-wider px-3 py-1.5 rounded-lg border border-white/20 bg-black/60 text-white shadow-lg backdrop-blur-sm"
-                                  >
-                                    {slide.cta}
-                                  </span>
-                                )}
+                                {/* Slide Footer: Action CTA */}
+                                <div className="relative flex items-center justify-between w-full pt-2 z-10">
+                                  <span className="text-[8px] text-white/40 uppercase tracking-widest font-bold">Swipe for details →</span>
+                                  {slide?.cta && (
+                                    <span 
+                                      className="text-[9px] font-black uppercase tracking-wider px-3 py-1.5 rounded-lg border border-white/20 bg-black/60 text-white shadow-lg backdrop-blur-sm"
+                                    >
+                                      {slide.cta}
+                                    </span>
+                                  )}
+                                </div>
                               </div>
-                            </div>
+                            );
+                          }
+                          
+                          // If it is the new HTML-based slide:
+                          return (
+                            <div 
+                              className="w-full h-full [&>div]:h-full [&>div]:w-full select-none"
+                              dangerouslySetInnerHTML={{
+                                __html: injectBgIntoHtml(slide.html, generatedCarouselImage, 0.08, undefined, undefined, activeColors.secondaryHex, activeColors.primaryHex)
+                              }}
+                            />
                           );
                         })()}
-
                       </div>
 
                       {/* Detailed info logs */}
