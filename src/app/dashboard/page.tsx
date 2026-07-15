@@ -796,100 +796,195 @@ export default function DashboardPage() {
 
           {/* Tab 1: Mission Control (Visual Style Tile Moodboard) */}
           {activeTab === "control" && (
-            <div className="bg-[#0b0c10] text-white rounded-3xl p-6 md:p-8 border border-white/10 shadow-2xl relative overflow-hidden font-sans space-y-6">
+            <div className="bg-white text-slate-800 rounded-3xl p-6 md:p-8 border border-slate-200 shadow-xl relative overflow-hidden font-sans space-y-6">
               
-              {/* Style Tile Main Header Grid */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 border-b border-white/10 pb-6">
-                
-                {/* 1. Logo & Brand box */}
-                <div className="space-y-4 pr-0 lg:pr-6 border-r border-white/0 lg:border-white/10">
-                  <div className="flex items-center gap-3">
-                    {assets?.logo_url ? (
-                      <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center p-1.5 border border-white/10">
-                        <img src={assets.logo_url} alt="Emblem" className="max-w-full max-h-full object-contain" />
-                      </div>
-                    ) : assets?.logo_studio_data?.assets?.monogramSvg ? (
-                      <div className="w-12 h-12 rounded-full overflow-hidden flex items-center justify-center bg-gray-900 border border-white/10 p-1" dangerouslySetInnerHTML={{ __html: assets.logo_studio_data.assets.monogramSvg }} />
-                    ) : (
-                      <div className="w-12 h-12 rounded-full bg-[#C9A84C] flex items-center justify-center text-black font-black text-sm uppercase">
-                        {dna.brand_name.charAt(0)}
-                      </div>
+              {/* Top Header Section */}
+              <div className="border-b border-slate-100 pb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded bg-slate-100 text-slate-800">
+                      Brand Board Direction
+                    </span>
+                    {moodboard?.id && (
+                      <span className="text-[10px] text-slate-400">Preset ID: {moodboard.id}</span>
                     )}
-                    <div>
-                      <h1 className="text-xl font-bold uppercase tracking-wider font-serif text-white">{dna.brand_name}</h1>
-                      <p className="text-[9px] text-[#C9A84C] font-semibold uppercase tracking-widest leading-none mt-0.5">{dna.sub_category || dna.category}</p>
-                    </div>
                   </div>
-                  <div className="space-y-1.5 pt-2">
-                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Brand Tagline</p>
-                    <p className="text-xs italic text-gray-300 leading-relaxed font-serif">&ldquo;{dna.usp}&rdquo;</p>
-                  </div>
+                  <h1 className="text-xl font-extrabold mt-1 text-slate-900 uppercase tracking-tight">{dna.brand_name}</h1>
+                  <p className="text-xs text-slate-500 font-medium">
+                    {moodboard?.name || "Bespoke Brand Strategy Board"} {moodboard?.tagline ? `— ${moodboard.tagline}` : ""}
+                  </p>
                 </div>
 
-                {/* 2. Color Palette Box */}
-                <div className="space-y-3 px-0 lg:px-4 border-r border-white/0 lg:border-white/10">
-                  <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Color Palette</span>
-                  <div className="grid grid-cols-6 gap-1.5 h-12">
-                    {/* Primary */}
-                    <div className="rounded border border-white/10 flex flex-col justify-end p-1 relative group overflow-hidden" style={{ backgroundColor: colors.primaryHex }}>
-                      <span className="text-[8px] font-bold text-white bg-black/60 px-1 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity absolute bottom-1 left-1 font-mono">{colors.primaryHex}</span>
-                    </div>
-                    {/* Secondary */}
-                    <div className="rounded border border-white/10 flex flex-col justify-end p-1 relative group overflow-hidden" style={{ backgroundColor: colors.secondaryHex }}>
-                      <span className="text-[8px] font-bold text-white bg-black/60 px-1 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity absolute bottom-1 left-1 font-mono">{colors.secondaryHex}</span>
-                    </div>
-                    {/* Swatches fallback */}
-                    <div className="rounded border border-white/10" style={{ backgroundColor: "#5A2E17" }} />
-                    <div className="rounded border border-white/10" style={{ backgroundColor: "#4B0E16" }} />
-                    <div className="rounded border border-white/10" style={{ backgroundColor: "#0D0D0D" }} />
-                    <div className="rounded border border-white/10" style={{ backgroundColor: "#F5ECD9" }} />
-                  </div>
-                  <div className="flex justify-between items-center text-[8px] text-gray-400 font-mono">
-                    <span><strong>CMYK:</strong> {colors.primaryCmyk}</span>
-                    <span><strong>PANTONE:</strong> {colors.pantoneApprox}</span>
-                  </div>
+                <div className="flex items-center gap-2 text-[10px] text-slate-400 shrink-0">
+                  <span><strong>Industry:</strong> {dna.industry}</span>
+                  <span>•</span>
+                  <span><strong>Category:</strong> {dna.category}</span>
                 </div>
-
-                {/* 3. Typography font showcase box */}
-                <div className="space-y-3 pl-0 lg:pl-6 flex flex-col justify-between">
-                  <div>
-                    <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest block mb-1">Typography System</span>
-                    <div className="space-y-1.5">
-                      <div>
-                        <span className="text-[8px] text-gray-400 uppercase tracking-wide">Headline:</span>
-                        <h4 className="text-base font-bold text-white leading-none mt-0.5" style={{ fontFamily: typography.primaryFont }}>
-                          {typography.primaryFont}
-                        </h4>
-                      </div>
-                      <div>
-                        <span className="text-[8px] text-gray-400 uppercase tracking-wide">Body Text:</span>
-                        <p className="text-xs text-gray-300 leading-none mt-0.5" style={{ fontFamily: typography.bodyFont }}>
-                          {typography.bodyFont}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  <p className="text-[8px] text-gray-500 font-mono leading-tight">{typography.usage}</p>
-                </div>
-
               </div>
 
-              {/* Middle Section: Mood images, Visual Mockups, UI Elements */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                
-                {/* 4. Brand Mood Box */}
-                <div className="border border-white/10 bg-white/[0.02] rounded-2xl p-4 space-y-3 flex flex-col justify-between">
-                  <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest block">Brand Mood & Tone</span>
-                  
-                  <div className="grid grid-cols-2 gap-2 my-auto">
-                    {moodImages.map((img, idx) => (
-                      <div key={idx} className="relative h-20 rounded-lg overflow-hidden border border-white/10 group">
-                        <img src={img} alt="Mood" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+              {/* ── BRAND BOARD CANVAS GRID ── */}
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
+
+                {/* ── ROW 1 ── */}
+
+                {/* BLOCK A: Logo + Brand Identity (4 cols) */}
+                <div className="md:col-span-4 bg-slate-50/50 border border-slate-100 rounded-2xl p-5 flex flex-col gap-4 shadow-sm">
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Brand Identity</p>
+
+                  {/* Logo circle — large and filled */}
+                  <div className="flex flex-col items-center gap-3">
+                    <div
+                      className="w-24 h-24 rounded-full flex items-center justify-center overflow-hidden border-2 border-slate-200 shadow-md bg-white"
+                      style={{ backgroundColor: colors.primaryHex || "#111" }}
+                    >
+                      {(() => {
+                        const svgStr = assets?.logo_studio_data?.assets?.primaryLogoSvg;
+                        if (svgStr) {
+                          return (
+                            <div
+                              className="w-16 h-16 flex items-center justify-center [&>svg]:w-full [&>svg]:h-full"
+                              dangerouslySetInnerHTML={{ __html: svgStr }}
+                            />
+                          );
+                        }
+                        if (assets?.logo_url) {
+                          return <img src={assets.logo_url} alt="Logo" className="w-14 h-14 object-contain" />;
+                        }
+                        return (
+                          <span className="text-2xl font-black text-white" style={{ fontFamily: "serif" }}>
+                            {(dna.brand_name || "B").charAt(0).toUpperCase()}
+                          </span>
+                        );
+                      })()}
+                    </div>
+                    <div className="text-center">
+                      <p className="text-slate-800 font-bold text-base tracking-tight">{dna.brand_name}</p>
+                      <p className="text-slate-500 text-[10px] mt-0.5 italic max-w-[160px] text-center leading-snug">
+                        {dna.usp ? `"${dna.usp}"` : "No tagline set"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-slate-100 pt-3 space-y-1">
+                    <div className="flex justify-between text-[9px]">
+                      <span className="text-slate-400 uppercase tracking-wider">Industry</span>
+                      <span className="text-slate-700 font-bold">{dna.industry}</span>
+                    </div>
+                    <div className="flex justify-between text-[9px]">
+                      <span className="text-slate-400 uppercase tracking-wider">Personality</span>
+                      <span className="text-slate-700 font-bold capitalize">
+                        {dna.brand_personality}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* BLOCK B: Color Palette (5 cols) */}
+                <div className="md:col-span-5 bg-slate-50/50 border border-slate-100 rounded-2xl p-5 flex flex-col gap-3 shadow-sm">
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Color Palette</p>
+                  <div className="grid grid-cols-2 gap-3 flex-1">
+                    {/* Primary */}
+                    <div className="space-y-2">
+                      <div
+                        className="h-20 w-full rounded-xl border border-slate-200 shadow-inner"
+                        style={{ backgroundColor: colors.primaryHex || "#1A0A00" }}
+                      />
+                      <div>
+                        <p className="text-[9px] font-bold text-slate-885 uppercase tracking-wider">Primary</p>
+                        <p className="text-[8px] text-slate-400 font-mono mt-0.5">{colors.primaryHex || "#1A0A00"}</p>
                       </div>
+                    </div>
+                    {/* Accent */}
+                    <div className="space-y-2">
+                      <div
+                        className="h-20 w-full rounded-xl border border-slate-200 shadow-inner"
+                        style={{ backgroundColor: colors.secondaryHex || "#C9A84C" }}
+                      />
+                      <div>
+                        <p className="text-[9px] font-bold text-slate-885 uppercase tracking-wider">Accent</p>
+                        <p className="text-[8px] text-slate-400 font-mono mt-0.5">{colors.secondaryHex || "#C9A84C"}</p>
+                      </div>
+                    </div>
+                    {/* Dark neutral */}
+                    <div className="space-y-2">
+                      <div className="h-14 w-full rounded-xl border border-slate-200 bg-slate-900" />
+                      <div>
+                        <p className="text-[9px] font-bold text-slate-885 uppercase tracking-wider">Background</p>
+                        <p className="text-[8px] text-slate-400 font-mono mt-0.5">#0F172A</p>
+                      </div>
+                    </div>
+                    {/* White/light */}
+                    <div className="space-y-2">
+                      <div className="h-14 w-full rounded-xl border border-slate-200 bg-slate-50" />
+                      <div>
+                        <p className="text-[9px] font-bold text-slate-885 uppercase tracking-wider">Highlight</p>
+                        <p className="text-[8px] text-slate-400 font-mono mt-0.5">#F8FAFC</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* BLOCK C: Typography (3 cols) */}
+                <div className="md:col-span-3 bg-slate-50/50 border border-slate-100 rounded-2xl p-5 flex flex-col gap-3 shadow-sm">
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Typography System</p>
+                  <div className="space-y-4 flex-1">
+                    <div>
+                      <span className="text-[8px] text-slate-400 block mb-1 uppercase tracking-wider">Headline</span>
+                      <span className="text-lg font-bold text-slate-900 block tracking-tight" style={{ fontFamily: typography.primaryFont }}>
+                        {typography.primaryFont}
+                      </span>
+                      <span className="text-[9px] text-slate-400 font-mono block mt-1">AaBbCc 123</span>
+                    </div>
+                    <div>
+                      <span className="text-[8px] text-slate-400 block mb-1 uppercase tracking-wider">Body</span>
+                      <span className="text-sm text-slate-700 block" style={{ fontFamily: typography.bodyFont }}>
+                        {typography.bodyFont}
+                      </span>
+                      <span className="text-[9px] text-slate-400 font-mono block mt-1">aAbBcC 456</span>
+                    </div>
+                  </div>
+                  <p className="text-[8px] text-slate-500 border-t border-slate-100 pt-2 leading-relaxed font-mono">
+                    {typography.usage}
+                  </p>
+                </div>
+
+                {/* ── ROW 2 ── */}
+
+                {/* BLOCK D: Brand Mood & Tone — TEXT ONLY (5 cols) */}
+                <div className="md:col-span-5 bg-slate-50/50 border border-slate-100 rounded-2xl p-5 flex flex-col gap-4 shadow-sm">
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Brand Mood & Tone</p>
+
+                  {/* Personality tags */}
+                  <div className="flex flex-wrap gap-2">
+                    {(dna.brand_values || []).map((v) => (
+                      <span
+                        key={v}
+                        className="text-[10px] font-black uppercase tracking-wider px-3 py-1.5 rounded-lg border bg-cyan-50/50 text-[#06B6D4] border-cyan-100/60"
+                      >
+                        {v}
+                      </span>
                     ))}
                   </div>
 
-                  <div className="flex justify-between items-center text-[9px] font-bold text-[#C9A84C] tracking-wide uppercase pt-1">
+                  {/* Tone descriptors */}
+                  <div className="space-y-2 flex-1">
+                    <p className="text-[8px] text-slate-400 uppercase tracking-wider">Voice Attributes</p>
+                    <div className="space-y-1.5">
+                      {[
+                        { label: "Tone", value: dna.brand_personality || "Professional" },
+                        { label: "Audience", value: dna.target_audience || "Not defined" },
+                        { label: "Mission", value: dna.mission || "Not defined" },
+                      ].map(({ label, value }) => (
+                        <div key={label} className="flex gap-2 text-[9px]">
+                          <span className="text-slate-400 uppercase tracking-wider w-14 shrink-0">{label}</span>
+                          <span className="text-slate-600 leading-snug line-clamp-2">{value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Separator words */}
+                  <div className="flex items-center gap-2 pt-2 border-t border-slate-100 text-[8px] font-black text-slate-400 uppercase tracking-widest">
                     <span>Luxurious</span>
                     <span>•</span>
                     <span>Timeless</span>
@@ -898,179 +993,57 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
-                {/* 5. Social Post & Carousel Direction */}
-                <div className="border border-white/10 bg-white/[0.02] rounded-2xl p-4 space-y-3">
-                  <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest block">Social Post Visual Direction</span>
-                  
-                  {/* Instagram / Social Frame */}
-                  <div className="border border-white/10 rounded-xl overflow-hidden bg-black/40 text-[9px] font-sans">
-                    {/* Social Post Header */}
-                    <div className="px-3 py-2 border-b border-white/5 flex items-center justify-between">
-                      <div className="flex items-center gap-1.5">
-                        <div className="w-4 h-4 rounded-full bg-white/15 border border-white/10 overflow-hidden">
-                          {assets?.logo_url ? (
-                            <img src={assets.logo_url} alt="Profile" className="w-full h-full object-cover" />
-                          ) : (
-                            <span className="text-[6px] font-bold text-white flex items-center justify-center h-full uppercase">{dna.brand_name.charAt(0)}</span>
-                          )}
-                        </div>
-                        <div className="leading-tight">
-                          <p className="text-[8px] font-black text-white">{dna.brand_name.toLowerCase()}</p>
-                          <p className="text-[6px] text-gray-400">Sponsored</p>
-                        </div>
-                      </div>
-                      <span className="text-[10px] text-white/50 font-bold leading-none select-none">•••</span>
-                    </div>
-
-                    {/* Social Post Body */}
-                    <div className="relative overflow-hidden bg-gradient-to-b from-transparent to-black" style={{ height: "135px" }}>
-                      <img src={moodImages[0]} alt="Post visual" className="w-full h-full object-cover opacity-50 absolute inset-0 pointer-events-none" />
-                      
-                      {/* Logo watermark overlay */}
-                      {assets?.logo_url && (
-                        <div className="absolute top-2 right-2 z-20 bg-white/90 border border-white/20 rounded p-1 shadow-sm max-w-[50px] max-h-[22px] flex items-center justify-center overflow-hidden">
-                          <img src={assets.logo_url} alt="Logo Brandmark" className="max-w-full max-h-full object-contain" />
-                        </div>
-                      )}
-
-                      {/* Brand Overlay Text */}
-                      <div className="absolute inset-0 p-3 flex flex-col justify-between z-10 bg-gradient-to-t from-black/80 via-black/20 to-black/35">
-                        <div className="flex justify-between items-center">
-                          <span className="text-[6px] font-black text-[#C9A84C] border border-[#C9A84C]/30 px-1 py-0.5 rounded uppercase tracking-widest">Aesthetic Focus</span>
-                          <span className="text-[6px] text-white/60">Slide 1 / 5</span>
-                        </div>
-                        <div className="space-y-1">
-                          <h5 className="font-bold text-white text-[10px] leading-tight max-w-[150px]" style={{ fontFamily: typography.primaryFont }}>
-                            {dna.usp}
-                          </h5>
-                          <p className="text-[6px] text-white/70 leading-relaxed max-w-[165px] line-clamp-2">
-                            {dna.business_description}
-                          </p>
-                        </div>
+                {/* BLOCK E: Social Post Visual Direction — approved moodboard (7 cols) */}
+                <div className="md:col-span-7 bg-slate-50/50 border border-slate-100 rounded-2xl overflow-hidden flex flex-col shadow-sm">
+                  <div className="px-5 pt-5 pb-3">
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Social Post Visual Direction</p>
+                  </div>
+                  {moodboard?.imageUrl ? (
+                    <div className="flex-1 relative">
+                      {/* Show approved moodboard — NO logo overlay */}
+                      <img
+                        src={moodboard.imageUrl}
+                        alt="Approved Moodboard"
+                        className="w-full h-full object-cover object-top"
+                        style={{ minHeight: "200px", maxHeight: "280px" }}
+                      />
+                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-slate-950/80 to-transparent px-4 py-3">
+                        <p className="text-[9px] text-[#C9A84C] font-black uppercase tracking-wider">✦ Approved Visual Direction</p>
+                        <p className="text-white text-[10px] font-bold mt-0.5">{moodboard.name}</p>
                       </div>
                     </div>
-                  </div>
-                </div>
-
-                {/* 6. Post Layout Elements Box */}
-                <div className="border border-white/10 bg-white/[0.02] rounded-2xl p-4 space-y-4">
-                  <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest block">Carousel & Post Components</span>
-                  
-                  <div className="space-y-3">
-                    {/* Badge component */}
-                    <div className="flex items-center justify-between bg-black/40 border border-white/5 p-2 rounded-lg">
-                      <span className="text-[7px] text-gray-400 uppercase font-mono">Accent Graphic Badge</span>
-                      <span className="text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded" style={{ backgroundColor: colors.secondaryHex, color: "#000" }}>
-                        {dna.brand_personality}
-                      </span>
-                    </div>
-
-                    {/* Typography Card */}
-                    <div className="bg-[#111] border border-white/10 p-3 rounded-lg text-center space-y-1">
-                      <p className="text-[7px] text-gray-400 font-bold uppercase tracking-widest">Text Slide Style</p>
-                      <p className="text-white text-[9px] leading-normal font-serif italic mx-auto max-w-[150px]" style={{ fontFamily: typography.primaryFont }}>
-                        &ldquo;{dna.mission.length > 55 ? `${dna.mission.slice(0, 52)}...` : dna.mission}&rdquo;
-                      </p>
-                    </div>
-
-                    {/* Carousel Nav dots preview */}
-                    <div className="flex items-center justify-between text-[7px] text-gray-400 bg-black/20 p-1.5 rounded-lg border border-white/5">
-                      <span>Swipe for details</span>
-                      <div className="flex gap-1">
-                        <span className="w-1 h-1 rounded-full bg-[#C9A84C]" />
-                        <span className="w-1 h-1 rounded-full bg-white/20" />
-                        <span className="w-1 h-1 rounded-full bg-white/20" />
-                        <span className="w-1 h-1 rounded-full bg-white/20" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-              </div>
-
-              {/* Lower Section: Values, Image Direction, Component mockup */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
-                
-                {/* 7. Brand Essence / Core values */}
-                <div className="border border-white/10 bg-white/[0.02] rounded-2xl p-4 space-y-3">
-                  <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest block">Brand Essence</span>
-                  <div className="space-y-1">
-                    <p className="text-[10px] text-[#C9A84C] font-bold uppercase font-mono">{dna.brand_personality} personality</p>
-                    <div className="flex flex-wrap gap-1.5 pt-2">
-                      {(dna.brand_values || []).map((val) => (
-                        <span key={val} className="px-2.5 py-1 rounded bg-white/5 border border-white/10 text-[9px] text-gray-200 font-semibold">
-                          {val}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                {/* 8. Imagery Direction Row */}
-                <div className="border border-white/10 bg-white/[0.02] rounded-2xl p-4 space-y-3">
-                  <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest block">Imagery Direction</span>
-                  <div className="flex gap-2 overflow-x-auto pb-1">
-                    {activeImageryList.map((img, i) => (
-                      <div key={i} className="relative w-12 h-12 rounded-lg overflow-hidden border border-white/10 shrink-0">
-                        <img src={img} alt="Gallery" className="w-full h-full object-cover" />
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex justify-between items-center text-[7px] text-gray-500">
-                    <span>Iconic</span>
-                    <span>Curated</span>
-                    <span>Authentic</span>
-                    <span>Refined</span>
-                  </div>
-                </div>
-
-                {/* 9. Components Box */}
-                <div className="border border-white/10 bg-white/[0.02] rounded-2xl p-4 space-y-3">
-                  <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest block">Components</span>
-                  <div className="border border-white/10 rounded-xl p-3 relative overflow-hidden flex flex-col justify-between" 
-                       style={{ minHeight: "72px", background: styleGradients.primary }}>
-                    <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ background: styleGradients.accent }} />
-                    <div className="flex justify-between items-start z-10">
+                  ) : (
+                    <div className="flex-1 flex items-center justify-center p-6 text-center">
                       <div>
-                        <p className="text-[6px] text-white/50 tracking-wider">MEMBER CARD</p>
-                        <p className="text-[10px] font-bold text-white tracking-wide mt-0.5" style={{ fontFamily: typography.primaryFont }}>
-                          {dna.brand_name.toUpperCase()}
-                        </p>
+                        <p className="text-slate-400 text-xs font-semibold">No moodboard approved yet.</p>
+                        <p className="text-slate-500 text-[10px] mt-1 leading-snug">Generate and approve a direction in the onboarding visual direction step.</p>
                       </div>
-                      {assets?.logo_url ? (
-                        <div className="bg-white/95 p-1 rounded border border-white/10 max-w-[42px] max-h-[18px] flex items-center justify-center overflow-hidden">
-                          <img src={assets.logo_url} alt="Logo" className="max-w-full max-h-full object-contain" />
-                        </div>
-                      ) : (
-                        <span className="text-[8px] font-black text-white/40 font-mono tracking-widest">{dna.brand_name.charAt(0)}</span>
-                      )}
                     </div>
-                    <div className="flex justify-between items-center mt-2.5 text-[6px] text-white/50 z-10 pt-1 border-t border-white/5">
-                      <span className="uppercase tracking-widest text-[5px]">{dna.main_goal}</span>
-                      <span className="font-mono">Synced DNA</span>
-                    </div>
+                  )}
+                </div>
+
+                {/* ── ROW 3 — Full width: Visual Brain Summary ── */}
+                <div className="md:col-span-12 bg-slate-50/80 border border-slate-100 rounded-2xl p-5 flex flex-col md:flex-row md:items-center gap-5 shadow-sm">
+                  <div className="space-y-2 flex-1">
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Visual Brand Summary</p>
+                    <p className="text-xs text-slate-600 leading-relaxed font-medium">
+                      {dna.business_description}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2 md:shrink-0">
+                    <div className="w-8 h-8 rounded-full border border-slate-200" style={{ backgroundColor: colors.primaryHex || "#1A0A00" }} />
+                    <div className="w-8 h-8 rounded-full border border-slate-200" style={{ backgroundColor: colors.secondaryHex || "#C9A84C" }} />
+                    <div className="w-8 h-8 rounded-full border border-slate-200 bg-slate-900" />
+                    <div className="w-8 h-8 rounded-full border border-slate-200 bg-slate-50" />
                   </div>
                 </div>
 
-              </div>
-
-              {/* 10. Mood Summary Banner at bottom */}
-              <div className="border-t border-white/10 pt-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 text-xs">
-                <div>
-                  <p className="text-[9px] font-black text-[#C9A84C] uppercase tracking-widest">Visual Brain Summary</p>
-                  <p className="text-gray-300 mt-1 leading-relaxed max-w-2xl font-serif text-[11px] italic">
-                    &ldquo;{dna.business_description}&rdquo;
-                  </p>
-                </div>
-                <div className="flex gap-2">
-                  {gradients.map((g, idx) => (
-                    <div key={idx} className="w-6 h-6 rounded-full border border-white/20 shadow-sm" style={{ background: g.style }} title={g.name} />
-                  ))}
-                </div>
               </div>
 
             </div>
           )}
+
 
           {/* Tab 2: Original Detailed Brand DNA Cards */}
           {activeTab === "dna" && (
