@@ -2457,36 +2457,35 @@ export default function OnboardingPage() {
                     const isApproved = (data.approvedMoodboard as any)?.id === inspectingMoodboard.id;
                     const logoGraphic = (data.selectedLogo as any)?.imageUrl || data.logoUrl;
                     return (
-                      <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4 bg-black/95 backdrop-blur-md">
+                      <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md">
                         <div 
-                          className={`w-full max-w-6xl rounded-3xl overflow-hidden border shadow-2xl transition-all relative ${preset.themeClass}`}
-                          style={{ backgroundColor: preset.themeBg }}
+                          className="w-full max-w-6xl rounded-3xl overflow-hidden border border-slate-200/80 shadow-2xl transition-all relative bg-white/95 backdrop-blur-lg text-slate-800"
                         >
                           {/* Close button top right */}
                           <button
                             onClick={() => setInspectingMoodboard(null)}
-                            className="absolute top-4 right-4 z-10 p-2 text-gray-400 hover:text-white rounded-full hover:bg-white/10 transition-colors"
+                            className="absolute top-4 right-4 z-10 p-2 text-gray-400 hover:text-gray-800 rounded-full hover:bg-gray-100 transition-colors"
                           >
                             <X className="w-5 h-5" />
                           </button>
 
                           {/* Top Header Section */}
-                          <div className="p-6 md:p-8 border-b border-gray-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                          <div className="p-6 md:p-8 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
                             <div>
                               <div className="flex items-center gap-2">
-                                <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded bg-white/10 ${preset.themeTitleColor}`}>
+                                <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded bg-slate-100 text-slate-800">
                                   Brand Board Direction
                                 </span>
-                                <span className="text-[10px] text-gray-500">Preset ID: {inspectingMoodboard.id}</span>
+                                <span className="text-[10px] text-slate-400">Preset ID: {inspectingMoodboard.id}</span>
                               </div>
-                              <h2 className="text-xl font-bold mt-1 text-white">{inspectingMoodboard.name}</h2>
-                              <p className="text-xs text-gray-400">{inspectingMoodboard.tagline}</p>
+                              <h2 className="text-xl font-extrabold mt-1 text-slate-900">{inspectingMoodboard.name}</h2>
+                              <p className="text-xs text-slate-500 font-medium">{inspectingMoodboard.tagline}</p>
                             </div>
 
                             <div className="flex items-center gap-3">
                               <button
                                 onClick={() => setInspectingMoodboard(null)}
-                                className="px-4 py-2 border border-gray-700 hover:border-gray-600 rounded-xl text-xs text-gray-300 font-bold transition-all"
+                                className="px-4 py-2 border border-slate-200 hover:border-slate-300 rounded-xl text-xs text-slate-700 hover:bg-slate-50 font-bold transition-all"
                               >
                                 Close Board
                               </button>
@@ -2518,13 +2517,13 @@ export default function OnboardingPage() {
                             {/* ── ROW 1 ── */}
 
                             {/* BLOCK A: Logo + Brand Identity (4 cols) */}
-                            <div className="md:col-span-4 bg-[#0D0D0D] border border-gray-800 rounded-2xl p-5 flex flex-col gap-4">
-                              <p className="text-[9px] font-black text-gray-500 uppercase tracking-[0.2em]">Brand Identity</p>
+                            <div className="md:col-span-4 bg-slate-50/50 border border-slate-100 rounded-2xl p-5 flex flex-col gap-4 shadow-sm">
+                              <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Brand Identity</p>
 
                               {/* Logo circle — large and filled */}
                               <div className="flex flex-col items-center gap-3">
                                 <div
-                                  className="w-24 h-24 rounded-full flex items-center justify-center overflow-hidden border-2 border-[#C9A84C]/40 shadow-xl shadow-black/40"
+                                  className="w-24 h-24 rounded-full flex items-center justify-center overflow-hidden border-2 border-slate-200 shadow-md bg-white"
                                   style={{ backgroundColor: userPrimaryColor || "#111" }}
                                 >
                                   {(() => {
@@ -2549,21 +2548,21 @@ export default function OnboardingPage() {
                                   })()}
                                 </div>
                                 <div className="text-center">
-                                  <p className="text-white font-bold text-base tracking-tight">{data.brandName}</p>
-                                  <p className="text-[#C9A84C] text-[10px] mt-0.5 italic max-w-[160px] text-center leading-snug">
+                                  <p className="text-slate-800 font-bold text-base tracking-tight">{data.brandName}</p>
+                                  <p className="text-slate-500 text-[10px] mt-0.5 italic max-w-[160px] text-center leading-snug">
                                     {data.usp ? `"${data.usp}"` : "No tagline set"}
                                   </p>
                                 </div>
                               </div>
 
-                              <div className="border-t border-gray-800 pt-3 space-y-1">
+                              <div className="border-t border-slate-100 pt-3 space-y-1">
                                 <div className="flex justify-between text-[9px]">
-                                  <span className="text-gray-600 uppercase tracking-wider">Industry</span>
-                                  <span className="text-gray-300 font-bold">{data.industry}</span>
+                                  <span className="text-slate-400 uppercase tracking-wider">Industry</span>
+                                  <span className="text-slate-700 font-bold">{data.industry}</span>
                                 </div>
                                 <div className="flex justify-between text-[9px]">
-                                  <span className="text-gray-600 uppercase tracking-wider">Personality</span>
-                                  <span className="text-gray-300 font-bold capitalize">
+                                  <span className="text-slate-400 uppercase tracking-wider">Personality</span>
+                                  <span className="text-slate-700 font-bold capitalize">
                                     {Array.isArray(data.brandPersonality) ? (data.brandPersonality as string[]).join(", ") : String(data.brandPersonality)}
                                   </span>
                                 </div>
@@ -2571,70 +2570,70 @@ export default function OnboardingPage() {
                             </div>
 
                             {/* BLOCK B: Color Palette — from brand data (5 cols) */}
-                            <div className="md:col-span-5 bg-[#0D0D0D] border border-gray-800 rounded-2xl p-5 flex flex-col gap-3">
-                              <p className="text-[9px] font-black text-gray-500 uppercase tracking-[0.2em]">Color Palette</p>
+                            <div className="md:col-span-5 bg-slate-50/50 border border-slate-100 rounded-2xl p-5 flex flex-col gap-3 shadow-sm">
+                              <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Color Palette</p>
                               <div className="grid grid-cols-2 gap-3 flex-1">
                                 {/* Primary color from user selection */}
                                 <div className="space-y-2">
                                   <div
-                                    className="h-20 w-full rounded-xl border border-white/10 shadow-inner"
+                                    className="h-20 w-full rounded-xl border border-slate-200 shadow-inner"
                                     style={{ backgroundColor: userPrimaryColor || "#1A0A00" }}
                                   />
                                   <div>
-                                    <p className="text-[9px] font-bold text-white uppercase tracking-wider">Primary</p>
-                                    <p className="text-[8px] text-gray-500 font-mono mt-0.5">{userPrimaryColor || "#1A0A00"}</p>
+                                    <p className="text-[9px] font-bold text-slate-800 uppercase tracking-wider">Primary</p>
+                                    <p className="text-[8px] text-slate-400 font-mono mt-0.5">{userPrimaryColor || "#1A0A00"}</p>
                                   </div>
                                 </div>
                                 {/* Secondary / accent */}
                                 <div className="space-y-2">
                                   <div
-                                    className="h-20 w-full rounded-xl border border-white/10 shadow-inner"
+                                    className="h-20 w-full rounded-xl border border-slate-200 shadow-inner"
                                     style={{ backgroundColor: userSecondaryColor || "#C9A84C" }}
                                   />
                                   <div>
-                                    <p className="text-[9px] font-bold text-white uppercase tracking-wider">Accent</p>
-                                    <p className="text-[8px] text-gray-500 font-mono mt-0.5">{userSecondaryColor || "#C9A84C"}</p>
+                                    <p className="text-[9px] font-bold text-slate-800 uppercase tracking-wider">Accent</p>
+                                    <p className="text-[8px] text-slate-400 font-mono mt-0.5">{userSecondaryColor || "#C9A84C"}</p>
                                   </div>
                                 </div>
                                 {/* Dark neutral */}
                                 <div className="space-y-2">
-                                  <div className="h-14 w-full rounded-xl border border-white/10 bg-[#0D0D0D]" />
+                                  <div className="h-14 w-full rounded-xl border border-slate-200 bg-slate-900" />
                                   <div>
-                                    <p className="text-[9px] font-bold text-white uppercase tracking-wider">Background</p>
-                                    <p className="text-[8px] text-gray-500 font-mono mt-0.5">#0D0D0D</p>
+                                    <p className="text-[9px] font-bold text-slate-800 uppercase tracking-wider">Background</p>
+                                    <p className="text-[8px] text-slate-400 font-mono mt-0.5">#0F172A</p>
                                   </div>
                                 </div>
                                 {/* White/light */}
                                 <div className="space-y-2">
-                                  <div className="h-14 w-full rounded-xl border border-white/10 bg-[#F5ECD7]" />
+                                  <div className="h-14 w-full rounded-xl border border-slate-200 bg-slate-50" />
                                   <div>
-                                    <p className="text-[9px] font-bold text-white uppercase tracking-wider">Highlight</p>
-                                    <p className="text-[8px] text-gray-500 font-mono mt-0.5">#F5ECD7</p>
+                                    <p className="text-[9px] font-bold text-slate-800 uppercase tracking-wider">Highlight</p>
+                                    <p className="text-[8px] text-slate-400 font-mono mt-0.5">#F8FAFC</p>
                                   </div>
                                 </div>
                               </div>
                             </div>
 
                             {/* BLOCK C: Typography (3 cols) */}
-                            <div className="md:col-span-3 bg-[#0D0D0D] border border-gray-800 rounded-2xl p-5 flex flex-col gap-3">
-                              <p className="text-[9px] font-black text-gray-500 uppercase tracking-[0.2em]">Typography System</p>
+                            <div className="md:col-span-3 bg-slate-50/50 border border-slate-100 rounded-2xl p-5 flex flex-col gap-3 shadow-sm">
+                              <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Typography System</p>
                               <div className="space-y-4 flex-1">
                                 <div>
-                                  <span className="text-[8px] text-gray-600 block mb-1 uppercase tracking-wider">Headline</span>
-                                  <span className="text-lg font-bold text-white block tracking-tight" style={{ fontFamily: preset.typography.headline }}>
+                                  <span className="text-[8px] text-slate-400 block mb-1 uppercase tracking-wider">Headline</span>
+                                  <span className="text-lg font-bold text-slate-900 block tracking-tight" style={{ fontFamily: preset.typography.headline }}>
                                     {preset.typography.headline}
                                   </span>
-                                  <span className="text-[9px] text-gray-600 font-mono block mt-1">AaBbCc 123</span>
+                                  <span className="text-[9px] text-slate-400 font-mono block mt-1">AaBbCc 123</span>
                                 </div>
                                 <div>
-                                  <span className="text-[8px] text-gray-600 block mb-1 uppercase tracking-wider">Body</span>
-                                  <span className="text-sm text-gray-300 block" style={{ fontFamily: preset.typography.body }}>
+                                  <span className="text-[8px] text-slate-400 block mb-1 uppercase tracking-wider">Body</span>
+                                  <span className="text-sm text-slate-700 block" style={{ fontFamily: preset.typography.body }}>
                                     {preset.typography.body}
                                   </span>
-                                  <span className="text-[9px] text-gray-600 font-mono block mt-1">aAbBcC 456</span>
+                                  <span className="text-[9px] text-slate-400 font-mono block mt-1">aAbBcC 456</span>
                                 </div>
                               </div>
-                              <p className="text-[8px] text-gray-600 border-t border-gray-800 pt-2 leading-relaxed">
+                              <p className="text-[8px] text-slate-500 border-t border-slate-100 pt-2 leading-relaxed">
                                 {preset.typography.desc}
                               </p>
                             </div>
@@ -2642,16 +2641,15 @@ export default function OnboardingPage() {
                             {/* ── ROW 2 ── */}
 
                             {/* BLOCK D: Brand Mood & Tone — TEXT ONLY (5 cols) */}
-                            <div className="md:col-span-5 bg-[#0D0D0D] border border-gray-800 rounded-2xl p-5 flex flex-col gap-4">
-                              <p className="text-[9px] font-black text-gray-500 uppercase tracking-[0.2em]">Brand Mood & Tone</p>
+                            <div className="md:col-span-5 bg-slate-50/50 border border-slate-100 rounded-2xl p-5 flex flex-col gap-4 shadow-sm">
+                              <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Brand Mood & Tone</p>
 
                               {/* Personality tags */}
                               <div className="flex flex-wrap gap-2">
                                 {(Array.isArray(data.brandValues) ? data.brandValues : []).map((v: string) => (
                                   <span
                                     key={v}
-                                    className="text-[10px] font-black uppercase tracking-wider px-3 py-1.5 rounded-lg border"
-                                    style={{ borderColor: `${userSecondaryColor || "#C9A84C"}50`, color: userSecondaryColor || "#C9A84C", backgroundColor: `${userSecondaryColor || "#C9A84C"}10` }}
+                                    className="text-[10px] font-black uppercase tracking-wider px-3 py-1.5 rounded-lg border bg-cyan-50/50 text-[#06B6D4] border-cyan-100/60"
                                   >
                                     {v}
                                   </span>
@@ -2660,7 +2658,7 @@ export default function OnboardingPage() {
 
                               {/* Tone descriptors */}
                               <div className="space-y-2 flex-1">
-                                <p className="text-[8px] text-gray-600 uppercase tracking-wider">Voice Attributes</p>
+                                <p className="text-[8px] text-slate-400 uppercase tracking-wider">Voice Attributes</p>
                                 <div className="space-y-1.5">
                                   {[
                                     { label: "Tone", value: Array.isArray(data.brandPersonality) ? (data.brandPersonality as string[]).join(", ") : String(data.brandPersonality || "Professional") },
@@ -2668,25 +2666,25 @@ export default function OnboardingPage() {
                                     { label: "Mission", value: data.mission || "Not defined" },
                                   ].map(({ label, value }) => (
                                     <div key={label} className="flex gap-2 text-[9px]">
-                                      <span className="text-gray-600 uppercase tracking-wider w-14 shrink-0">{label}</span>
-                                      <span className="text-gray-300 leading-snug line-clamp-2">{value}</span>
+                                      <span className="text-slate-400 uppercase tracking-wider w-14 shrink-0">{label}</span>
+                                      <span className="text-slate-600 leading-snug line-clamp-2">{value}</span>
                                     </div>
                                   ))}
                                 </div>
                               </div>
 
                               {/* Separator words */}
-                              <div className="flex items-center gap-2 pt-2 border-t border-gray-800">
+                              <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
                                 {preset.imageryTags.slice(0, 4).map((tag) => (
-                                  <span key={tag} className="text-[8px] font-black text-gray-600 uppercase tracking-widest">{tag}</span>
+                                  <span key={tag} className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{tag}</span>
                                 ))}
                               </div>
                             </div>
 
                             {/* BLOCK E: Social Post Visual Direction — approved moodboard (7 cols) */}
-                            <div className="md:col-span-7 bg-[#0D0D0D] border border-gray-800 rounded-2xl overflow-hidden flex flex-col">
+                            <div className="md:col-span-7 bg-slate-50/50 border border-slate-100 rounded-2xl overflow-hidden flex flex-col shadow-sm">
                               <div className="px-5 pt-5 pb-3">
-                                <p className="text-[9px] font-black text-gray-500 uppercase tracking-[0.2em]">Social Post Visual Direction</p>
+                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Social Post Visual Direction</p>
                               </div>
                               {(() => {
                                 const mb = data.approvedMoodboard as { id: string; name: string; tagline: string; imageUrl: string } | null;
@@ -2699,7 +2697,7 @@ export default function OnboardingPage() {
                                       className="w-full h-full object-cover object-top"
                                       style={{ minHeight: "200px", maxHeight: "280px" }}
                                     />
-                                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent px-4 py-3">
+                                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-slate-950/80 to-transparent px-4 py-3">
                                       <p className="text-[9px] text-[#C9A84C] font-black uppercase tracking-wider">✦ Approved Visual Direction</p>
                                       <p className="text-white text-[10px] font-bold mt-0.5">{mb.name}</p>
                                     </div>
@@ -2707,8 +2705,8 @@ export default function OnboardingPage() {
                                 ) : (
                                   <div className="flex-1 flex items-center justify-center p-6 text-center">
                                     <div>
-                                      <p className="text-gray-600 text-xs">No moodboard approved yet.</p>
-                                      <p className="text-gray-700 text-[10px] mt-1">Generate and approve a direction in the Social Media Visual Direction studio to see it here.</p>
+                                      <p className="text-slate-400 text-xs font-semibold">No moodboard approved yet.</p>
+                                      <p className="text-slate-500 text-[10px] mt-1 leading-snug">Generate and approve a direction in the Social Media Visual Direction studio to see it here.</p>
                                     </div>
                                   </div>
                                 );
@@ -2716,21 +2714,22 @@ export default function OnboardingPage() {
                             </div>
 
                             {/* ── ROW 3 — Full width: Visual Brain Summary ── */}
-                            <div className="md:col-span-12 bg-[#0D0D0D] border border-gray-800 rounded-2xl p-5 flex flex-col md:flex-row md:items-center gap-5">
+                            <div className="md:col-span-12 bg-slate-50/80 border border-slate-100 rounded-2xl p-5 flex flex-col md:flex-row md:items-center gap-5 shadow-sm">
                               <div className="space-y-2 flex-1">
-                                <p className="text-[9px] font-black text-gray-500 uppercase tracking-[0.2em]">Visual Brand Summary</p>
-                                <p className="text-xs text-gray-300 leading-relaxed font-medium">
+                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Visual Brand Summary</p>
+                                <p className="text-xs text-slate-600 leading-relaxed font-medium">
                                   {data.businessDescription || preset.summary || `${data.brandName} is a ${data.industry} brand with a ${Array.isArray(data.brandPersonality) ? (data.brandPersonality as string[]).join(", ") : String(data.brandPersonality || "professional")} identity, serving ${data.targetAudience || "a global audience"}.`}
                                 </p>
                               </div>
 
                               <div className="flex items-center gap-2 md:shrink-0">
-                                <div className="w-8 h-8 rounded-full border-2 border-[#C9A84C]/40" style={{ backgroundColor: userPrimaryColor || "#1A0A00" }} />
-                                <div className="w-8 h-8 rounded-full border-2 border-[#C9A84C]/40" style={{ backgroundColor: userSecondaryColor || "#C9A84C" }} />
-                                <div className="w-8 h-8 rounded-full border-2 border-white/10 bg-[#0D0D0D]" />
-                                <div className="w-8 h-8 rounded-full border-2 border-white/10 bg-[#F5ECD7]" />
+                                <div className="w-8 h-8 rounded-full border border-slate-200" style={{ backgroundColor: userPrimaryColor || "#1A0A00" }} />
+                                <div className="w-8 h-8 rounded-full border border-slate-200" style={{ backgroundColor: userSecondaryColor || "#C9A84C" }} />
+                                <div className="w-8 h-8 rounded-full border border-slate-200 bg-slate-900" />
+                                <div className="w-8 h-8 rounded-full border border-slate-200 bg-slate-50" />
                               </div>
                             </div>
+
 
                           </div>
                         </div>
