@@ -1,67 +1,12 @@
 import { supabase } from "@/lib/supabase";
 import { getBrandMemoryContext } from "@/lib/brandMemory";
+import { callLLM } from "@/lib/aiProvider";
 
 export interface ContentMixItem {
   platform: string;
   postType: string;
   recommendedCount: number;
   overrideCount: number;
-}
-
-/**
- * Calls the active LLM (Claude if key present, else Gemini) to generate recommended post distribution.
- */
-async function callLLMForContentMix(prompt: string): Promise<Array<{ platform: string; postType: string; count: number }>> {
-  const claudeKey = process.env.CLAUDE_API_KEY || process.env.ANTHROPIC_API_KEY;
-  const geminiKey = process.env.GEMINI_API_KEY;
-
-  if (claudeKey) {
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "x-api-key": claudeKey,
-        "anthropic-version": "2023-06-01",
-        "content-type": "application/json"
-      },
-      body: JSON.stringify({
-        model: "claude-3-5-sonnet-20241022",
-        max_tokens: 1500,
-        messages: [{ role: "user", content: prompt + "\n\nProvide ONLY the raw JSON array (no markdown, no backticks)." }]
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`Claude API failed with status ${response.status}`);
-    }
-
-    const resJson = await response.json();
-    const text = resJson.content?.[0]?.text || "";
-    return JSON.parse(text.trim());
-  } else if (geminiKey) {
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-          responseMimeType: "application/json"
-        }
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`Gemini API failed with status ${response.status}`);
-    }
-
-    const resJson = await response.json();
-    const text = resJson.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!text) {
-      throw new Error("Empty response from Gemini API");
-    }
-    return JSON.parse(text.trim());
-  } else {
-    throw new Error("Neither Claude API Key nor Gemini API Key is configured in environment variables.");
-  }
 }
 
 /**
@@ -91,7 +36,14 @@ Return ONLY a valid JSON array of objects (no markdown, no backticks, just raw J
   }
 ]`;
 
-  const recommendations = await callLLMForContentMix(prompt);
+  const responseText = await callLLM(prompt);
+  
+  // Sanitize code block wrappers if any
+  let jsonText = responseText.trim();
+  if (jsonText.startsWith("```")) {
+    jsonText = jsonText.replace(/^```[a-zA-Z]*\s*/, "").replace(/\s*```$/, "").trim();
+  }
+  const recommendations = JSON.parse(jsonText) as Array<{ platform: string; postType: string; count: number }>;
 
   // 3. Prepare rows for upsert
   const upsertRows = recommendations.map(rec => ({

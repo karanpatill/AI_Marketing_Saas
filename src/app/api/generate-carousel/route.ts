@@ -1,27 +1,5 @@
 import { NextResponse } from "next/server";
-
-async function callGeminiWithRetry(
-  url: string,
-  payload: object,
-  maxRetries = 3,
-  delayMs = 4000
-): Promise<Response> {
-  let lastResponse: Response | null = null;
-  for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    if (attempt > 0) {
-      console.warn(`Gemini 429 rate limit. Waiting ${delayMs}ms before retry ${attempt}/${maxRetries}...`);
-      await new Promise((r) => setTimeout(r, delayMs));
-    }
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-    if (res.status !== 429) return res;
-    lastResponse = res;
-  }
-  return lastResponse!;
-}
+import { callGeminiWithRetry, getUnsplashFallbackImage } from "@/lib/aiProvider";
 
 export async function POST(req: Request) {
   try {
@@ -617,31 +595,4 @@ Do not include markdown code block formatting. Ensure the HTML matches the brand
       { status: 500 }
     );
   }
-}
-
-async function getUnsplashFallbackImage(query: string, orientation: "landscape" | "portrait" | "squarish" = "squarish"): Promise<string> {
-  try {
-    const cleanQuery = encodeURIComponent(query.substring(0, 80));
-    const searchUrl = `https://unsplash.com/napi/search/photos?query=${cleanQuery}&per_page=15&orientation=${orientation}`;
-    const res = await fetch(searchUrl, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-      }
-    });
-    if (res.ok) {
-      const data = await res.json();
-      if (data.results && data.results.length > 0) {
-        const limit = Math.min(data.results.length, 8);
-        const randomIndex = Math.floor(Math.random() * limit);
-        const photo = data.results[randomIndex];
-        const rawUrl = photo.urls?.raw || photo.urls?.regular;
-        if (rawUrl) {
-          return `${rawUrl.split('?')[0]}?q=80&w=1080&auto=format&fit=crop`;
-        }
-      }
-    }
-  } catch (err: any) {
-    console.error("Unsplash fallback search failed:", err.message);
-  }
-  return "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1080&auto=format&fit=crop"; // Premium abstract wallpaper
 }

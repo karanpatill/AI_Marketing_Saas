@@ -1,5 +1,6 @@
 import { supabase } from "@/lib/supabase";
 import { getBrandMemoryContext } from "@/lib/brandMemory";
+import { callLLM } from "@/lib/aiProvider";
 
 export interface StrategyPayload {
   annualGoals: {
@@ -32,70 +33,6 @@ export interface StrategyPayload {
     conceptBrief: string;
     cta: string;
   }>;
-}
-
-/**
- * Calls the active LLM (Claude if key present, else Gemini) to compile a 30-day marketing strategy.
- */
-async function callLLMForStrategy(prompt: string): Promise<StrategyPayload> {
-  const claudeKey = process.env.CLAUDE_API_KEY || process.env.ANTHROPIC_API_KEY;
-  const geminiKey = process.env.GEMINI_API_KEY;
-
-  if (claudeKey) {
-    // Call Claude API (Anthropic)
-    console.log("Initializing Strategy compiler using Claude API...");
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "x-api-key": claudeKey,
-        "anthropic-version": "2023-06-01",
-        "content-type": "application/json"
-      },
-      body: JSON.stringify({
-        model: "claude-3-5-sonnet-20241022",
-        max_tokens: 4000,
-        messages: [{ role: "user", content: prompt + "\n\nProvide ONLY the raw JSON object matching the interface (no markdown, no backticks)." }]
-      })
-    });
-
-    if (!response.ok) {
-      const errText = await response.text();
-      console.error("Claude API failed:", errText);
-      throw new Error(`Claude API failed with status ${response.status}`);
-    }
-
-    const resJson = await response.json();
-    const text = resJson.content?.[0]?.text || "";
-    return JSON.parse(text.trim());
-  } else if (geminiKey) {
-    // Call Gemini API (Fallback)
-    console.log("Initializing Strategy compiler using Gemini API...");
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-          responseMimeType: "application/json"
-        }
-      })
-    });
-
-    if (!response.ok) {
-      const errText = await response.text();
-      console.error("Gemini API failed:", errText);
-      throw new Error(`Gemini API failed with status ${response.status}`);
-    }
-
-    const resJson = await response.json();
-    const text = resJson.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!text) {
-      throw new Error("Empty response from Gemini API");
-    }
-    return JSON.parse(text.trim());
-  } else {
-    throw new Error("Neither Claude API Key nor Gemini API Key is configured in environment variables.");
-  }
 }
 
 /**
@@ -148,7 +85,14 @@ interface StrategyPayload {
   }>; // Generate EXACTLY 30 items representing consecutive days.
 }`;
 
-  const strategy = await callLLMForStrategy(prompt);
+  const responseText = await callLLM(prompt, { maxTokens: 4000 });
+  
+  // Sanitize code block wrappers if any
+  let jsonText = responseText.trim();
+  if (jsonText.startsWith("```")) {
+    jsonText = jsonText.replace(/^```[a-zA-Z]*\s*/, "").replace(/\s*```$/, "").trim();
+  }
+  const strategy = JSON.parse(jsonText) as StrategyPayload;
 
   // 3. Save to brand_strategies
   const { error: strategyError } = await supabase.from("brand_strategies").insert({

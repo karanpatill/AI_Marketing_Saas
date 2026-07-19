@@ -1,5 +1,6 @@
 import { supabase } from "@/lib/supabase";
 import { getBrandMemoryContext } from "@/lib/brandMemory";
+import { callLLM } from "@/lib/aiProvider";
 
 export interface GeneratedCampaignPayload {
   title: string;
@@ -13,59 +14,6 @@ export interface GeneratedCampaignPayload {
     conceptBrief: string;
     cta: string;
   }>;
-}
-
-async function callLLMForCampaign(prompt: string): Promise<GeneratedCampaignPayload> {
-  const claudeKey = process.env.CLAUDE_API_KEY || process.env.ANTHROPIC_API_KEY;
-  const geminiKey = process.env.GEMINI_API_KEY;
-
-  if (claudeKey) {
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "x-api-key": claudeKey,
-        "anthropic-version": "2023-06-01",
-        "content-type": "application/json"
-      },
-      body: JSON.stringify({
-        model: "claude-3-5-sonnet-20241022",
-        max_tokens: 2500,
-        messages: [{ role: "user", content: prompt + "\n\nProvide ONLY the raw JSON object matching the interface (no markdown, no backticks)." }]
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`Claude API failed in Campaign Planner: ${response.status}`);
-    }
-
-    const resJson = await response.json();
-    const text = resJson.content?.[0]?.text || "";
-    return JSON.parse(text.trim());
-  } else if (geminiKey) {
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-          responseMimeType: "application/json"
-        }
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`Gemini API failed in Campaign Planner: ${response.status}`);
-    }
-
-    const resJson = await response.json();
-    const text = resJson.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!text) {
-      throw new Error("Empty response from Gemini API in Campaign Planner");
-    }
-    return JSON.parse(text.trim());
-  } else {
-    throw new Error("Missing active API keys for Campaign Planner.");
-  }
 }
 
 /**
@@ -111,7 +59,14 @@ interface GeneratedCampaignPayload {
   }>;
 }`;
 
-  const plan = await callLLMForCampaign(prompt);
+  const responseText = await callLLM(prompt);
+  
+  // Sanitize code block wrappers if any
+  let jsonText = responseText.trim();
+  if (jsonText.startsWith("```")) {
+    jsonText = jsonText.replace(/^```[a-zA-Z]*\s*/, "").replace(/\s*```$/, "").trim();
+  }
+  const plan = JSON.parse(jsonText) as GeneratedCampaignPayload;
 
   // 1. Write the campaign to public.brand_campaigns
   const { data: campaign, error: campaignError } = await supabase

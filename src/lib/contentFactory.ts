@@ -1,5 +1,6 @@
 import { supabase } from "@/lib/supabase";
 import { getBrandMemoryContext } from "@/lib/brandMemory";
+import { callLLM, getUnsplashFallbackImage } from "@/lib/aiProvider";
 
 export interface GeneratedContentPayload {
   caption: string;
@@ -10,93 +11,44 @@ export interface GeneratedContentPayload {
   hashtags: string[];
 }
 
-async function callLLMForContent(prompt: string): Promise<GeneratedContentPayload> {
-  const claudeKey = process.env.CLAUDE_API_KEY || process.env.ANTHROPIC_API_KEY;
-  const geminiKey = process.env.GEMINI_API_KEY;
-
-  if (claudeKey) {
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "x-api-key": claudeKey,
-        "anthropic-version": "2023-06-01",
-        "content-type": "application/json"
-      },
-      body: JSON.stringify({
-        model: "claude-3-5-sonnet-20241022",
-        max_tokens: 3000,
-        messages: [{ role: "user", content: prompt + "\n\nProvide ONLY the raw JSON object matching the interface (no markdown, no backticks)." }]
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`Claude API failed in Content Factory: ${response.status}`);
-    }
-
-    const resJson = await response.json();
-    const text = resJson.content?.[0]?.text || "";
-    return JSON.parse(text.trim());
-  } else if (geminiKey) {
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-          responseMimeType: "application/json"
-        }
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`Gemini API failed in Content Factory: ${response.status}`);
-    }
-
-    const resJson = await response.json();
-    const text = resJson.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!text) {
-      throw new Error("Empty response from Gemini API in Content Factory");
-    }
-    return JSON.parse(text.trim());
-  } else {
-    throw new Error("Missing active API keys for Content Factory.");
-  }
-}
-
-async function generateImageWithFal(prompt: string): Promise<string | null> {
+async function generateImageWithFal(prompt: string): Promise<string> {
   const falKey = process.env.FAL_API_KEY || process.env.FAL_KEY;
-  if (!falKey) {
-    console.warn("FAL_API_KEY is not configured in .env.local. Skipping image generation.");
-    return null;
-  }
+  let imageUrl: string | null = null;
 
-  try {
-    console.log("Triggering Fal.ai Image Generation (SD 3.5 Large) for prompt:", prompt);
-    const response = await fetch("https://fal.run/fal-ai/stable-diffusion-v35-large", {
-      method: "POST",
-      headers: {
-        "Authorization": `Key ${falKey}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        prompt: prompt,
-        image_size: "square_hd",
-        num_inference_steps: 28,
-        enable_safety_checker: true
-      })
-    });
+  if (falKey) {
+    try {
+      console.log("Triggering Fal.ai Image Generation (SD 3.5 Large) for prompt:", prompt);
+      const response = await fetch("https://fal.run/fal-ai/stable-diffusion-v35-large", {
+        method: "POST",
+        headers: {
+          "Authorization": `Key ${falKey}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          prompt: prompt,
+          image_size: "square_hd",
+          num_inference_steps: 28,
+          enable_safety_checker: true
+        })
+      });
 
-    if (!response.ok) {
-      console.error("Fal.ai API error:", await response.text());
-      return null;
+      if (response.ok) {
+        const data = await response.json();
+        imageUrl = data.images?.[0]?.url || null;
+      } else {
+        console.warn("Fal.ai API failed (using Unsplash fallback):", await response.text());
+      }
+    } catch (err) {
+      console.error("Fal.ai fetch error (using Unsplash fallback):", err);
     }
-
-    const data = await response.json();
-    return data.images?.[0]?.url || null;
-  } catch (err) {
-    console.error("Fal.ai fetch error:", err);
-    return null;
   }
+
+  if (!imageUrl) {
+    console.log("Using dynamic Unsplash fallback for calendar post asset image...");
+    imageUrl = await getUnsplashFallbackImage(prompt || "business workspace technology graphic", "squarish");
+  }
+
+  return imageUrl;
 }
 
 /**
@@ -202,7 +154,12 @@ interface GeneratedContentPayload {
   hashtags: string[]; // Array of 5-8 relevant hashtags
 }`;
 
-  const generated = await callLLMForContent(prompt);
+  const responseText = await callLLM(prompt);
+  let jsonText = responseText.trim();
+  if (jsonText.startsWith("```")) {
+    jsonText = jsonText.replace(/^```[a-zA-Z]*\s*/, "").replace(/\s*```$/, "").trim();
+  }
+  const generated = JSON.parse(jsonText) as GeneratedContentPayload;
 
   // === LIVE FAL.AI MEDIA GENERATION INTEGRATION ===
   if (item.post_type === "static" && generated.visualPrompt) {
