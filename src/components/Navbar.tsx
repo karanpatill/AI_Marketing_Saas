@@ -39,7 +39,7 @@ export default function Navbar() {
 
         {/* Right CTAs */}
         <div className="flex items-center gap-3">
-          <a href="#" className="text-[13px] text-gray-500 hover:text-gray-900 transition-colors">
+          <a href="/auth" className="text-[13px] text-gray-500 hover:text-gray-900 transition-colors">
             Sign in
           </a>
           <a href="/onboarding" id="navbar-cta"
@@ -68,7 +68,7 @@ export default function Navbar() {
               {l.hasDropdown && <ChevronDown className="w-4 h-4 text-gray-400" />}
             </a>
           ))}
-          <a href="#" className="flex text-[15px] text-gray-700 hover:text-gray-900 py-3 transition-colors">
+          <a href="/auth" className="flex text-[15px] text-gray-700 hover:text-gray-900 py-3 transition-colors">
             Sign in
           </a>
         </div>

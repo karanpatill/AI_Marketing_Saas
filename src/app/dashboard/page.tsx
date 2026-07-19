@@ -9,6 +9,9 @@ import {
   Loader2, LogOut, ArrowRight, ShieldCheck,
   Tag, Compass, HelpCircle, Users, Eye, Flag,
   Building, Image, FileText, Video, Plus,
+  Settings, Bell, Search, Activity, Trash2,
+  Shield, CreditCard, Mail, User, AlertCircle,
+  X, Check, Lock, ChevronDown, RefreshCw
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 
@@ -99,7 +102,30 @@ export default function DashboardPage() {
   const [dna, setDna] = useState<BrandDna | null>(null);
   const [assets, setAssets] = useState<BrandAssets | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"control" | "dna" | "campaigns" | "mix" | "studio" | "carousel" | "video">("control");
+  const [activeTab, setActiveTab] = useState<"control" | "dna" | "campaigns" | "mix" | "studio" | "carousel" | "video" | "settings">("control");
+
+  // --- SaaS Foundation State ---
+  const [currentUser, setCurrentUser] = useState<any | null>(null);
+  const [organizations, setOrganizations] = useState<any[]>([]);
+  const [workspaces, setWorkspaces] = useState<any[]>([]);
+  const [activeOrg, setActiveOrg] = useState<any | null>(null);
+  const [activeWorkspace, setActiveWorkspace] = useState<any | null>(null);
+  const [teamMembers, setTeamMembers] = useState<any[]>([]);
+  const [pendingInvitations, setPendingInvitations] = useState<any[]>([]);
+  const [activityLogs, setActivityLogs] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState("viewer");
+  const [isInviting, setIsInviting] = useState(false);
+  const [newWorkspaceName, setNewWorkspaceName] = useState("");
+  const [isCreatingWorkspace, setIsCreatingWorkspace] = useState(false);
+  const [settingsTab, setSettingsTab] = useState<"profile" | "workspace" | "team" | "billing">("profile");
+  const [userName, setUserName] = useState("");
+  const [userAvatar, setUserAvatar] = useState("");
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" | "info" } | null>(null);
 
   // Post Generator Studio States
   const [postPrompt, setPostPrompt] = useState("");
@@ -444,9 +470,106 @@ export default function DashboardPage() {
     }
   };
 
-  // Fetch latest DNA & Assets from Supabase
+  // --- SaaS Initializer mount useEffect ───
+  useEffect(() => {
+    async function loadSaaSData() {
+      try {
+        const { supabase } = await import("@/lib/supabase");
+        
+        // 1. Get current auth user
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        if (authError || !user) {
+          router.push("/auth");
+          return;
+        }
+        setCurrentUser(user);
+
+        // 2. Fetch User Profile
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", user.id)
+          .maybeSingle();
+        if (profile) {
+          setUserName(profile.name || "");
+          setUserAvatar(profile.avatar_url || "");
+        } else {
+          setUserName(user.user_metadata?.name || user.email?.split("@")[0] || "");
+        }
+
+        // 3. Fetch Organizations & Workspaces
+        const res = await fetch("/api/workspace");
+        if (res.ok) {
+          const workspaceData = await res.json();
+          setOrganizations(workspaceData.organizations || []);
+          setWorkspaces(workspaceData.workspaces || []);
+
+          if (workspaceData.organizations?.length > 0) {
+            const defaultOrg = workspaceData.organizations[0];
+            setActiveOrg(defaultOrg);
+
+            const orgWorkspaces = workspaceData.workspaces?.filter((w: any) => w.org_id === defaultOrg.id) || [];
+            if (orgWorkspaces.length > 0) {
+              setActiveWorkspace(orgWorkspaces[0]);
+            }
+          }
+        }
+
+        // 4. Fetch Notifications
+        const { data: notifyList } = await supabase
+          .from("notifications")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(10);
+        setNotifications(notifyList || []);
+
+      } catch (err) {
+        console.error("Failed to initialize SaaS data:", err);
+      }
+    }
+    loadSaaSData();
+  }, []);
+
+  // --- Load org details when activeOrg changes ───
+  useEffect(() => {
+    if (activeOrg) {
+      loadOrgDetails(activeOrg.id);
+    }
+  }, [activeOrg]);
+
+  const loadOrgDetails = async (orgId: string) => {
+    try {
+      const teamRes = await fetch(`/api/team?orgId=${orgId}`);
+      if (teamRes.ok) {
+        const teamData = await teamRes.json();
+        setTeamMembers(teamData);
+      }
+
+      const inviteRes = await fetch(`/api/invitations?orgId=${orgId}`);
+      if (inviteRes.ok) {
+        const inviteData = await inviteRes.json();
+        setPendingInvitations(inviteData);
+      }
+
+      const { supabase } = await import("@/lib/supabase");
+      const { data: logs } = await supabase
+        .from("activity_logs")
+        .select("*")
+        .eq("org_id", orgId)
+        .order("created_at", { ascending: false })
+        .limit(10);
+      setActivityLogs(logs || []);
+    } catch (err) {
+      console.error("Failed to load org details:", err);
+    }
+  };
+
+  // --- Fetch Brand DNA & Assets scoped by activeWorkspace ───
   useEffect(() => {
     async function fetchWorkspaceData() {
+      if (!activeWorkspace) return;
+      setLoading(true);
       try {
         const { supabase } = await import("@/lib/supabase");
         
@@ -468,8 +591,7 @@ export default function DashboardPage() {
           const res = await supabase
             .from("brand_dna")
             .select("*")
-            .order("created_at", { ascending: false })
-            .limit(1)
+            .eq("workspace_id", activeWorkspace.id)
             .maybeSingle();
           dnaData = res.data;
           dnaError = res.error;
@@ -477,7 +599,8 @@ export default function DashboardPage() {
 
         if (dnaError) {
           console.error("Error fetching brand DNA:", dnaError);
-          setLoading(false);
+          setDna(null);
+          setAssets(null);
           return;
         }
 
@@ -499,6 +622,9 @@ export default function DashboardPage() {
 
           // Trigger content and campaign fetches
           await reloadDynamicData(dnaData.id);
+        } else {
+          setDna(null);
+          setAssets(null);
         }
       } catch (err) {
         console.error("Initialization error:", err);
@@ -508,7 +634,140 @@ export default function DashboardPage() {
     }
 
     fetchWorkspaceData();
-  }, []);
+  }, [activeWorkspace]);
+
+  // --- SaaS Action Handlers ───
+  const handleInvite = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inviteEmail || !activeOrg) return;
+    setIsInviting(true);
+    try {
+      const res = await fetch("/api/invitations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orgId: activeOrg.id,
+          email: inviteEmail,
+          role: inviteRole
+        })
+      });
+      if (res.ok) {
+        setInviteEmail("");
+        setToast({ message: "Invitation sent successfully!", type: "success" });
+        loadOrgDetails(activeOrg.id);
+      } else {
+        const data = await res.json();
+        setToast({ message: data.error || "Failed to send invitation", type: "error" });
+      }
+    } catch (err: any) {
+      setToast({ message: err.message || "Failed to send invitation", type: "error" });
+    } finally {
+      setIsInviting(false);
+    }
+  };
+
+  const handleCreateWorkspace = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newWorkspaceName || !activeOrg) return;
+    setIsCreatingWorkspace(true);
+    try {
+      const res = await fetch("/api/workspace", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orgId: activeOrg.id,
+          name: newWorkspaceName
+        })
+      });
+      if (res.ok) {
+        const newWs = await res.json();
+        setWorkspaces(prev => [...prev, newWs]);
+        setNewWorkspaceName("");
+        setActiveWorkspace(newWs);
+        setToast({ message: "Workspace created successfully!", type: "success" });
+      } else {
+        const data = await res.json();
+        setToast({ message: data.error || "Failed to create workspace", type: "error" });
+      }
+    } catch (err: any) {
+      setToast({ message: err.message || "Failed to create workspace", type: "error" });
+    } finally {
+      setIsCreatingWorkspace(false);
+    }
+  };
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentUser) return;
+    setIsSavingProfile(true);
+    try {
+      const { supabase } = await import("@/lib/supabase");
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update({
+          name: userName,
+          avatar_url: userAvatar,
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", currentUser.id);
+
+      if (profileError) throw profileError;
+
+      await supabase.auth.updateUser({
+        data: { name: userName }
+      });
+
+      setToast({ message: "Profile saved successfully!", type: "success" });
+    } catch (err: any) {
+      setToast({ message: err.message || "Failed to save profile", type: "error" });
+    } finally {
+      setIsSavingProfile(false);
+    }
+  };
+
+  const handleSignOut = async () => {
+    try {
+      const { supabase } = await import("@/lib/supabase");
+      await supabase.auth.signOut();
+      router.push("/auth");
+      router.refresh();
+    } catch (err) {
+      console.error("Sign out error:", err);
+    }
+  };
+
+  const handleClearInvite = async (inviteId: string) => {
+    if (!activeOrg) return;
+    try {
+      const res = await fetch(`/api/invitations?orgId=${activeOrg.id}&inviteId=${inviteId}`, {
+        method: "DELETE"
+      });
+      if (res.ok) {
+        setToast({ message: "Invitation revoked successfully", type: "success" });
+        loadOrgDetails(activeOrg.id);
+      }
+    } catch (err: any) {
+      setToast({ message: err.message || "Failed to revoke invitation", type: "error" });
+    }
+  };
+
+  const handleRemoveMember = async (userId: string) => {
+    if (!activeOrg) return;
+    try {
+      const res = await fetch(`/api/team?orgId=${activeOrg.id}&userId=${userId}`, {
+        method: "DELETE"
+      });
+      if (res.ok) {
+        setToast({ message: "Team member removed", type: "success" });
+        loadOrgDetails(activeOrg.id);
+      } else {
+        const data = await res.json();
+        setToast({ message: data.error || "Failed to remove member", type: "error" });
+      }
+    } catch (err: any) {
+      setToast({ message: err.message || "Failed to remove member", type: "error" });
+    }
+  };
 
   if (loading) {
     return (
@@ -519,37 +778,13 @@ export default function DashboardPage() {
     );
   }
 
-  // If no onboarding data exists, redirect to onboarding flow
-  if (!dna) {
-    return (
-      <div className="min-h-screen bg-gray-50/50 flex flex-col items-center justify-center p-6 text-center">
-        <div className="bg-white border border-gray-200 rounded-2xl p-8 max-w-sm w-full shadow-sm space-y-4">
-          <div className="w-12 h-12 rounded-full bg-brand-primary/5 flex items-center justify-center text-brand-primary mx-auto">
-            <Cpu className="w-6 h-6" />
-          </div>
-          <h2 className="text-lg font-bold text-gray-900">Configure Brand DNA</h2>
-          <p className="text-xs text-gray-400 leading-relaxed">
-            You haven't completed the Brand DNA onboarding. Set up your marketing profile to unlock the AI dashboard.
-          </p>
-          <button
-            onClick={() => router.push("/onboarding")}
-            className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-brand-dark hover:bg-brand-darkHover text-white text-xs font-bold uppercase tracking-wider transition-all"
-          >
-            Start Setup
-            <ArrowRight className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   // --- Parse approved moodboard if exists ---
   let moodboard: any = null;
-  if (dna.approved_moodboard) {
+  if (dna && dna?.approved_moodboard) {
     try {
-      moodboard = typeof dna.approved_moodboard === "string" 
-        ? JSON.parse(dna.approved_moodboard) 
-        : dna.approved_moodboard;
+      moodboard = typeof dna?.approved_moodboard === "string" 
+        ? JSON.parse(dna?.approved_moodboard) 
+        : dna?.approved_moodboard;
     } catch (e) {
       console.error("Failed to parse approved moodboard", e);
     }
@@ -688,21 +923,36 @@ export default function DashboardPage() {
         <aside className="hidden md:flex flex-col justify-between w-[220px] bg-white border border-gray-200/80 rounded-2xl p-4 shrink-0 shadow-[0_4px_20px_rgb(0,0,0,0.01)]">
           <div className="space-y-4">
             
-            {/* Active Brand Card */}
-            <div className="p-3 bg-gray-50 border border-gray-100 rounded-xl flex items-center gap-3">
-              {assets?.logo_url ? (
-                <img src={assets.logo_url} alt="Logo" className="w-8 h-8 rounded-lg object-contain bg-white border border-gray-200 p-0.5 shrink-0" />
-              ) : assets?.logo_studio_data?.assets?.faviconSvg ? (
-                <div className="w-8 h-8 rounded-lg bg-gray-900 flex items-center justify-center p-1 shrink-0" dangerouslySetInnerHTML={{ __html: assets.logo_studio_data.assets.faviconSvg }} />
-              ) : (
-                <div className="w-8 h-8 rounded-lg bg-[#06B6D4]/10 border border-[#06B6D4]/20 flex items-center justify-center text-[#06B6D4] shrink-0 font-bold text-xs uppercase">
-                  {dna.brand_name.charAt(0)}
+            {/* SaaS Workspace & Organization Switcher */}
+            <div className="space-y-2 pb-3 border-b border-gray-100">
+              <div className="relative">
+                <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest block mb-1">Organization</label>
+                <div className="flex items-center justify-between p-2.5 bg-gray-50 border border-gray-205 rounded-xl cursor-pointer hover:bg-gray-100/60 transition-all text-gray-900 font-semibold text-xs">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Building className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                    <span className="truncate">{activeOrg?.name || "Loading Org..."}</span>
+                  </div>
                 </div>
-              )}
-              <div className="min-w-0 flex-1">
-                <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Active Brand</p>
-                <h3 className="text-xs font-bold text-gray-900 truncate leading-tight">{dna.brand_name}</h3>
-                <p className="text-[8px] text-[#06B6D4] font-mono font-bold tracking-wide uppercase truncate mt-0.5">{dna.industry}</p>
+              </div>
+
+              <div>
+                <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest block mb-1">Workspace</label>
+                <select
+                  value={activeWorkspace?.id || ""}
+                  onChange={(e) => {
+                    const ws = workspaces.find(w => w.id === e.target.value);
+                    if (ws) setActiveWorkspace(ws);
+                  }}
+                  className="w-full p-2.5 bg-gray-50 border border-gray-205 rounded-xl text-xs font-semibold text-gray-900 outline-none focus:border-brand-dark/40 cursor-pointer hover:bg-gray-100/60 transition-all"
+                >
+                  {workspaces
+                    .filter(w => w.org_id === activeOrg?.id)
+                    .map(w => (
+                      <option key={w.id} value={w.id}>
+                        {w.name}
+                      </option>
+                    ))}
+                </select>
               </div>
             </div>
 
@@ -794,40 +1044,165 @@ export default function DashboardPage() {
             </nav>
           </div>
 
-          {/* Reset profile */}
-          <button
-            onClick={() => router.push("/onboarding")}
-            className="flex items-center gap-2 px-3 py-2 text-xs font-semibold text-red-500 hover:bg-red-50 rounded-xl transition-all"
-          >
-            <LogOut className="w-4 h-4" />
-            Reset Brand DNA
-          </button>
+          {/* Settings & Sign Out */}
+          <div className="space-y-1 pt-3 border-t border-gray-100">
+            <button
+              onClick={() => setActiveTab("settings")}
+              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all text-left
+                ${activeTab === "settings"
+                  ? "bg-brand-dark text-white shadow-sm"
+                  : "text-gray-500 hover:text-gray-800 hover:bg-gray-50"
+                }`}
+            >
+              <Settings className="w-3.5 h-3.5" />
+              <span>Settings</span>
+            </button>
+
+            <button
+              onClick={handleSignOut}
+              className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-gray-500 hover:text-red-500 hover:bg-red-50/50 rounded-xl transition-all text-left"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span>Sign Out</span>
+            </button>
+          </div>
         </aside>
 
         {/* Right Dashboard Area */}
         <main className="flex-1 space-y-6">
 
-          {/* Top Info Banner */}
-          <div className="bg-white border border-gray-200/80 rounded-2xl p-6 shadow-[0_4px_20px_rgb(0,0,0,0.01)] flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-            <div className="space-y-1">
-              <h2 className="text-lg font-bold text-gray-900 tracking-tight">
-                {dna.brand_name} Brand Dashboard
-              </h2>
-              <div className="flex flex-wrap gap-2 text-[10px] text-gray-400">
-                <span><strong>Category:</strong> {dna.category}</span>
-                {dna.sub_category && (
-                  <>
-                    <span>•</span>
-                    <span><strong>Sub-category:</strong> {dna.sub_category}</span>
-                  </>
+          {/* SaaS Utility Top Bar: Global Search & Notifications */}
+          <div className="flex items-center justify-between gap-4 bg-white border border-gray-200/80 rounded-2xl px-5 py-3 shadow-[0_4px_20px_rgb(0,0,0,0.01)] relative">
+            {/* Search Input */}
+            <div className="flex-1 flex items-center gap-2 max-w-sm bg-gray-50 border border-gray-205 rounded-xl px-3 py-1.5 text-xs text-gray-400">
+              <Search className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+              <input
+                type="text"
+                placeholder="Search campaigns, assets, strategies..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="bg-transparent border-none outline-none text-gray-800 placeholder-gray-400 w-full font-medium"
+              />
+            </div>
+
+            {/* Notification Bell + Profile Info */}
+            <div className="flex items-center gap-4 relative">
+              {/* Toast notifier absolute helper */}
+              {toast && (
+                <div 
+                  className={`fixed bottom-6 right-6 z-50 flex items-center gap-2.5 px-4 py-3 rounded-2xl shadow-xl border animate-fade-left text-xs font-semibold
+                    ${toast.type === "success" 
+                      ? "bg-emerald-50 text-emerald-800 border-emerald-200" 
+                      : toast.type === "error"
+                      ? "bg-red-50 text-red-800 border-red-200"
+                      : "bg-blue-50 text-blue-800 border-blue-200"
+                    }`}
+                >
+                  {toast.type === "success" ? <Check className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
+                  <span>{toast.message}</span>
+                  <button onClick={() => setToast(null)} className="ml-2 hover:opacity-75">
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              )}
+
+              {/* Notification bell */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowNotifications(!showNotifications)}
+                  className="p-2 bg-gray-50 hover:bg-gray-100 rounded-xl border border-gray-205 transition-all text-gray-500 hover:text-gray-900 relative cursor-pointer"
+                >
+                  <Bell className="w-4 h-4" />
+                  {notifications.filter(n => !n.is_read).length > 0 && (
+                    <span className="absolute top-1 right-1 w-2 h-2 bg-brand-primary rounded-full" />
+                  )}
+                </button>
+
+                {/* Notifications Dropdown */}
+                {showNotifications && (
+                  <div className="absolute right-0 mt-2 w-80 bg-white border border-gray-250 rounded-2xl shadow-2xl p-4 z-50 space-y-3">
+                    <div className="flex justify-between items-center pb-2 border-b border-gray-100">
+                      <h4 className="text-xs font-black text-gray-900 uppercase tracking-wider">Notifications</h4>
+                      <button onClick={() => setShowNotifications(false)} className="text-gray-400 hover:text-gray-700 text-xs">Close</button>
+                    </div>
+                    <div className="max-h-60 overflow-y-auto space-y-2 divide-y divide-gray-100">
+                      {notifications.length === 0 ? (
+                        <p className="text-[10px] text-gray-400 text-center py-4 font-mono">No new notifications.</p>
+                      ) : (
+                        notifications.map(n => (
+                          <div key={n.id} className="pt-2 text-xs text-gray-600">
+                            <h5 className="font-bold text-gray-900">{n.title}</h5>
+                            <p className="text-[10px] text-gray-500 mt-0.5">{n.message}</p>
+                            <span className="text-[8px] text-gray-400 block mt-1">{new Date(n.created_at).toLocaleDateString()}</span>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
                 )}
               </div>
-            </div>
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-700 text-xs font-semibold tracking-tight shrink-0 self-start sm:self-center">
-              <ShieldCheck className="w-4 h-4" />
-              Memory Synced
+
+              {/* User Avatar Card */}
+              <div className="flex items-center gap-2 pl-3 border-l border-gray-100">
+                {userAvatar ? (
+                  <img src={userAvatar} alt="Avatar" className="w-7 h-7 rounded-full object-cover border border-gray-200" />
+                ) : (
+                  <div className="w-7 h-7 rounded-full bg-brand-dark flex items-center justify-center text-white font-bold text-xs uppercase">
+                    {userName?.charAt(0) || "U"}
+                  </div>
+                )}
+                <span className="hidden sm:inline text-xs font-bold text-gray-700 max-w-[80px] truncate">{userName}</span>
+              </div>
             </div>
           </div>
+
+          {/* Empty State / Onboarding requirement checker */}
+          {!dna && activeTab !== "settings" ? (
+            <div className="flex-1 flex items-center justify-center py-12">
+              <div className="max-w-md w-full bg-white border border-gray-200 rounded-3xl p-8 text-center shadow-[0_4px_20px_rgb(0,0,0,0.01)] space-y-5 animate-fade-up">
+                <div className="w-12 h-12 rounded-full bg-brand-primary/10 flex items-center justify-center text-brand-primary mx-auto">
+                  <Brain className="w-6 h-6" />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Workspace DNA Required</h3>
+                  <p className="text-xs text-gray-400 leading-relaxed">
+                    This workspace does not have a Brand DNA profile configured yet. Run the brand builder to generate marketing roadmap, strategies, logos and design assets.
+                  </p>
+                </div>
+                <button
+                  onClick={() => router.push("/onboarding")}
+                  className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-brand-dark hover:bg-brand-darkHover text-white text-xs font-bold uppercase tracking-wider transition-all"
+                >
+                  ✦ Start Brand Onboarding
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* Top Info Banner - Only render if DNA is synced */}
+              {dna && (
+                <div className="bg-white border border-gray-200/80 rounded-2xl p-6 shadow-[0_4px_20px_rgb(0,0,0,0.01)] flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+                  <div className="space-y-1">
+                    <h2 className="text-lg font-bold text-gray-900 tracking-tight">
+                      {dna?.brand_name} Brand Dashboard
+                    </h2>
+                    <div className="flex flex-wrap gap-2 text-[10px] text-gray-400">
+                      <span><strong>Category:</strong> {dna?.category}</span>
+                      {dna?.sub_category && (
+                        <>
+                          <span>•</span>
+                          <span><strong>Sub-category:</strong> {dna?.sub_category}</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-700 text-xs font-semibold tracking-tight shrink-0 self-start sm:self-center">
+                    <ShieldCheck className="w-4 h-4" />
+                    Memory Synced
+                  </div>
+                </div>
+              )}
 
           {/* Tab 1: Mission Control (Visual Style Tile Moodboard) */}
           {activeTab === "control" && (
@@ -844,16 +1219,16 @@ export default function DashboardPage() {
                       <span className="text-[10px] text-slate-400">Preset ID: {moodboard.id}</span>
                     )}
                   </div>
-                  <h1 className="text-xl font-extrabold mt-1 text-slate-900 uppercase tracking-tight">{dna.brand_name}</h1>
+                  <h1 className="text-xl font-extrabold mt-1 text-slate-900 uppercase tracking-tight">{dna?.brand_name}</h1>
                   <p className="text-xs text-slate-500 font-medium">
                     {moodboard?.name || "Bespoke Brand Strategy Board"} {moodboard?.tagline ? `— ${moodboard.tagline}` : ""}
                   </p>
                 </div>
 
                 <div className="flex items-center gap-2 text-[10px] text-slate-400 shrink-0">
-                  <span><strong>Industry:</strong> {dna.industry}</span>
+                  <span><strong>Industry:</strong> {dna?.industry}</span>
                   <span>•</span>
-                  <span><strong>Category:</strong> {dna.category}</span>
+                  <span><strong>Category:</strong> {dna?.category}</span>
                 </div>
               </div>
 
@@ -887,15 +1262,15 @@ export default function DashboardPage() {
                         }
                         return (
                           <span className="text-2xl font-black text-white" style={{ fontFamily: "serif" }}>
-                            {(dna.brand_name || "B").charAt(0).toUpperCase()}
+                            {(dna?.brand_name || "B").charAt(0).toUpperCase()}
                           </span>
                         );
                       })()}
                     </div>
                     <div className="text-center">
-                      <p className="text-slate-800 font-bold text-base tracking-tight">{dna.brand_name}</p>
+                      <p className="text-slate-800 font-bold text-base tracking-tight">{dna?.brand_name}</p>
                       <p className="text-slate-500 text-[10px] mt-0.5 italic max-w-[160px] text-center leading-snug">
-                        {dna.usp ? `"${dna.usp}"` : "No tagline set"}
+                        {dna?.usp ? `"${dna?.usp}"` : "No tagline set"}
                       </p>
                     </div>
                   </div>
@@ -903,12 +1278,12 @@ export default function DashboardPage() {
                   <div className="border-t border-slate-100 pt-3 space-y-1">
                     <div className="flex justify-between text-[9px]">
                       <span className="text-slate-400 uppercase tracking-wider">Industry</span>
-                      <span className="text-slate-700 font-bold">{dna.industry}</span>
+                      <span className="text-slate-700 font-bold">{dna?.industry}</span>
                     </div>
                     <div className="flex justify-between text-[9px]">
                       <span className="text-slate-400 uppercase tracking-wider">Personality</span>
                       <span className="text-slate-700 font-bold capitalize">
-                        {dna.brand_personality}
+                        {dna?.brand_personality}
                       </span>
                     </div>
                   </div>
@@ -991,7 +1366,7 @@ export default function DashboardPage() {
 
                   {/* Personality tags */}
                   <div className="flex flex-wrap gap-2">
-                    {(dna.brand_values || []).map((v) => (
+                    {(dna?.brand_values || []).map((v) => (
                       <span
                         key={v}
                         className="text-[10px] font-black uppercase tracking-wider px-3 py-1.5 rounded-lg border bg-cyan-50/50 text-[#06B6D4] border-cyan-100/60"
@@ -1006,9 +1381,9 @@ export default function DashboardPage() {
                     <p className="text-[8px] text-slate-400 uppercase tracking-wider">Voice Attributes</p>
                     <div className="space-y-1.5">
                       {[
-                        { label: "Tone", value: dna.brand_personality || "Professional" },
-                        { label: "Audience", value: dna.target_audience || "Not defined" },
-                        { label: "Mission", value: dna.mission || "Not defined" },
+                        { label: "Tone", value: dna?.brand_personality || "Professional" },
+                        { label: "Audience", value: dna?.target_audience || "Not defined" },
+                        { label: "Mission", value: dna?.mission || "Not defined" },
                       ].map(({ label, value }) => (
                         <div key={label} className="flex gap-2 text-[9px]">
                           <span className="text-slate-400 uppercase tracking-wider w-14 shrink-0">{label}</span>
@@ -1062,7 +1437,7 @@ export default function DashboardPage() {
                   <div className="space-y-2 flex-1">
                     <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Visual Brand Summary</p>
                     <p className="text-xs text-slate-600 leading-relaxed font-medium">
-                      {dna.business_description}
+                      {dna?.business_description}
                     </p>
                   </div>
 
@@ -1097,17 +1472,17 @@ export default function DashboardPage() {
                   <div className="space-y-2 text-xs">
                     <div className="flex flex-col gap-1 border-b border-gray-100 pb-2">
                       <span className="text-gray-400 font-medium">Business Description</span>
-                      <p className="text-gray-700 leading-relaxed">{dna.business_description}</p>
+                      <p className="text-gray-700 leading-relaxed">{dna?.business_description}</p>
                     </div>
-                    {dna.website && (
+                    {dna?.website && (
                       <div className="flex justify-between border-b border-gray-100 pb-2">
                         <span className="text-gray-400">Website</span>
-                        <a href={dna.website} target="_blank" rel="noreferrer" className="text-brand-secondary hover:underline font-semibold">{dna.website}</a>
+                        <a href={dna?.website} target="_blank" rel="noreferrer" className="text-brand-secondary hover:underline font-semibold">{dna?.website}</a>
                       </div>
                     )}
                     <div className="flex justify-between">
                       <span className="text-gray-400">USP (Unique Value)</span>
-                      <span className="font-semibold text-gray-800 text-right max-w-[200px]">{dna.usp}</span>
+                      <span className="font-semibold text-gray-800 text-right max-w-[200px]">{dna?.usp}</span>
                     </div>
                   </div>
                 </div>
@@ -1122,22 +1497,22 @@ export default function DashboardPage() {
                   <div className="space-y-2 text-xs">
                     <div className="flex flex-col gap-1 border-b border-gray-100 pb-2">
                       <span className="text-gray-400 font-medium">Mission</span>
-                      <p className="text-gray-700 font-medium">{dna.mission}</p>
+                      <p className="text-gray-700 font-medium">{dna?.mission}</p>
                     </div>
-                    {dna.vision && (
+                    {dna?.vision && (
                       <div className="flex flex-col gap-1 border-b border-gray-100 pb-2">
                         <span className="text-gray-400 font-medium">Vision</span>
-                        <p className="text-gray-700">{dna.vision}</p>
+                        <p className="text-gray-700">{dna?.vision}</p>
                       </div>
                     )}
                     <div className="flex justify-between border-b border-gray-100 pb-2">
                       <span className="text-gray-400">Brand Personality</span>
-                      <span className="font-semibold text-gray-800 capitalize">{dna.brand_personality}</span>
+                      <span className="font-semibold text-gray-800 capitalize">{dna?.brand_personality}</span>
                     </div>
                     <div className="flex flex-col gap-1.5">
                       <span className="text-gray-400">Core Brand Values</span>
                       <div className="flex flex-wrap gap-1">
-                        {(dna.brand_values || []).map((v) => (
+                        {(dna?.brand_values || []).map((v) => (
                           <span key={v} className="px-2 py-1 rounded bg-gray-50 border border-gray-200 text-[10px] text-gray-600 font-semibold">{v}</span>
                         ))}
                       </div>
@@ -1153,21 +1528,21 @@ export default function DashboardPage() {
                   </h3>
                   
                   <div className="space-y-3 text-xs">
-                    {dna.products && dna.products.length > 0 && (
+                    {dna?.products && dna?.products.length > 0 && (
                       <div className="flex flex-col gap-1.5 border-b border-gray-100 pb-2">
                         <span className="text-gray-400">Products</span>
                         <div className="flex flex-wrap gap-1">
-                          {dna.products.map(p => (
+                          {dna?.products.map(p => (
                             <span key={p} className="px-2 py-1 rounded bg-blue-50/50 border border-blue-100 text-[10px] text-blue-700 font-semibold">{p}</span>
                           ))}
                         </div>
                       </div>
                     )}
-                    {dna.services && dna.services.length > 0 && (
+                    {dna?.services && dna?.services.length > 0 && (
                       <div className="flex flex-col gap-1.5 border-b border-gray-100 pb-2">
                         <span className="text-gray-400">Services</span>
                         <div className="flex flex-wrap gap-1">
-                          {dna.services.map(s => (
+                          {dna?.services.map(s => (
                             <span key={s} className="px-2 py-1 rounded bg-emerald-50/50 border border-emerald-100 text-[10px] text-emerald-700 font-semibold">{s}</span>
                           ))}
                         </div>
@@ -1175,7 +1550,7 @@ export default function DashboardPage() {
                     )}
                     <div className="flex justify-between">
                       <span className="text-gray-400">Pricing Strategy</span>
-                      <span className="font-semibold text-gray-800">{dna.pricing}</span>
+                      <span className="font-semibold text-gray-800">{dna?.pricing}</span>
                     </div>
                   </div>
                 </div>
@@ -1190,22 +1565,22 @@ export default function DashboardPage() {
                   <div className="space-y-3 text-xs">
                     <div className="flex flex-col gap-1 border-b border-gray-100 pb-2">
                       <span className="text-gray-400 font-medium">Target Demographics</span>
-                      <p className="text-gray-700">{dna.target_audience}</p>
+                      <p className="text-gray-700">{dna?.target_audience}</p>
                     </div>
-                    {dna.customer_personas && (
+                    {dna?.customer_personas && (
                       <div className="flex flex-col gap-1 border-b border-gray-100 pb-2">
                         <span className="text-gray-400 font-medium">Customer Persona</span>
-                        <p className="text-gray-600 italic leading-relaxed">{dna.customer_personas}</p>
+                        <p className="text-gray-600 italic leading-relaxed">{dna?.customer_personas}</p>
                       </div>
                     )}
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <span className="text-gray-400 block mb-1">Country Focus</span>
-                        <span className="font-semibold text-gray-800">{dna.country}</span>
+                        <span className="font-semibold text-gray-800">{dna?.country}</span>
                       </div>
                       <div>
                         <span className="text-gray-400 block mb-1">Languages</span>
-                        <span className="font-semibold text-gray-800">{(dna.languages || []).join(", ")}</span>
+                        <span className="font-semibold text-gray-800">{(dna?.languages || []).join(", ")}</span>
                       </div>
                     </div>
                   </div>
@@ -1241,8 +1616,8 @@ export default function DashboardPage() {
                               ? "tracking-wider font-extrabold italic text-[10px]"
                               : "tracking-widest font-black uppercase text-[10px]";
                             const displayActiveBrandName = f.includes("montserrat") 
-                              ? dna.brand_name.toUpperCase() 
-                              : dna.brand_name;
+                              ? dna?.brand_name.toUpperCase() 
+                              : dna?.brand_name;
                             return (
                               <div className="w-32 h-32 bg-white border border-gray-200 rounded-xl flex flex-col items-center justify-center p-4 relative overflow-hidden shadow-inner bg-gradient-to-b from-white to-gray-50/30">
                                 <div className="flex-1 flex items-center justify-center w-full">
@@ -1414,8 +1789,8 @@ export default function DashboardPage() {
                       };
 
                       const displayBrandName = (typography.primaryFont || "").toLowerCase().includes("montserrat") 
-                        ? dna.brand_name.toUpperCase() 
-                        : dna.brand_name;
+                        ? dna?.brand_name.toUpperCase() 
+                        : dna?.brand_name;
 
                       return (
                         <div className="border-t border-gray-100 pt-5 mt-5">
@@ -1686,7 +2061,7 @@ export default function DashboardPage() {
                                         body: JSON.stringify({ calendarItemId: item.id })
                                       });
                                       if (res.ok) {
-                                        await reloadDynamicData(dna.id);
+                                        await reloadDynamicData(dna?.id || "");
                                       } else {
                                         alert("Generation failed");
                                       }
@@ -1774,7 +2149,7 @@ export default function DashboardPage() {
                             await fetch("/api/content-mix", {
                               method: "POST",
                               headers: { "Content-Type": "application/json" },
-                              body: JSON.stringify({ brandDnaId: dna.id, action: "override", platform: mix.platform, postType: mix.postType, count: newCount })
+                              body: JSON.stringify({ brandDnaId: dna?.id, action: "override", platform: mix.platform, postType: mix.postType, count: newCount })
                             });
                           }}
                           className="w-8 h-8 rounded-lg bg-gray-50 border border-gray-200 hover:bg-gray-100 flex items-center justify-center font-bold text-gray-600 cursor-pointer animate-scale"
@@ -1790,7 +2165,7 @@ export default function DashboardPage() {
                             await fetch("/api/content-mix", {
                               method: "POST",
                               headers: { "Content-Type": "application/json" },
-                              body: JSON.stringify({ brandDnaId: dna.id, action: "override", platform: mix.platform, postType: mix.postType, count: newCount })
+                              body: JSON.stringify({ brandDnaId: dna?.id, action: "override", platform: mix.platform, postType: mix.postType, count: newCount })
                             });
                           }}
                           className="w-8 h-8 rounded-lg bg-gray-50 border border-gray-200 hover:bg-gray-100 flex items-center justify-center font-bold text-gray-600 cursor-pointer animate-scale"
@@ -1905,16 +2280,16 @@ export default function DashboardPage() {
                       <div className="grid grid-cols-2 gap-2 text-[9px] pt-1">
                         <div>
                           <span className="text-gray-400 uppercase tracking-wider block">Personality</span>
-                          <span className="font-semibold text-gray-700 capitalize">{dna.brand_personality}</span>
+                          <span className="font-semibold text-gray-700 capitalize">{dna?.brand_personality}</span>
                         </div>
                         <div>
                           <span className="text-gray-400 uppercase tracking-wider block">Industry</span>
-                          <span className="font-semibold text-gray-700">{dna.industry}</span>
+                          <span className="font-semibold text-gray-700">{dna?.industry}</span>
                         </div>
-                        {dna.approved_moodboard && (
+                        {dna?.approved_moodboard && (
                           <div className="col-span-2">
                             <span className="text-gray-400 uppercase tracking-wider block">Visual Direction</span>
-                            <span className="font-semibold text-gray-700">{dna.approved_moodboard.name}</span>
+                            <span className="font-semibold text-gray-700">{dna?.approved_moodboard.name}</span>
                           </div>
                         )}
                       </div>
@@ -2445,6 +2820,396 @@ export default function DashboardPage() {
               </div>
             </div>
           )}
+        </>
+      )}
+      {/* Tab 8: SaaS Settings Panel */}
+          {activeTab === "settings" && (
+            <div className="space-y-6 animate-fade-up">
+              {/* Header */}
+              <div className="bg-white border border-gray-200/80 rounded-2xl p-5 shadow-[0_4px_20px_rgb(0,0,0,0.01)] flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-bold text-gray-900 flex items-center gap-1.5 uppercase tracking-wider">
+                    <Settings className="w-4 h-4 text-brand-dark" />
+                    SaaS Platform Settings
+                  </h3>
+                  <p className="text-[11px] text-gray-400 mt-0.5">
+                    Manage your personal profile, workspaces, invite team members, and check billing.
+                  </p>
+                </div>
+              </div>
+
+              {/* Layout: Inner tabs */}
+              <div className="flex flex-col lg:flex-row gap-6">
+                {/* Left Inner Sub-Nav */}
+                <div className="w-full lg:w-48 bg-white border border-gray-200/80 rounded-2xl p-3 shrink-0 h-fit space-y-1">
+                  <button
+                    onClick={() => setSettingsTab("profile")}
+                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all text-left
+                      ${settingsTab === "profile"
+                        ? "bg-brand-dark text-white shadow-sm"
+                        : "text-gray-500 hover:text-gray-800 hover:bg-gray-50"
+                      }`}
+                  >
+                    <User className="w-3.5 h-3.5" />
+                    <span>My Profile</span>
+                  </button>
+
+                  <button
+                    onClick={() => setSettingsTab("workspace")}
+                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all text-left
+                      ${settingsTab === "workspace"
+                        ? "bg-brand-dark text-white shadow-sm"
+                        : "text-gray-500 hover:text-gray-800 hover:bg-gray-50"
+                      }`}
+                  >
+                    <Building className="w-3.5 h-3.5" />
+                    <span>Workspaces</span>
+                  </button>
+
+                  <button
+                    onClick={() => setSettingsTab("team")}
+                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all text-left
+                      ${settingsTab === "team"
+                        ? "bg-brand-dark text-white shadow-sm"
+                        : "text-gray-500 hover:text-gray-800 hover:bg-gray-50"
+                      }`}
+                  >
+                    <Users className="w-3.5 h-3.5" />
+                    <span>Team & Members</span>
+                  </button>
+
+                  <button
+                    onClick={() => setSettingsTab("billing")}
+                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all text-left
+                      ${settingsTab === "billing"
+                        ? "bg-brand-dark text-white shadow-sm"
+                        : "text-gray-500 hover:text-gray-800 hover:bg-gray-50"
+                      }`}
+                  >
+                    <CreditCard className="w-3.5 h-3.5" />
+                    <span>Billing & Quota</span>
+                  </button>
+                </div>
+
+                {/* Right Sub-Tab Content */}
+                <div className="flex-1 bg-white border border-gray-200/80 rounded-2xl p-6 shadow-[0_4px_20px_rgb(0,0,0,0.01)] min-h-[400px]">
+                  
+                  {/* profile tab */}
+                  {settingsTab === "profile" && (
+                    <form onSubmit={handleSaveProfile} className="space-y-6">
+                      <div>
+                        <h4 className="text-sm font-bold text-gray-900 mb-1">Profile Details</h4>
+                        <p className="text-[11px] text-gray-400">Update your email, full name, and avatar settings.</p>
+                      </div>
+
+                      <div className="space-y-4">
+                        <div className="flex flex-col gap-1.5">
+                          <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Email Address (Read-only)</label>
+                          <input
+                            type="text"
+                            disabled
+                            value={currentUser?.email || ""}
+                            className="bg-gray-50 border border-gray-200 text-gray-400 outline-none rounded-xl px-3.5 py-2.5 text-xs cursor-not-allowed"
+                          />
+                        </div>
+
+                        <div className="flex flex-col gap-1.5">
+                          <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">Full Name</label>
+                          <input
+                            type="text"
+                            value={userName}
+                            onChange={(e) => setUserName(e.target.value)}
+                            className="bg-white border border-gray-200 focus:border-brand-dark/40 outline-none rounded-xl px-3.5 py-2.5 text-xs text-gray-900 transition-colors"
+                          />
+                        </div>
+
+                        <div className="flex flex-col gap-1.5">
+                          <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">Avatar Image URL</label>
+                          <input
+                            type="text"
+                            value={userAvatar}
+                            onChange={(e) => setUserAvatar(e.target.value)}
+                            className="bg-white border border-gray-200 focus:border-brand-dark/40 outline-none rounded-xl px-3.5 py-2.5 text-xs text-gray-900 transition-colors placeholder-gray-400"
+                            placeholder="https://images.unsplash.com/..."
+                          />
+                        </div>
+                      </div>
+
+                      <div className="pt-4 border-t border-gray-100 flex justify-end">
+                        <button
+                          type="submit"
+                          disabled={isSavingProfile}
+                          className="px-4 py-2 bg-brand-dark hover:bg-brand-darkHover text-white text-xs font-bold rounded-xl flex items-center gap-1.5 transition-all disabled:opacity-50"
+                        >
+                          {isSavingProfile ? (
+                            <>
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              Saving...
+                            </>
+                          ) : (
+                            <>
+                              <Check className="w-3.5 h-3.5" />
+                              Save Profile
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </form>
+                  )}
+
+                  {/* workspace tab */}
+                  {settingsTab === "workspace" && (
+                    <div className="space-y-6">
+                      <div>
+                        <h4 className="text-sm font-bold text-gray-900 mb-1">Workspace Architecture</h4>
+                        <p className="text-[11px] text-gray-400">View your active workspaces and create new marketing project groups.</p>
+                      </div>
+
+                      {/* Active Workspaces List */}
+                      <div className="space-y-3">
+                        <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">Workspaces in {activeOrg?.name}</label>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {workspaces
+                            .filter(w => w.org_id === activeOrg?.id)
+                            .map((w) => (
+                              <div
+                                key={w.id}
+                                onClick={() => setActiveWorkspace(w)}
+                                className={`p-4 border rounded-xl cursor-pointer transition-all flex items-center justify-between
+                                  ${activeWorkspace?.id === w.id
+                                    ? "border-brand-dark bg-gray-50 shadow-sm"
+                                    : "border-gray-200 hover:bg-gray-50/50"
+                                  }`}
+                              >
+                                <div>
+                                  <h5 className="text-xs font-bold text-gray-900">{w.name}</h5>
+                                  <p className="text-[10px] text-gray-400 mt-0.5">Slug: /{w.slug}</p>
+                                </div>
+                                {activeWorkspace?.id === w.id && (
+                                  <span className="px-2 py-0.5 bg-brand-dark text-white rounded text-[8px] font-bold uppercase tracking-wider">Active</span>
+                                )}
+                              </div>
+                            ))}
+                        </div>
+                      </div>
+
+                      {/* Create Workspace Form */}
+                      <form onSubmit={handleCreateWorkspace} className="pt-6 border-t border-gray-100 space-y-4">
+                        <h5 className="text-xs font-bold text-gray-900">Create New Workspace</h5>
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            placeholder="Workspace Name (e.g. Acme EMEA)"
+                            value={newWorkspaceName}
+                            onChange={(e) => setNewWorkspaceName(e.target.value)}
+                            className="flex-1 bg-white border border-gray-200 focus:border-brand-dark/40 outline-none rounded-xl px-3.5 py-2 text-xs text-gray-900 transition-colors"
+                          />
+                          <button
+                            type="submit"
+                            disabled={isCreatingWorkspace || !newWorkspaceName}
+                            className="bg-brand-dark hover:bg-brand-darkHover disabled:opacity-50 text-white font-bold text-xs rounded-xl px-4 py-2 flex items-center gap-1 transition-all"
+                          >
+                            {isCreatingWorkspace ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                              <Plus className="w-3.5 h-3.5" />
+                            )}
+                            Create
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  )}
+
+                  {/* team tab */}
+                  {settingsTab === "team" && (
+                    <div className="space-y-6">
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div>
+                          <h4 className="text-sm font-bold text-gray-900 mb-1">Team & Members</h4>
+                          <p className="text-[11px] text-gray-400">Invite colleagues, edit roles, and trace activity history logs.</p>
+                        </div>
+                      </div>
+
+                      {/* Invite Form */}
+                      <form onSubmit={handleInvite} className="bg-gray-50 border border-gray-200/60 rounded-xl p-4 space-y-3">
+                        <h5 className="text-xs font-bold text-gray-900">Invite New Colleague</h5>
+                        <div className="flex flex-col sm:flex-row gap-2">
+                          <input
+                            type="email"
+                            placeholder="colleague@company.com"
+                            value={inviteEmail}
+                            onChange={(e) => setInviteEmail(e.target.value)}
+                            className="flex-1 bg-white border border-gray-200 focus:border-brand-dark/40 outline-none rounded-xl px-3.5 py-2 text-xs text-gray-900 transition-colors"
+                          />
+                          <select
+                            value={inviteRole}
+                            onChange={(e) => setInviteRole(e.target.value)}
+                            className="bg-white border border-gray-200 outline-none rounded-xl px-3.5 py-2 text-xs text-gray-900 cursor-pointer"
+                          >
+                            <option value="admin">Admin</option>
+                            <option value="editor">Editor</option>
+                            <option value="viewer">Viewer</option>
+                          </select>
+                          <button
+                            type="submit"
+                            disabled={isInviting || !inviteEmail}
+                            className="bg-brand-dark hover:bg-brand-darkHover disabled:opacity-50 text-white font-bold text-xs rounded-xl px-4 py-2 flex items-center gap-1 transition-all"
+                          >
+                            {isInviting ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                              <Mail className="w-3.5 h-3.5" />
+                            )}
+                            Invite
+                          </button>
+                        </div>
+                      </form>
+
+                      {/* Team Members List */}
+                      <div className="space-y-3">
+                        <h5 className="text-xs font-bold text-gray-900">Active Team Members</h5>
+                        <div className="border border-gray-200/80 rounded-xl divide-y divide-gray-150">
+                          {teamMembers.map((m) => (
+                            <div key={m.userId} className="p-3.5 flex items-center justify-between text-xs">
+                              <div className="flex items-center gap-3">
+                                {m.avatarUrl ? (
+                                  <img src={m.avatarUrl} alt="Avatar" className="w-8 h-8 rounded-full object-cover border border-gray-200" />
+                                ) : (
+                                  <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center font-bold text-gray-500 uppercase">
+                                    {m.name.charAt(0)}
+                                  </div>
+                                )}
+                                <div>
+                                  <h6 className="font-bold text-gray-900">{m.name} {m.userId === currentUser?.id && <span className="text-gray-400 font-normal text-[10px]">(You)</span>}</h6>
+                                  <p className="text-[10px] text-gray-400">{m.email}</p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-3">
+                                <span className="px-2 py-0.5 bg-gray-150 rounded text-[9px] font-bold uppercase tracking-wider text-gray-600">
+                                  {m.role}
+                                </span>
+                                {m.userId !== currentUser?.id && (
+                                  <button
+                                    onClick={() => handleRemoveMember(m.userId)}
+                                    className="p-1 text-gray-400 hover:text-red-500 rounded transition-all"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Pending Invites List */}
+                      {pendingInvitations.length > 0 && (
+                        <div className="space-y-3">
+                          <h5 className="text-xs font-bold text-gray-900">Pending Invitations</h5>
+                          <div className="border border-gray-200/80 rounded-xl divide-y divide-gray-150">
+                            {pendingInvitations.map((inv) => (
+                              <div key={inv.id} className="p-3 flex items-center justify-between text-xs">
+                                <div>
+                                  <p className="font-bold text-gray-900">{inv.email}</p>
+                                  <p className="text-[9px] text-gray-400">Invited as {inv.role}</p>
+                                </div>
+                                <button
+                                  onClick={() => handleClearInvite(inv.id)}
+                                  className="text-[10px] text-red-500 hover:underline font-bold"
+                                >
+                                  Revoke
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Audit Trail / Activity Logs */}
+                      <div className="space-y-3 pt-6 border-t border-gray-100">
+                        <h5 className="text-xs font-bold text-gray-900 flex items-center gap-1">
+                          <Activity className="w-4 h-4 text-gray-400" />
+                          Security Activity Logs
+                        </h5>
+                        <div className="border border-gray-200/80 rounded-xl divide-y divide-gray-150 bg-gray-50/50">
+                          {activityLogs.length === 0 ? (
+                            <div className="p-4 text-center text-[10px] text-gray-400 font-mono">No recent logs recorded.</div>
+                          ) : (
+                            activityLogs.map((log) => (
+                              <div key={log.id} className="p-3 text-[10px] text-gray-500 font-mono flex justify-between items-center">
+                                <div>
+                                  <span className="text-gray-900 font-bold">Action: {log.action}</span>
+                                  <p className="text-[9px] text-gray-400 mt-0.5">{JSON.stringify(log.details)}</p>
+                                </div>
+                                <span>{new Date(log.created_at).toLocaleTimeString()}</span>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      </div>
+
+                    </div>
+                  )}
+
+                  {/* billing tab */}
+                  {settingsTab === "billing" && (
+                    <div className="space-y-6">
+                      <div>
+                        <h4 className="text-sm font-bold text-gray-900 mb-1">Billing & Quota</h4>
+                        <p className="text-[11px] text-gray-400">Manage plan subscriptions, usage metrics and quotas.</p>
+                      </div>
+
+                      {/* Active subscription card */}
+                      <div className="p-4 bg-gradient-to-br from-brand-dark to-slate-900 text-white rounded-2xl shadow-sm border border-gray-800 space-y-4">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <span className="text-[8px] font-black text-gray-300 uppercase tracking-widest font-mono">Active Plan</span>
+                            <h4 className="text-base font-black tracking-wide mt-0.5">Automarc Pro Beta</h4>
+                          </div>
+                          <span className="px-2.5 py-1 bg-white/10 backdrop-blur-md rounded-full text-[9px] font-black uppercase tracking-wider border border-white/15">Active</span>
+                        </div>
+                        <p className="text-xs text-gray-300 leading-relaxed max-w-sm">
+                          Your account has full access to the AI Provider Router, Content planning mixes, logo studios, and LongCat-Video models.
+                        </p>
+                        <div className="pt-3 border-t border-white/10 flex justify-between items-center text-[10px] text-gray-400">
+                          <span>Renews: 14 Aug 2026</span>
+                          <span>Price: $0.00 (Beta Partner)</span>
+                        </div>
+                      </div>
+
+                      {/* Quotas progress bar */}
+                      <div className="space-y-4 pt-4">
+                        <h5 className="text-xs font-bold text-gray-900">Usage Analytics & Quotas</h5>
+                        <div className="space-y-3.5">
+                          <div className="space-y-1.5">
+                            <div className="flex justify-between text-xs">
+                              <span className="text-gray-500 font-medium">AI Copywriting generation</span>
+                              <span className="text-gray-900 font-bold">142 / 500 requests</span>
+                            </div>
+                            <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                              <div className="h-full bg-brand-dark rounded-full" style={{ width: "28.4%" }} />
+                            </div>
+                          </div>
+
+                          <div className="space-y-1.5">
+                            <div className="flex justify-between text-xs">
+                              <span className="text-gray-500 font-medium">AI Media Generation (Images/Videos)</span>
+                              <span className="text-gray-900 font-bold">38 / 100 media files</span>
+                            </div>
+                            <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                              <div className="h-full bg-[#06B6D4] rounded-full" style={{ width: "38%" }} />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                </div>
+              </div>
+            </div>
+          )}
 
         </main>
 
@@ -2541,7 +3306,7 @@ export default function DashboardPage() {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({
-                          brandDnaId: dna.id,
+                          brandDnaId: dna?.id,
                           title: campaignTitle,
                           campaignType,
                           description: campaignDesc,
@@ -2553,7 +3318,7 @@ export default function DashboardPage() {
                         setCampaignTitle("");
                         setCampaignDesc("");
                         setCampaignPlatforms([]);
-                        await reloadDynamicData(dna.id);
+                        await reloadDynamicData(dna?.id || "");
                       } else {
                         alert("Failed to plan campaign");
                       }

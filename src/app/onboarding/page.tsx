@@ -771,6 +771,19 @@ export default function OnboardingPage() {
     try {
       const { supabase } = await import("@/lib/supabase");
       
+      // Get current user and default workspace
+      const { data: { user } } = await supabase.auth.getUser();
+      let workspaceId = null;
+      if (user) {
+        const { data: workspaces } = await supabase
+          .from("workspaces")
+          .select("id")
+          .limit(1);
+        if (workspaces && workspaces.length > 0) {
+          workspaceId = workspaces[0].id;
+        }
+      }
+
       // TRANSACTION STEP 1: Insert Brand DNA profile
       const { data: dnaResult, error: dnaError } = await supabase
         .from("brand_dna")
@@ -797,6 +810,7 @@ export default function OnboardingPage() {
           platforms: data.platforms || [],
           main_goal: data.mainGoal,
           approved_moodboard: data.approvedMoodboard || null,
+          workspace_id: workspaceId,
         })
         .select()
         .single();
