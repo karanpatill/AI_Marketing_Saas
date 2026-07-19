@@ -1,126 +1,118 @@
 "use client";
 
-import { ArrowRight, CheckCircle2 } from "lucide-react";
-import Navbar from "./Navbar";
-import DashboardMockup from "./DashboardMockup";
-
-const PLATFORMS = ["Instagram", "LinkedIn"];
-
-const FEATURES = [
-  "Brand Memory",
-  "Moodboard Studio",
-  "AI Content Factory",
-  "Competitor Intel",
-  "Auto-scheduler",
-];
+import { motion } from "framer-motion";
+import { ArrowUpRight, Play } from "lucide-react";
+import ThreeCanvas from "./ThreeCanvas";
 
 export default function Hero() {
+  const transition = { duration: 1.2, ease: [0.16, 1, 0.3, 1] as any };
+
   return (
-    <div className="min-h-screen bg-white">
+    <div className="relative w-full h-screen overflow-hidden bg-white select-none">
+      
+      {/* ── 3D Mathematical Ribbon Canvas ── */}
+      <ThreeCanvas />
 
-      {/* ── Top gradient band (subtle, like Linear.app) ── */}
-      <div
-        className="h-1 w-full"
-        style={{
-          background: "linear-gradient(90deg, var(--color-brand-primary, #2563EB) 0%, var(--color-brand-secondary, #10B981) 100%)",
-        }}
-      />
-
-      {/* ── Navbar ── */}
-      <Navbar />
-
-      {/* ── Hero ── */}
-      <section className="relative max-w-7xl mx-auto px-5 sm:px-8 lg:px-16 pt-16 sm:pt-20 lg:pt-24 pb-0 flex flex-col lg:flex-row items-center gap-14 lg:gap-12">
-
-        {/* ─── Background tint (very subtle) ─── */}
-        <div
-          className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 w-[900px] h-[500px] rounded-full opacity-[0.04] blur-3xl"
-          style={{
-            background: "radial-gradient(ellipse, var(--color-brand-primary, #2563EB) 0%, transparent 70%)",
-          }}
-        />
-
-        {/* ─── Left: Copy ─── */}
-        <div className="relative z-10 flex-1 flex flex-col items-center lg:items-start text-center lg:text-left max-w-[540px] mx-auto lg:mx-0">
-
-          {/* Eyebrow badge */}
-          <div className="animate-fade-up [animation-delay:40ms] inline-flex items-center gap-2 mb-6 rounded-full border border-brand-primary/20 bg-brand-primary/5 px-4 py-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-brand-primary animate-pulse" />
-            <span className="text-[12px] font-semibold text-brand-primary">
-              AI Marketing OS · Now in beta
-            </span>
-          </div>
+      {/* ── Dom Content Overlay ── */}
+      <div className="relative z-10 w-full h-full flex flex-col justify-between p-8 sm:p-12 md:p-16 pt-32 sm:pt-40">
+        
+        {/* Left Aligned Content area */}
+        <div className="max-w-xl flex flex-col items-start gap-6 mt-8 sm:mt-12">
+          {/* Overline */}
+          <motion.span
+            initial={{ y: 30, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ ...transition, delay: 0.1 }}
+            className="text-[10px] font-bold uppercase tracking-[0.25em] text-gray-400"
+          >
+            DESIGNING THE FUTURE
+          </motion.span>
 
           {/* Headline */}
-          <h1 className="animate-fade-up [animation-delay:80ms] text-[#111018] font-bold tracking-tight leading-[1.07] text-[40px] min-[400px]:text-[46px] sm:text-[54px] lg:text-[58px] xl:text-[64px]">
-            Your Brand,{" "}
-            <span
-              className="bg-gradient-to-r from-brand-primary to-brand-secondary bg-clip-text text-transparent"
+          <motion.h1
+            initial={{ y: 40, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ ...transition, delay: 0.2 }}
+            className="text-gray-900 font-medium tracking-tight text-[52px] sm:text-6xl md:text-7xl lg:text-8xl leading-[1.05] whitespace-pre-line"
+          >
+            {"Where Vision\nMeets Design."}
+          </motion.h1>
+
+          {/* Description */}
+          <motion.p
+            initial={{ y: 30, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ ...transition, delay: 0.3 }}
+            className="text-gray-500 font-light text-sm sm:text-base leading-relaxed max-w-sm"
+          >
+            We craft digital experiences that inspire, engage, and elevate your brand on autopilot.
+          </motion.p>
+
+          {/* Action Buttons Array */}
+          <motion.div
+            initial={{ y: 30, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ ...transition, delay: 0.4 }}
+            className="flex flex-wrap items-center gap-6 mt-4"
+          >
+            {/* Explore Button */}
+            <a
+              href="/onboarding"
+              className="group inline-flex items-center gap-2 bg-[#0A0A0A] hover:bg-gray-800 text-white rounded-full px-8 py-4 text-[10px] font-bold uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-[0.98] shadow-md shadow-black/5"
             >
-              Automated.
+              EXPLORE OUR WORK
+              <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+            </a>
+
+            {/* Watch Intro Button */}
+            <button className="group flex items-center gap-3 cursor-pointer">
+              <div className="w-14 h-14 bg-white rounded-full shadow-[0_4px_20px_rgba(0,0,0,0.06)] border border-gray-100 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <Play className="w-4 h-4 text-black fill-black ml-0.5" />
+              </div>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-gray-900 group-hover:opacity-75 transition-opacity">
+                WATCH INTRO
+              </span>
+            </button>
+          </motion.div>
+        </div>
+
+        {/* Bottom Statistics Bar */}
+        <motion.div
+          initial={{ y: 30, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ ...transition, delay: 0.6 }}
+          className="flex items-center gap-8 border-t border-gray-150 pt-8 pb-4"
+        >
+          {/* Stat 1 */}
+          <div className="flex flex-col gap-1">
+            <span className="text-2xl sm:text-3xl font-medium text-gray-900">200+</span>
+            <span className="text-[8px] sm:text-[9px] font-bold tracking-[0.15em] text-gray-400 uppercase">
+              Projects
             </span>
-          </h1>
-
-          {/* Sub */}
-          <p className="animate-fade-up [animation-delay:160ms] mt-5 text-gray-500 text-[16px] sm:text-[17px] leading-relaxed max-w-[460px]">
-            Tell Automarc about your business once. It builds the strategy, creates the content, and publishes across every platform — on autopilot.
-          </p>
-
-          {/* Feature pills */}
-          <div className="animate-fade-up [animation-delay:220ms] mt-5 flex flex-wrap gap-2 justify-center lg:justify-start">
-            {FEATURES.map(f => (
-              <span key={f} className="flex items-center gap-1.5 text-[11px] text-gray-500 bg-gray-50 border border-gray-200 rounded-full px-3 py-1">
-                <CheckCircle2 className="w-3 h-3 text-brand-primary" />
-                {f}
-              </span>
-            ))}
           </div>
 
-          {/* CTAs */}
-          <div className="animate-fade-up [animation-delay:300ms] mt-7 flex flex-wrap items-center justify-center lg:justify-start gap-3">
-            <a id="cta-primary" href="/onboarding"
-               className="flex items-center gap-2 px-6 py-3 rounded-full font-semibold text-sm text-white bg-brand-dark hover:bg-brand-darkHover transition-all hover:scale-[1.02] active:scale-[0.98] shadow-[0_2px_12px_rgba(0,0,0,0.18)]">
-              Start for free
-              <ArrowRight className="w-4 h-4" />
-            </a>
-            <a id="cta-secondary" href="#" className="flex items-center gap-2 px-6 py-3 rounded-full font-semibold text-sm text-gray-700 border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all">
-              Book a demo
-            </a>
+          <div className="w-px h-8 bg-gray-200" />
+
+          {/* Stat 2 */}
+          <div className="flex flex-col gap-1">
+            <span className="text-2xl sm:text-3xl font-medium text-gray-900">98%</span>
+            <span className="text-[8px] sm:text-[9px] font-bold tracking-[0.15em] text-gray-400 uppercase">
+              Clients Satisfied
+            </span>
           </div>
 
-          {/* Trust line */}
-          <p className="animate-fade-up [animation-delay:380ms] mt-5 text-[12px] text-gray-400">
-            Free 14-day trial · No credit card required · Cancel anytime
-          </p>
-        </div>
+          <div className="w-px h-8 bg-gray-200" />
 
-        {/* ─── Right: Dashboard ─── */}
-        <div className="animate-fade-up [animation-delay:180ms] relative z-10 flex-1 w-full max-w-[640px] mx-auto lg:mx-0">
-          <DashboardMockup />
-        </div>
-      </section>
+          {/* Stat 3 */}
+          <div className="flex flex-col gap-1">
+            <span className="text-2xl sm:text-3xl font-medium text-gray-900">15+</span>
+            <span className="text-[8px] sm:text-[9px] font-bold tracking-[0.15em] text-gray-400 uppercase">
+              Awards Won
+            </span>
+          </div>
+        </motion.div>
 
-      {/* ── Divider ── */}
-      <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-16 mt-20">
-        <div className="border-t border-gray-100" />
       </div>
-
-      {/* ── Platform strip ── */}
-      <div className="py-8 overflow-hidden">
-        <p className="text-center text-[11px] font-medium text-gray-400 uppercase tracking-widest mb-5">
-          Publish to every platform, automatically
-        </p>
-        <div className="flex overflow-hidden">
-          <div className="animate-marquee flex items-center gap-12 whitespace-nowrap pr-12">
-            {[...PLATFORMS, ...PLATFORMS].map((name, i) => (
-              <span key={i} className="text-[13px] font-semibold text-gray-300">
-                {name}
-              </span>
-            ))}
-          </div>
-        </div>
-      </div>
-
     </div>
   );
 }
