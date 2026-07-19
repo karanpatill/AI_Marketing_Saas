@@ -283,6 +283,12 @@ OUTPUT RULES:
       genError = e.message;
     }
 
+    if (!imageUrl) {
+      console.log("Using dynamic Unsplash fallback for moodboard...");
+      imageUrl = await getUnsplashFallbackImage(`${brandName} ${industry} brand identity moodboard strategy presentation board`, "landscape");
+      genError = null; // Clear error since we recovered with fallback
+    }
+
     const singleMood = {
       id: "option_1",
       name: "Bespoke Brand Strategy Board",
@@ -302,4 +308,31 @@ OUTPUT RULES:
     console.error("Moodboard generation error:", error);
     return NextResponse.json({ error: error.message || "Failed to generate moodboard" }, { status: 500 });
   }
+}
+
+async function getUnsplashFallbackImage(query: string, orientation: "landscape" | "portrait" | "squarish" = "squarish"): Promise<string> {
+  try {
+    const cleanQuery = encodeURIComponent(query.substring(0, 80));
+    const searchUrl = `https://unsplash.com/napi/search/photos?query=${cleanQuery}&per_page=15&orientation=${orientation}`;
+    const res = await fetch(searchUrl, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+      }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.results && data.results.length > 0) {
+        const limit = Math.min(data.results.length, 8);
+        const randomIndex = Math.floor(Math.random() * limit);
+        const photo = data.results[randomIndex];
+        const rawUrl = photo.urls?.raw || photo.urls?.regular;
+        if (rawUrl) {
+          return `${rawUrl.split('?')[0]}?q=80&w=1080&auto=format&fit=crop`;
+        }
+      }
+    }
+  } catch (err: any) {
+    console.error("Unsplash fallback search failed:", err.message);
+  }
+  return "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?q=80&w=1080&auto=format&fit=crop"; // Premium abstract design wallpaper
 }

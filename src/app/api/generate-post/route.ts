@@ -151,33 +151,39 @@ OUTPUT FORMAT: Return ONLY the final detailed text prompt. No introduction, no m
     }
 
     // ── STEP 2: Call fal.ai Flux Schnell to generate the post image ──
-    const falResponse = await fetch("https://fal.run/fal-ai/flux/schnell", {
-      method: "POST",
-      headers: {
-        Authorization: `Key ${falApiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        prompt: fluxPrompt,
-        image_size: imageSize,
-        num_inference_steps: 4,
-        num_images: 1,
-        enable_safety_checker: true,
-        output_format: "png",
-      }),
-    });
+    let imageUrl: string | null = null;
+    try {
+      const falResponse = await fetch("https://fal.run/fal-ai/flux/schnell", {
+        method: "POST",
+        headers: {
+          Authorization: `Key ${falApiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          prompt: fluxPrompt,
+          image_size: imageSize,
+          num_inference_steps: 4,
+          num_images: 1,
+          enable_safety_checker: true,
+          output_format: "png",
+        }),
+      });
 
-    if (!falResponse.ok) {
-      const errText = await falResponse.text();
-      console.error("Fal Post generation failed:", errText);
-      throw new Error(`fal.ai post generation returned status ${falResponse.status}`);
+      if (!falResponse.ok) {
+        const errText = await falResponse.text();
+        console.warn("Fal Post generation failed (will use Unsplash fallback):", errText);
+      } else {
+        const falResJson = await falResponse.json();
+        imageUrl = falResJson.images?.[0]?.url || null;
+      }
+    } catch (e: any) {
+      console.warn("Fal Post generation exception (will use Unsplash fallback):", e.message);
     }
 
-    const falResJson = await falResponse.json();
-    const imageUrl = falResJson.images?.[0]?.url || null;
-
     if (!imageUrl) {
-      throw new Error("No image URL returned from fal.ai");
+      console.log("Using dynamic Unsplash fallback for post...");
+      const unsplashOrientation = aspectRatio === "portrait" ? "portrait" : aspectRatio === "landscape" ? "landscape" : "squarish";
+      imageUrl = await getUnsplashFallbackImage(`${industry} ${userPrompt || "marketing presentation"}`, unsplashOrientation);
     }
 
     return NextResponse.json({
@@ -191,4 +197,31 @@ OUTPUT FORMAT: Return ONLY the final detailed text prompt. No introduction, no m
       { status: 500 }
     );
   }
+}
+
+async function getUnsplashFallbackImage(query: string, orientation: "landscape" | "portrait" | "squarish" = "squarish"): Promise<string> {
+  try {
+    const cleanQuery = encodeURIComponent(query.substring(0, 80));
+    const searchUrl = `https://unsplash.com/napi/search/photos?query=${cleanQuery}&per_page=15&orientation=${orientation}`;
+    const res = await fetch(searchUrl, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+      }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.results && data.results.length > 0) {
+        const limit = Math.min(data.results.length, 8);
+        const randomIndex = Math.floor(Math.random() * limit);
+        const photo = data.results[randomIndex];
+        const rawUrl = photo.urls?.raw || photo.urls?.regular;
+        if (rawUrl) {
+          return `${rawUrl.split('?')[0]}?q=80&w=1080&auto=format&fit=crop`;
+        }
+      }
+    }
+  } catch (err: any) {
+    console.error("Unsplash fallback search failed:", err.message);
+  }
+  return "https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=1080&auto=format&fit=crop"; // Premium dynamic marketing wallpaper
 }

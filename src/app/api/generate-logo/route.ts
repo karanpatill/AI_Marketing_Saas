@@ -167,33 +167,38 @@ You must respond with a single, valid JSON object containing exactly these field
     const fluxPrompt = String(kitData.fluxPrompt || `A premium professional logo icon/symbol mark for ${brandName}, a ${industry} brand. Standalone symbol mark, clean vector design, solid background, modern tech-forward shape, rich color scheme, no text, no letters.`);
 
     // ── STEP 2: Call fal.ai Flux Schnell to generate the high-quality logo image ──
-    const falResponse = await fetch("https://fal.run/fal-ai/flux/schnell", {
-      method: "POST",
-      headers: {
-        Authorization: `Key ${falApiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        prompt: fluxPrompt,
-        image_size: "square",
-        num_inference_steps: 4,
-        num_images: 1,
-        enable_safety_checker: true,
-        output_format: "png",
-      }),
-    });
+    let imageUrl: string | null = null;
+    try {
+      const falResponse = await fetch("https://fal.run/fal-ai/flux/schnell", {
+        method: "POST",
+        headers: {
+          Authorization: `Key ${falApiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          prompt: fluxPrompt,
+          image_size: "square",
+          num_inference_steps: 4,
+          num_images: 1,
+          enable_safety_checker: true,
+          output_format: "png",
+        }),
+      });
 
-    if (!falResponse.ok) {
-      const errText = await falResponse.text();
-      console.error("Fal Logo generation failed:", errText);
-      throw new Error(`fal.ai logo generation returned status ${falResponse.status}`);
+      if (!falResponse.ok) {
+        const errText = await falResponse.text();
+        console.warn("Fal Logo generation failed (will use Unsplash fallback):", errText);
+      } else {
+        const falResJson = await falResponse.ok ? await falResponse.json() : null;
+        imageUrl = falResJson?.images?.[0]?.url || null;
+      }
+    } catch (e: any) {
+      console.warn("Fal Logo generation exception (will use Unsplash fallback):", e.message);
     }
 
-    const falResJson = await falResponse.json();
-    const imageUrl = falResJson.images?.[0]?.url || null;
-
     if (!imageUrl) {
-      throw new Error("No image URL returned from fal.ai");
+      console.log("Using dynamic Unsplash fallback for logo...");
+      imageUrl = await getUnsplashFallbackImage(`${brandName} abstract minimal geometric logo icon`, "squarish");
     }
 
     // Build the logos[] array the page expects
@@ -203,7 +208,7 @@ You must respond with a single, valid JSON object containing exactly these field
         name: kitVariant === "A" ? "Classic Bold Mark" : "Modern Gradient Mark",
         description: fluxPrompt,
         svgContent: null,
-        imageUrl: imageUrl, // Flux image URL from Fal
+        imageUrl: imageUrl, // Flux image URL or Unsplash fallback
         error: null,
         kitData: { ...kitData, kitVariant },
       },
@@ -214,4 +219,31 @@ You must respond with a single, valid JSON object containing exactly these field
     console.error("Logo generation API error:", error);
     return NextResponse.json({ error: error.message || "Failed to generate logo kit." }, { status: 500 });
   }
+}
+
+async function getUnsplashFallbackImage(query: string, orientation: "landscape" | "portrait" | "squarish" = "squarish"): Promise<string> {
+  try {
+    const cleanQuery = encodeURIComponent(query.substring(0, 80));
+    const searchUrl = `https://unsplash.com/napi/search/photos?query=${cleanQuery}&per_page=15&orientation=${orientation}`;
+    const res = await fetch(searchUrl, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+      }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.results && data.results.length > 0) {
+        const limit = Math.min(data.results.length, 8);
+        const randomIndex = Math.floor(Math.random() * limit);
+        const photo = data.results[randomIndex];
+        const rawUrl = photo.urls?.raw || photo.urls?.regular;
+        if (rawUrl) {
+          return `${rawUrl.split('?')[0]}?q=80&w=1080&auto=format&fit=crop`;
+        }
+      }
+    }
+  } catch (err: any) {
+    console.error("Unsplash fallback search failed:", err.message);
+  }
+  return "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1080&auto=format&fit=crop"; // Premium abstract wallpaper
 }
