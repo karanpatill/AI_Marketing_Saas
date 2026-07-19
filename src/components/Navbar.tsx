@@ -40,7 +40,7 @@ export default function Navbar() {
         <div className="flex items-center justify-between">
           {/* Left: Logo */}
           <a href="/" className="font-bold tracking-[0.25em] text-xs text-gray-900 uppercase">
-            GRIDLINE
+            AUTOMARC
           </a>
 
           {/* Center: Desktop Links */}

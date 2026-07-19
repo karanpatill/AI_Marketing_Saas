@@ -625,6 +625,7 @@ export default function DashboardPage() {
         } else {
           setDna(null);
           setAssets(null);
+          router.push("/onboarding");
         }
       } catch (err) {
         console.error("Initialization error:", err);

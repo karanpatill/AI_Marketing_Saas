@@ -8,16 +8,16 @@ export default function Hero() {
   const transition = { duration: 1.2, ease: [0.16, 1, 0.3, 1] as any };
 
   return (
-    <div className="relative w-full h-screen overflow-hidden bg-white select-none">
+    <div className="relative w-full min-h-screen bg-white select-none flex flex-col justify-between py-24 px-8 sm:px-12 md:px-16">
       
       {/* ── 3D Mathematical Ribbon Canvas ── */}
       <ThreeCanvas />
 
       {/* ── Dom Content Overlay ── */}
-      <div className="relative z-10 w-full h-full flex flex-col justify-between p-8 sm:p-12 md:p-16 pt-32 sm:pt-40">
+      <div className="relative z-10 w-full flex-grow flex flex-col justify-between pt-16">
         
         {/* Left Aligned Content area */}
-        <div className="max-w-xl flex flex-col items-start gap-6 mt-8 sm:mt-12">
+        <div className="max-w-xl flex flex-col items-start gap-6 mt-8 sm:mt-12 mb-16">
           {/* Overline */}
           <motion.span
             initial={{ y: 30, opacity: 0 }}
@@ -53,26 +53,16 @@ export default function Hero() {
             initial={{ y: 30, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ ...transition, delay: 0.4 }}
-            className="flex flex-wrap items-center gap-6 mt-4"
+            className="flex flex-wrap items-center gap-4 mt-4"
           >
-            {/* Explore Button */}
+            {/* Get Started Button */}
             <a
-              href="/onboarding"
+              href="/auth"
               className="group inline-flex items-center gap-2 bg-[#0A0A0A] hover:bg-gray-800 text-white rounded-full px-8 py-4 text-[10px] font-bold uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-[0.98] shadow-md shadow-black/5"
             >
-              EXPLORE OUR WORK
+              GET STARTED
               <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
             </a>
-
-            {/* Watch Intro Button */}
-            <button className="group flex items-center gap-3 cursor-pointer">
-              <div className="w-14 h-14 bg-white rounded-full shadow-[0_4px_20px_rgba(0,0,0,0.06)] border border-gray-100 flex items-center justify-center group-hover:scale-105 transition-transform">
-                <Play className="w-4 h-4 text-black fill-black ml-0.5" />
-              </div>
-              <span className="text-[10px] font-bold uppercase tracking-widest text-gray-900 group-hover:opacity-75 transition-opacity">
-                WATCH INTRO
-              </span>
-            </button>
           </motion.div>
         </div>
 
@@ -81,7 +71,7 @@ export default function Hero() {
           initial={{ y: 30, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ ...transition, delay: 0.6 }}
-          className="flex items-center gap-8 border-t border-gray-150 pt-8 pb-4"
+          className="flex items-center gap-8 border-t border-gray-150 pt-8 pb-4 mt-auto"
         >
           {/* Stat 1 */}
           <div className="flex flex-col gap-1">
