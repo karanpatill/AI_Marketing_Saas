@@ -1,108 +1,84 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowUpRight, Play } from "lucide-react";
-import ThreeCanvas from "./ThreeCanvas";
+import { ArrowRight } from "lucide-react";
+import WordsPullUp from "./ui/WordsPullUp";
 
 export default function Hero() {
-  const transition = { duration: 1.2, ease: [0.16, 1, 0.3, 1] as any };
-
   return (
-    <div className="relative w-full min-h-screen bg-white select-none flex flex-col justify-between py-24 px-8 sm:px-12 md:px-16">
-      
-      {/* ── 3D Mathematical Ribbon Canvas ── */}
-      <ThreeCanvas />
-
-      {/* ── Dom Content Overlay ── */}
-      <div className="relative z-10 w-full flex-grow flex flex-col justify-between pt-16">
+    <section className="h-screen p-4 md:p-6 pt-20 md:pt-24 bg-black select-none">
+      <div className="w-full h-full rounded-2xl md:rounded-[2rem] overflow-hidden relative bg-black border border-[#E1E0CC]/10">
         
-        {/* Left Aligned Content area */}
-        <div className="max-w-xl flex flex-col items-start gap-6 mt-8 sm:mt-12 mb-16">
-          {/* Overline */}
-          <motion.span
-            initial={{ y: 30, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ ...transition, delay: 0.1 }}
-            className="text-[10px] font-bold uppercase tracking-[0.25em] text-gray-400"
-          >
-            DESIGNING THE FUTURE
-          </motion.span>
+        {/* ── Background Video ── */}
+        <video 
+          autoPlay 
+          loop 
+          muted 
+          playsInline 
+          className="absolute inset-0 w-full h-full object-cover"
+        >
+          {/* Defaulting to the Prisma video as a placeholder. REPLACE WITH YOUR SAAS VIDEO URL */}
+          <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260405_170732_8a9ccda6-5cff-4628-b164-059c500a2b41.mp4" type="video/mp4" />
+        </video>
 
-          {/* Headline */}
-          <motion.h1
-            initial={{ y: 40, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ ...transition, delay: 0.2 }}
-            className="text-gray-900 font-medium tracking-tight text-[52px] sm:text-6xl md:text-7xl lg:text-8xl leading-[1.05] whitespace-pre-line"
-          >
-            {"Where Vision\nMeets Design."}
-          </motion.h1>
+        {/* ── Gradient Overlay ── */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/90 pointer-events-none" />
 
-          {/* Description */}
-          <motion.p
-            initial={{ y: 30, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ ...transition, delay: 0.3 }}
-            className="text-gray-500 font-light text-sm sm:text-base leading-relaxed max-w-sm"
-          >
-            We craft digital experiences that inspire, engage, and elevate your brand on autopilot.
-          </motion.p>
+        {/* ── Noise Overlay ── */}
+        <div className="noise-overlay absolute inset-0 opacity-[0.7] mix-blend-overlay pointer-events-none" />
 
-          {/* Action Buttons Array */}
-          <motion.div
-            initial={{ y: 30, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ ...transition, delay: 0.4 }}
-            className="flex flex-wrap items-center gap-4 mt-4"
-          >
-            {/* Get Started Button */}
-            <a
-              href="/auth"
-              className="group inline-flex items-center gap-2 bg-[#0A0A0A] hover:bg-gray-800 text-white rounded-full px-8 py-4 text-[10px] font-bold uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-[0.98] shadow-md shadow-black/5"
+        {/* ── Hero Content Grid ── */}
+        <div className="absolute bottom-0 left-0 right-0 p-6 md:p-10 grid grid-cols-12 gap-4 items-end z-10">
+          
+          {/* Main Heading Column (8 cols) */}
+          <div className="col-span-12 md:col-span-8">
+            <WordsPullUp 
+              text="Automarc" 
+              showAsterisk={true}
+              className="text-[14vw] sm:text-[12vw] md:text-[10vw] lg:text-[9vw] xl:text-[8vw] 2xl:text-[7.5vw] font-medium leading-[0.85] tracking-[-0.07em] text-[#E1E0CC] uppercase"
+            />
+          </div>
+
+          {/* Description + CTA Column (4 cols) */}
+          <div className="col-span-12 md:col-span-4 flex flex-col gap-4 pb-2">
+            <motion.p 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+              className="text-[#E1E0CC] text-xs sm:text-sm md:text-base leading-[1.3] font-normal drop-shadow-md"
             >
-              GET STARTED
-              <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-            </a>
-          </motion.div>
+              Govern your brand&apos;s digital presence, automate cross-platform campaigns, and generate premium content with specialized AI agents working around the clock.
+            </motion.p>
+
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.7, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+              className="flex flex-wrap items-center gap-3"
+            >
+              {/* Primary CTA Button */}
+              <a
+                href="/auth"
+                className="flex items-center gap-2 bg-primary text-black font-medium rounded-full pl-4 pr-1 py-1 text-sm sm:text-base group hover:gap-3 transition-all"
+              >
+                <span>GET STARTED</span>
+                <div className="bg-black text-primary rounded-full w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center transition-transform group-hover:scale-110">
+                  <ArrowRight className="w-4 h-4" />
+                </div>
+              </a>
+
+              {/* Secondary Ghost Button */}
+              <a
+                href="/how-it-works"
+                className="border border-[#E1E0CC]/30 text-[#E1E0CC] rounded-full px-5 py-2 text-sm sm:text-base hover:border-[#E1E0CC]/60 transition-colors"
+              >
+                How It Works
+              </a>
+            </motion.div>
+          </div>
         </div>
 
-        {/* Bottom Statistics Bar */}
-        <motion.div
-          initial={{ y: 30, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ ...transition, delay: 0.6 }}
-          className="flex items-center gap-8 border-t border-gray-150 pt-8 pb-4 mt-auto"
-        >
-          {/* Stat 1 */}
-          <div className="flex flex-col gap-1">
-            <span className="text-2xl sm:text-3xl font-medium text-gray-900">200+</span>
-            <span className="text-[8px] sm:text-[9px] font-bold tracking-[0.15em] text-gray-400 uppercase">
-              Projects
-            </span>
-          </div>
-
-          <div className="w-px h-8 bg-gray-200" />
-
-          {/* Stat 2 */}
-          <div className="flex flex-col gap-1">
-            <span className="text-2xl sm:text-3xl font-medium text-gray-900">98%</span>
-            <span className="text-[8px] sm:text-[9px] font-bold tracking-[0.15em] text-gray-400 uppercase">
-              Clients Satisfied
-            </span>
-          </div>
-
-          <div className="w-px h-8 bg-gray-200" />
-
-          {/* Stat 3 */}
-          <div className="flex flex-col gap-1">
-            <span className="text-2xl sm:text-3xl font-medium text-gray-900">15+</span>
-            <span className="text-[8px] sm:text-[9px] font-bold tracking-[0.15em] text-gray-400 uppercase">
-              Awards Won
-            </span>
-          </div>
-        </motion.div>
-
       </div>
-    </div>
+    </section>
   );
 }

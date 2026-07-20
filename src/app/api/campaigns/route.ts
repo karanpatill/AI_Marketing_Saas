@@ -1,48 +1,37 @@
-import { NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
-import { createMarketingCampaign } from "@/lib/campaignPlanner";
+import { NextRequest, NextResponse } from "next/server";
+import { withApiWrapper } from "@/backend/middlewares/apiWrapper";
+import { requireAuth } from "@/backend/middlewares/auth";
+import { createAdminClient } from "@/lib/supabaseServer";
+import { CampaignService } from "@/backend/services/CampaignService";
 
-export async function GET(req: Request) {
-  try {
-    const { searchParams } = new URL(req.url);
-    const brandDnaId = searchParams.get("brandDnaId");
-
-    if (!brandDnaId) {
-      return NextResponse.json({ error: "Missing brandDnaId parameter" }, { status: 400 });
-    }
-
-    const { data: campaigns, error } = await supabase
-      .from("brand_campaigns")
-      .select("*")
-      .eq("brand_dna_id", brandDnaId)
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      throw new Error(`Failed to fetch campaigns: ${error.message}`);
-    }
-
-    return NextResponse.json(campaigns || []);
-
-  } catch (error: any) {
-    console.error("GET Campaigns Error:", error);
-    return NextResponse.json({ error: error.message || "Failed to retrieve campaigns" }, { status: 500 });
+export const GET = withApiWrapper(async (req: NextRequest) => {
+  await requireAuth();
+  const url = new URL(req.url);
+  const projectId = url.searchParams.get("projectId");
+  
+  if (!projectId) {
+    return NextResponse.json([]); // Return empty array if no project provided
   }
-}
 
-export async function POST(req: Request) {
-  try {
-    const body = await req.json();
-    const { brandDnaId, title, campaignType, description, platforms } = body;
+  const supabase = createAdminClient();
+  const service = new CampaignService(supabase);
+  const data = await service.getCampaigns(projectId);
 
-    if (!brandDnaId || !title || !campaignType || !description || !platforms) {
-      return NextResponse.json({ error: "Missing required parameters in body" }, { status: 400 });
-    }
+  return NextResponse.json(data);
+});
 
-    const campaignId = await createMarketingCampaign(brandDnaId, title, campaignType, description, platforms);
-    return NextResponse.json({ success: true, campaignId, message: "Campaign and posts planned successfully" });
+export const POST = withApiWrapper(async (req: NextRequest) => {
+  await requireAuth();
+  const body = await req.json();
+  const { projectId, name, ...data } = body;
 
-  } catch (error: any) {
-    console.error("POST Create Campaign Error:", error);
-    return NextResponse.json({ error: error.message || "Failed to create campaign" }, { status: 500 });
+  if (!projectId || !name) {
+    return NextResponse.json({ error: "projectId and name are required" }, { status: 400 });
   }
-}
+
+  const supabase = createAdminClient();
+  const service = new CampaignService(supabase);
+  const campaign = await service.createCampaign(projectId, name, data);
+
+  return NextResponse.json(campaign, { status: 201 });
+});

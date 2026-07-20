@@ -1,140 +1,58 @@
-import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabaseServer";
-import { randomBytes } from "crypto";
+import { NextResponse, NextRequest } from "next/server";
+import { createAdminClient } from "@/lib/supabaseServer";
+import { withApiWrapper } from "@/backend/middlewares/apiWrapper";
+import { requireAuth, requireWorkspaceAdmin } from "@/backend/middlewares/auth";
+import { InvitationService } from "@/backend/services/InvitationService";
+import { createInvitationSchema } from "@/backend/validations/invitations";
 
-export async function GET(req: Request) {
-  try {
-    const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+export const GET = withApiWrapper(async (req: NextRequest) => {
+  const user = await requireAuth();
 
-    if (authError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const { searchParams } = new URL(req.url);
-    const orgId = searchParams.get("orgId");
-
-    if (!orgId) {
-      return NextResponse.json({ error: "Missing orgId parameter" }, { status: 400 });
-    }
-
-    const { data: invites, error: fetchError } = await supabase
-      .from("invitations")
-      .select("*")
-      .eq("org_id", orgId)
-      .eq("status", "pending");
-
-    if (fetchError) throw fetchError;
-
-    return NextResponse.json(invites || []);
-  } catch (error: any) {
-    console.error("Invitations GET error:", error);
-    return NextResponse.json({ error: error.message || "Failed to retrieve invitations" }, { status: 500 });
+  const orgId = req.nextUrl.searchParams.get("orgId");
+  if (!orgId) {
+    return NextResponse.json({ error: { code: 'MISSING_PARAMS', message: 'Missing orgId parameter' } }, { status: 400 });
   }
-}
 
-export async function POST(req: Request) {
-  try {
-    const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+  // Assuming only admins can view pending invites
+  await requireWorkspaceAdmin(user.id, orgId);
 
-    if (authError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  const supabaseAdmin = createAdminClient();
+  const invitationService = new InvitationService(supabaseAdmin);
 
-    const { orgId, email, role } = await req.json();
+  const invites = await invitationService.getPendingInvitations(orgId);
+  return NextResponse.json(invites);
+});
 
-    if (!orgId || !email || !role) {
-      return NextResponse.json({ error: "Missing parameters" }, { status: 400 });
-    }
+export const POST = withApiWrapper(async (req: NextRequest) => {
+  const user = await requireAuth();
 
-    // Check caller permission
-    const { data: caller } = await supabase
-      .from("members")
-      .select("role")
-      .eq("org_id", orgId)
-      .eq("user_id", user.id)
-      .single();
+  const body = await req.json();
+  const validatedData = createInvitationSchema.parse(body);
 
-    if (!caller || !["owner", "admin"].includes(caller.role)) {
-      return NextResponse.json({ error: "Forbidden. Admin access required." }, { status: 403 });
-    }
+  await requireWorkspaceAdmin(user.id, validatedData.orgId);
 
-    const token = randomBytes(24).toString("hex");
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 7); // 7 days expiry
+  const supabaseAdmin = createAdminClient();
+  const invitationService = new InvitationService(supabaseAdmin);
 
-    const { data: invitation, error: inviteError } = await supabase
-      .from("invitations")
-      .insert({
-        org_id: orgId,
-        email: email.toLowerCase().trim(),
-        role,
-        token,
-        invited_by: user.id,
-        status: "pending",
-        expires_at: expiresAt.toISOString()
-      })
-      .select()
-      .single();
+  const invitation = await invitationService.createInvitation(user.id, validatedData);
+  return NextResponse.json({ data: invitation }, { status: 201 });
+});
 
-    if (inviteError) throw inviteError;
+export const DELETE = withApiWrapper(async (req: NextRequest) => {
+  const user = await requireAuth();
 
-    // Log Activity
-    await supabase.from("activity_logs").insert({
-      org_id: orgId,
-      user_id: user.id,
-      action: "member_invited",
-      details: { email, role, inviteId: invitation.id }
-    });
+  const orgId = req.nextUrl.searchParams.get("orgId");
+  const inviteId = req.nextUrl.searchParams.get("inviteId");
 
-    return NextResponse.json(invitation);
-  } catch (error: any) {
-    console.error("Invitation create error:", error);
-    return NextResponse.json({ error: error.message || "Failed to create invitation" }, { status: 500 });
+  if (!orgId || !inviteId) {
+    return NextResponse.json({ error: { code: 'MISSING_PARAMS', message: 'Missing orgId or inviteId parameters' } }, { status: 400 });
   }
-}
 
-export async function DELETE(req: Request) {
-  try {
-    const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+  await requireWorkspaceAdmin(user.id, orgId);
 
-    if (authError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  const supabaseAdmin = createAdminClient();
+  const invitationService = new InvitationService(supabaseAdmin);
 
-    const { searchParams } = new URL(req.url);
-    const orgId = searchParams.get("orgId");
-    const inviteId = searchParams.get("inviteId");
-
-    if (!orgId || !inviteId) {
-      return NextResponse.json({ error: "Missing parameters" }, { status: 400 });
-    }
-
-    // Check caller permission
-    const { data: caller } = await supabase
-      .from("members")
-      .select("role")
-      .eq("org_id", orgId)
-      .eq("user_id", user.id)
-      .single();
-
-    if (!caller || !["owner", "admin"].includes(caller.role)) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
-
-    const { error: deleteError } = await supabase
-      .from("invitations")
-      .delete()
-      .eq("org_id", orgId)
-      .eq("id", inviteId);
-
-    if (deleteError) throw deleteError;
-
-    return NextResponse.json({ success: true, message: "Invitation revoked successfully" });
-  } catch (error: any) {
-    console.error("Invitation revoke error:", error);
-    return NextResponse.json({ error: error.message || "Failed to revoke invitation" }, { status: 500 });
-  }
-}
+  await invitationService.revokeInvitation(user.id, orgId, inviteId);
+  return NextResponse.json({ success: true, message: "Invitation revoked successfully" });
+});

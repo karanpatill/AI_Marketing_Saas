@@ -2,32 +2,29 @@
 
 export default function Footer() {
   return (
-    <footer className="relative z-10 w-full bg-white border-t border-gray-100 py-12 px-8 sm:px-12 md:px-16 mt-20">
+    <footer className="relative z-10 w-full bg-black border-t border-[#E1E0CC]/10 py-12 px-6">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
-        {/* Left Side: Brand Name */}
+        {/* Brand & Tagline */}
         <div className="flex flex-col items-center md:items-start gap-1">
-          <span className="font-bold tracking-[0.25em] text-[10px] text-gray-900 uppercase">
+          <span className="text-[#E1E0CC] font-bold text-lg tracking-tight">
             AUTOMARC
           </span>
-          <span className="text-[9px] text-gray-400 font-medium uppercase tracking-wider">
+          <span className="text-[#E1E0CC]/40 text-xs font-normal">
             Your Brand, Automated
           </span>
         </div>
 
-        {/* Center Links */}
-        <div className="flex flex-wrap justify-center gap-8 text-[9px] font-bold uppercase tracking-widest text-gray-400">
-          <a href="#" className="hover:text-black transition-colors">About</a>
-          <a href="#" className="hover:text-black transition-colors">Services</a>
-          <a href="#" className="hover:text-black transition-colors">Portfolio</a>
-          <a href="#" className="hover:text-black transition-colors">Blog</a>
-          <a href="#" className="hover:text-black transition-colors">Contact</a>
+        {/* Footer Navigation */}
+        <div className="flex flex-wrap justify-center gap-6 sm:gap-8">
+          <a href="/about-us" className="text-[#E1E0CC]/50 text-sm hover:text-[#E1E0CC] transition-colors">About</a>
+          <a href="/how-it-works" className="text-[#E1E0CC]/50 text-sm hover:text-[#E1E0CC] transition-colors">How It Works</a>
+          <a href="/privacy-policy" className="text-[#E1E0CC]/50 text-sm hover:text-[#E1E0CC] transition-colors">Privacy Policy</a>
+          <a href="/dashboard" className="text-[#E1E0CC]/50 text-sm hover:text-[#E1E0CC] transition-colors">Dashboard</a>
         </div>
 
-        {/* Right Side: Legal Info */}
-        <div className="flex gap-6 text-[9px] font-bold uppercase tracking-widest text-gray-400">
-          <span>© 2026 AUTOMARC INC.</span>
-          <a href="#" className="hover:text-black transition-colors">Privacy</a>
-          <a href="#" className="hover:text-black transition-colors">Terms</a>
+        {/* Copyright */}
+        <div className="text-[#E1E0CC]/30 text-xs font-mono">
+          © 2026 AUTOMARC INC. ALL RIGHTS RESERVED.
         </div>
       </div>
     </footer>

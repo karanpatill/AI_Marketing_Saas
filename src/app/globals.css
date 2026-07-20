@@ -1,47 +1,56 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;300;400;500;600;700;800&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Hide scrollbar globally */
-::-webkit-scrollbar {
-  display: none !important;
-}
-
-* {
-  scrollbar-width: none !important;
-  -ms-overflow-style: none !important;
-}
+/* -------------------------------------------------------------------------- */
+/* PRISMA CINEMATIC THEME DESIGN SYSTEM                                       */
+/* -------------------------------------------------------------------------- */
 
 :root {
-  --brand-primary: 15 23 42;         /* Option 2: Deep Slate Navy (#0F172A) */
-  --brand-secondary: 6 182 212;     /* Option 2: Cyber Cyan (#06B6D4) */
-  --brand-dark: 15 23 42;            /* Slate Navy (#0F172A) */
-  --brand-dark-hover: 30 41 59;      /* Slate Navy Hover (#1E293B) */
-  
-  /* Fallbacks for older inline CSS styles */
-  --color-brand-primary: #0F172A;
-  --color-brand-secondary: #06B6D4;
+  --bg-global: #000000;
+  --surface-panel: #101010;
+  --surface-elevated: #212121;
+  --primary-text: #E1E0CC;
+  --primary-color: #DEDBC8;
+  --muted-text: rgba(225, 224, 204, 0.7);
+  --accent-green: #22C55E;
 }
 
+/* Global Font Stack & Text Selection */
+* {
+  font-family: 'Almarai', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  box-sizing: border-box;
+}
+
+::selection {
+  background: rgba(222, 219, 200, 0.2);
+  color: #E1E0CC;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #000000;
+}
+::-webkit-scrollbar-thumb {
+  background: #2a2a2a;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3a3a3a;
+}
+
+/* Base Body Styles */
 @layer base {
-  html {
+  html, body {
+    background-color: #000000;
+    color: #E1E0CC;
+    min-height: 100vh;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
-  }
-
-  * {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-  }
-
-  body {
-    background-color: #ffffff;
-    color: #111018;
-    line-height: 1.5;
   }
 
   a {
@@ -49,7 +58,7 @@
     text-decoration: none;
   }
 
-  input, button, textarea {
+  input, button, textarea, select {
     font-family: inherit;
     border: none;
     background: none;
@@ -57,38 +66,68 @@
   }
 }
 
-@layer utilities {
-  @keyframes fade-up {
-    from { opacity: 0; transform: translateY(20px); filter: blur(6px); }
-    to   { opacity: 1; transform: translateY(0);    filter: blur(0);   }
+/* SVG Noise Utilities */
+.noise-overlay {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+}
+
+.bg-noise {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+}
+
+.font-serif-italic {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+}
+
+/* Shimmer Skeleton Loader */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #212121 25%, #2a2a2a 50%, #212121 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 0.5rem;
+}
+
+@layer components {
+  /* Prisma Components */
+  .prisma-panel {
+    background-color: #101010;
+    border: 1px solid rgba(225, 224, 204, 0.1);
+    border-radius: 1rem;
   }
 
-  @keyframes fade-down {
-    from { opacity: 0; transform: translateY(-12px); }
-    to   { opacity: 1; transform: translateY(0);     }
+  .prisma-elevated {
+    background-color: #212121;
+    border: 1px solid rgba(225, 224, 204, 0.1);
+    border-radius: 1rem;
   }
 
-  @keyframes hero-rise {
-    from { opacity: 0; transform: translateY(36px) scale(0.97); }
-    to   { opacity: 1; transform: translateY(0)    scale(1);    }
+  .prisma-btn-primary {
+    background-color: #DEDBC8;
+    color: #000000;
+    font-weight: 500;
+    border-radius: 9999px;
+    padding: 0.5rem 1.25rem;
+    transition: all 0.2s ease;
+  }
+  .prisma-btn-primary:hover {
+    background-color: #E1E0CC;
   }
 
-  @keyframes marquee {
-    from { transform: translateX(0); }
-    to   { transform: translateX(-50%); }
+  .prisma-btn-secondary {
+    background-color: transparent;
+    color: #E1E0CC;
+    border: 1px solid rgba(225, 224, 204, 0.3);
+    border-radius: 9999px;
+    padding: 0.5rem 1.25rem;
+    transition: all 0.2s ease;
   }
-
-  .animate-fade-up   { animation: fade-up   0.8s cubic-bezier(0.22,1,0.36,1) both; }
-  .animate-fade-down { animation: fade-down  0.6s cubic-bezier(0.22,1,0.36,1) both; }
-  .animate-hero-rise { animation: hero-rise  1.0s cubic-bezier(0.22,1,0.36,1) both; }
-  .animate-marquee   { animation: marquee   32s  linear infinite;                   }
-
-  @media (prefers-reduced-motion: reduce) {
-    .animate-fade-up,
-    .animate-fade-down,
-    .animate-hero-rise,
-    .animate-marquee {
-      animation: none !important;
-    }
+  .prisma-btn-secondary:hover {
+    border-color: rgba(225, 224, 204, 0.6);
   }
 }
