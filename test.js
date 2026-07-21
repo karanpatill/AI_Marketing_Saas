@@ -1,0 +1,1 @@
+fetch('https://mixkit.co/free-stock-video/abstract/').then(res => res.text()).then(text => { const match = text.match(/https:\/\/mixkit\.co\/.*\.mp4/g); console.log(match ? match[0] : 'Not found'); })
