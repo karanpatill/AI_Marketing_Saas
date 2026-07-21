@@ -17,8 +17,8 @@ export default function Hero() {
           playsInline 
           className="absolute inset-0 w-full h-full object-cover"
         >
-          {/* Defaulting to the Prisma video as a placeholder. REPLACE WITH YOUR SAAS VIDEO URL */}
-          <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260405_170732_8a9ccda6-5cff-4628-b164-059c500a2b41.mp4" type="video/mp4" />
+          {/* Defaulting to a high-quality free abstract tech stock video */}
+          <source src="https://assets.mixkit.co/videos/31497/31497-720.mp4" type="video/mp4" />
         </video>
 
         {/* ── Gradient Overlay ── */}
