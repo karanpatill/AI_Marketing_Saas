@@ -1020,30 +1020,30 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
       <div className="flex-1 flex max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 gap-6">
         
         {/* Left App Sidebar */}
-        <aside className="hidden md:flex flex-col justify-between w-[220px] bg-[#101010] border border-[#E1E0CC]/10 rounded-2xl p-4 shrink-0 shadow-2xl">
+        <aside className="hidden md:flex flex-col justify-between w-[220px] bg-black border-r border-[#E1E0CC]/10 p-4 shrink-0">
           <div className="space-y-4">
             
             {/* SaaS Workspace & Organization Switcher */}
             <div className="space-y-2 pb-3 border-b border-[#E1E0CC]/10">
               <div className="relative">
-                <label className="text-[9px] font-black text-[#E1E0CC]/50 uppercase tracking-widest block mb-1">Organization</label>
-                <div className="flex items-center justify-between p-2.5 bg-black border border-[#E1E0CC]/10 rounded-xl cursor-pointer hover:bg-[#E1E0CC]/10/60 transition-all text-[#E1E0CC] font-semibold text-xs">
+                <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest block mb-1">Organization</label>
+                <div className="flex items-center justify-between p-2.5 bg-black border border-[#E1E0CC]/10 rounded-2xl cursor-pointer hover:bg-[#E1E0CC]/10/60 transition-all text-[#E1E0CC] font-semibold text-xs">
                   <div className="flex items-center gap-2 min-w-0">
-                    <Building className="w-3.5 h-3.5 text-[#E1E0CC]/50 shrink-0" />
+                    <Building className="w-3.5 h-3.5 text-gray-400 shrink-0" />
                     <span className="truncate">{dna?.brand_name || activeOrg?.name || "My Organization"}</span>
                   </div>
                 </div>
               </div>
 
               <div>
-                <label className="text-[9px] font-black text-[#E1E0CC]/50 uppercase tracking-widest block mb-1">Workspace</label>
+                <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest block mb-1">Workspace</label>
                 <select
                   value={activeWorkspace?.id || ""}
                   onChange={(e) => {
                     const ws = workspaces.find(w => w.id === e.target.value);
                     if (ws) setActiveWorkspace(ws);
                   }}
-                  className="w-full p-2.5 bg-black border border-[#E1E0CC]/10 rounded-xl text-xs font-semibold text-[#E1E0CC] outline-none focus:border-[#E1E0CC]/10 cursor-pointer hover:bg-[#E1E0CC]/10/60 transition-all"
+                  className="w-full p-2.5 bg-black border border-[#E1E0CC]/10 rounded-2xl text-xs font-semibold text-[#E1E0CC] outline-none focus:border-[#E1E0CC]/10 cursor-pointer hover:bg-[#E1E0CC]/10/60 transition-all"
                 >
                   {workspaces
                     .filter(w => w.org_id === activeOrg?.id)
@@ -1060,10 +1060,10 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
             <nav className="space-y-1">
               <button
                 onClick={() => setActiveTab("control")}
-                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all text-left
+                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-2xl text-xs font-semibold transition-all text-left
                   ${activeTab === "control"
                     ? "bg-black border border-[#E1E0CC]/10 text-[#E1E0CC] shadow-[0_0_15px_rgba(225,224,204,0.03)]"
-                    : "text-[#E1E0CC]/50 hover:text-[#E1E0CC]/90 hover:bg-[#E1E0CC]/5"
+                    : "text-gray-400 hover:text-[#E1E0CC]/90 hover:bg-[#E1E0CC]/5"
                   }`}
               >
                 <BarChart3 className="w-3.5 h-3.5" />
@@ -1072,10 +1072,10 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
 
               <button
                 onClick={() => setActiveTab("dna")}
-                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all text-left
+                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-2xl text-xs font-semibold transition-all text-left
                   ${activeTab === "dna"
                     ? "bg-black border border-[#E1E0CC]/10 text-[#E1E0CC] shadow-[0_0_15px_rgba(225,224,204,0.03)]"
-                    : "text-[#E1E0CC]/50 hover:text-[#E1E0CC]/90 hover:bg-[#E1E0CC]/5"
+                    : "text-gray-400 hover:text-[#E1E0CC]/90 hover:bg-[#E1E0CC]/5"
                   }`}
               >
                 <Layers className="w-3.5 h-3.5" />
@@ -1084,10 +1084,10 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
 
               <button
                 onClick={() => setActiveTab("campaigns")}
-                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all text-left
+                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-2xl text-xs font-semibold transition-all text-left
                   ${activeTab === "campaigns"
                     ? "bg-black border border-[#E1E0CC]/10 text-[#E1E0CC] shadow-[0_0_15px_rgba(225,224,204,0.03)]"
-                    : "text-[#E1E0CC]/50 hover:text-[#E1E0CC]/90 hover:bg-[#E1E0CC]/5"
+                    : "text-gray-400 hover:text-[#E1E0CC]/90 hover:bg-[#E1E0CC]/5"
                   }`}
               >
                 <Calendar className="w-3.5 h-3.5" />
@@ -1098,10 +1098,10 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
 
               <button
                 onClick={() => setActiveTab("studio")}
-                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all text-left
+                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-2xl text-xs font-semibold transition-all text-left
                   ${activeTab === "studio"
                     ? "bg-black border border-[#E1E0CC]/10 text-[#E1E0CC] shadow-[0_0_15px_rgba(225,224,204,0.03)]"
-                    : "text-[#E1E0CC]/50 hover:text-[#E1E0CC]/90 hover:bg-[#E1E0CC]/5"
+                    : "text-gray-400 hover:text-[#E1E0CC]/90 hover:bg-[#E1E0CC]/5"
                   }`}
               >
                 <Image className="w-3.5 h-3.5" />
@@ -1110,10 +1110,10 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
 
               <button
                 onClick={() => setActiveTab("carousel")}
-                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all text-left
+                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-2xl text-xs font-semibold transition-all text-left
                   ${activeTab === "carousel"
                     ? "bg-black border border-[#E1E0CC]/10 text-[#E1E0CC] shadow-[0_0_15px_rgba(225,224,204,0.03)]"
-                    : "text-[#E1E0CC]/50 hover:text-[#E1E0CC]/90 hover:bg-[#E1E0CC]/5"
+                    : "text-gray-400 hover:text-[#E1E0CC]/90 hover:bg-[#E1E0CC]/5"
                   }`}
               >
                 <Plus className="w-3.5 h-3.5 text-[#0A0A0A]" />
@@ -1126,10 +1126,10 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
           <div className="space-y-1 pt-3 border-t border-[#E1E0CC]/10">
             <button
               onClick={() => setActiveTab("settings")}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all text-left
+              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-2xl text-xs font-semibold transition-all text-left
                 ${activeTab === "settings"
                   ? "bg-black border border-[#E1E0CC]/10 text-[#E1E0CC] shadow-[0_0_15px_rgba(225,224,204,0.03)]"
-                  : "text-[#E1E0CC]/50 hover:text-[#E1E0CC]/90 hover:bg-[#E1E0CC]/5"
+                  : "text-gray-400 hover:text-[#E1E0CC]/90 hover:bg-[#E1E0CC]/5"
                 }`}
             >
               <Settings className="w-3.5 h-3.5" />
@@ -1138,7 +1138,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
 
             <button
               onClick={handleSignOut}
-              className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-[#E1E0CC]/60 hover:text-[#E1E0CC] hover:bg-[#E1E0CC]/10/50 rounded-xl transition-all text-left"
+              className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-[#E1E0CC]/60 hover:text-[#E1E0CC] hover:bg-[#E1E0CC]/10/50 rounded-2xl transition-all text-left"
             >
               <LogOut className="w-3.5 h-3.5" />
               <span>Sign Out</span>
@@ -1179,19 +1179,19 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
           {/* Empty State / Onboarding requirement checker */}
           {!dna && activeTab !== "settings" ? (
             <div className="flex-1 flex items-center justify-center py-12">
-              <div className="max-w-md w-full bg-[#0A0A0A] border border-[#E1E0CC]/15 rounded-3xl p-8 text-center shadow-[0_4px_20px_rgb(0,0,0,0.01)] space-y-5 animate-fade-up">
+              <div className="max-w-md w-full bg-[#101010] border border-[#E1E0CC]/10 rounded-2xl p-8 text-center shadow-[0_4px_20px_rgb(0,0,0,0.01)] space-y-5 animate-fade-up">
                 <div className="w-12 h-12 rounded-full bg-[#E1E0CC]/10 flex items-center justify-center text-[#E1E0CC] mx-auto">
                   <Brain className="w-6 h-6" />
                 </div>
                 <div className="space-y-2">
                   <h3 className="text-sm font-bold text-[#E1E0CC] uppercase tracking-wider">Workspace DNA Required</h3>
-                  <p className="text-xs text-[#E1E0CC]/50 leading-relaxed">
+                  <p className="text-xs text-gray-400 leading-relaxed">
                     This workspace does not have a Brand DNA profile configured yet. Run the brand builder to generate marketing roadmap, strategies, logos and design assets.
                   </p>
                 </div>
                 <button
                   onClick={() => router.push("/onboarding")}
-                  className="w-full flex items-center justify-center gap-1.5 py-4 rounded-full bg-[#0A0A0A] hover:bg-black text-white text-xs font-bold uppercase tracking-wider transition-all hover:scale-[1.02] active:scale-[0.98] shadow-none shadow-black/5"
+                  className="w-full flex items-center justify-center gap-1.5 py-4 rounded-full bg-[#101010] hover:bg-black text-white text-xs font-bold uppercase tracking-wider transition-all hover:scale-[1.02] active:scale-[0.98] shadow-none shadow-black/5"
                 >
                   ✦ Start Brand Onboarding
                   <ArrowRight className="w-4 h-4" />
@@ -1202,13 +1202,13 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
             <>
               {/* Top Info Banner - Only render if DNA is synced */}
               {dna && (
-                <div className="bg-[#0A0A0A] border border-[#E1E0CC]/15/80 rounded-2xl p-6 shadow-[0_4px_20px_rgb(0,0,0,0.01)] flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+                <div className="bg-[#101010] border border-[#E1E0CC]/10/80 rounded-2xl p-6 shadow-[0_4px_20px_rgb(0,0,0,0.01)] flex flex-col sm:flex-row justify-between sm:items-center gap-4">
                   <div className="space-y-1">
                     <WordsPullUp 
                       text={`${dna?.brand_name || 'Brand'} Brand Dashboard`}
                       className="text-lg font-bold text-[#E1E0CC] tracking-tight"
                     />
-                    <div className="flex flex-wrap gap-2 text-[10px] text-[#E1E0CC]/50">
+                    <div className="flex flex-wrap gap-2 text-[10px] text-gray-400">
                       <span><strong>Category:</strong> {dna?.category}</span>
                       {dna?.sub_category && (
                         <>
@@ -1218,7 +1218,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                       )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#E1E0CC]/10 border border-[#E1E0CC]/20 text-[#E1E0CC] text-xs font-semibold tracking-tight shrink-0 self-start sm:self-center">
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-[#E1E0CC]/10 border border-[#E1E0CC]/20 text-[#E1E0CC] text-xs font-semibold tracking-tight shrink-0 self-start sm:self-center">
                     <ShieldCheck className="w-4 h-4" />
                     Memory Synced
                   </div>
@@ -1227,7 +1227,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
 
           {/* Tab 1: Mission Control (Visual Style Tile Moodboard) */}
           {activeTab === "control" && (
-            <div className="bg-[#0A0A0A] text-[#E1E0CC] rounded-3xl p-6 md:p-8 border border-[#E1E0CC]/10 shadow-xl relative overflow-hidden font-normal space-y-6">
+            <div className="bg-[#101010] text-[#E1E0CC] rounded-2xl p-6 md:p-8 border border-[#E1E0CC]/10 shadow-xl relative overflow-hidden font-normal space-y-6">
               
               {/* Top Header Section */}
               <div className="border-b border-[#E1E0CC]/10 pb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -1237,19 +1237,19 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                       Brand Board Direction
                     </span>
                     {moodboard?.id && (
-                      <span className="text-[10px] text-[#E1E0CC]/70">Preset ID: {moodboard.id}</span>
+                      <span className="text-[10px] text-gray-300">Preset ID: {moodboard.id}</span>
                     )}
                   </div>
                   <WordsPullUp 
                     text={dna?.brand_name || 'Brand'}
                     className="text-xl font-extrabold mt-1 text-[#E1E0CC] uppercase tracking-tight"
                   />
-                  <p className="text-xs text-[#E1E0CC]/70 font-medium">
+                  <p className="text-xs text-gray-300 font-medium">
                     {moodboard?.name || "Bespoke Brand Strategy Board"} {moodboard?.tagline ? `— ${moodboard.tagline}` : ""}
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2 text-[10px] text-[#E1E0CC]/70 shrink-0">
+                <div className="flex items-center gap-2 text-[10px] text-gray-300 shrink-0">
                   <span><strong>Industry:</strong> {dna?.industry}</span>
                   <span>•</span>
                   <span><strong>Category:</strong> {dna?.category}</span>
@@ -1263,12 +1263,12 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
 
                 {/* BLOCK A: Logo + Brand Identity (4 cols) */}
                 <div className="md:col-span-4 bg-[#101010]/50 border border-[#E1E0CC]/10 rounded-2xl p-5 flex flex-col gap-4 shadow-none">
-                  <p className="text-[9px] font-black text-[#E1E0CC]/70 uppercase tracking-[0.2em]">Brand Identity</p>
+                  <p className="text-[9px] font-black text-gray-300 uppercase tracking-[0.2em]">Brand Identity</p>
 
                   {/* Logo circle — large and filled */}
                   <div className="flex flex-col items-center gap-3">
                     <div
-                      className="w-24 h-24 rounded-full flex items-center justify-center overflow-hidden border-2 border-[#E1E0CC]/10 shadow-none bg-[#0A0A0A]"
+                      className="w-24 h-24 rounded-full flex items-center justify-center overflow-hidden border-2 border-[#E1E0CC]/10 shadow-none bg-[#101010]"
                       style={{ backgroundColor: colors.primaryHex || "#111" }}
                     >
                       {(() => {
@@ -1293,7 +1293,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                     </div>
                     <div className="text-center">
                       <p className="text-[#E1E0CC] font-bold text-base tracking-tight">{dna?.brand_name}</p>
-                      <p className="text-[#E1E0CC]/70 text-[10px] mt-0.5 italic max-w-[160px] text-center leading-snug">
+                      <p className="text-gray-300 text-[10px] mt-0.5 italic max-w-[160px] text-center leading-snug">
                         {dna?.usp ? `"${dna?.usp}"` : "No tagline set"}
                       </p>
                     </div>
@@ -1301,11 +1301,11 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
 
                   <div className="border-t border-[#E1E0CC]/10 pt-3 space-y-1">
                     <div className="flex justify-between text-[9px]">
-                      <span className="text-[#E1E0CC]/70 uppercase tracking-wider">Industry</span>
+                      <span className="text-gray-300 uppercase tracking-wider">Industry</span>
                       <span className="text-[#E1E0CC] font-bold">{dna?.industry}</span>
                     </div>
                     <div className="flex justify-between text-[9px]">
-                      <span className="text-[#E1E0CC]/70 uppercase tracking-wider">Personality</span>
+                      <span className="text-gray-300 uppercase tracking-wider">Personality</span>
                       <span className="text-[#E1E0CC] font-bold capitalize">
                         {dna?.brand_personality}
                       </span>
@@ -1315,44 +1315,44 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
 
                 {/* BLOCK B: Color Palette (5 cols) */}
                 <div className="md:col-span-5 bg-[#101010]/50 border border-[#E1E0CC]/10 rounded-2xl p-5 flex flex-col gap-3 shadow-none">
-                  <p className="text-[9px] font-black text-[#E1E0CC]/70 uppercase tracking-[0.2em]">Color Palette</p>
+                  <p className="text-[9px] font-black text-gray-300 uppercase tracking-[0.2em]">Color Palette</p>
                   <div className="grid grid-cols-2 gap-3 flex-1">
                     {/* Primary */}
                     <div className="space-y-2">
                       <div
-                        className="h-20 w-full rounded-xl border border-[#E1E0CC]/10 shadow-inner"
+                        className="h-20 w-full rounded-2xl border border-[#E1E0CC]/10 shadow-inner"
                         style={{ backgroundColor: colors.primaryHex || "#1A0A00" }}
                       />
                       <div>
                         <p className="text-[9px] font-bold text-slate-885 uppercase tracking-wider">Primary</p>
-                        <p className="text-[8px] text-[#E1E0CC]/70 font-mono mt-0.5">{colors.primaryHex || "#1A0A00"}</p>
+                        <p className="text-[8px] text-gray-300 font-mono mt-0.5">{colors.primaryHex || "#1A0A00"}</p>
                       </div>
                     </div>
                     {/* Accent */}
                     <div className="space-y-2">
                       <div
-                        className="h-20 w-full rounded-xl border border-[#E1E0CC]/10 shadow-inner"
+                        className="h-20 w-full rounded-2xl border border-[#E1E0CC]/10 shadow-inner"
                         style={{ backgroundColor: colors.secondaryHex || "#C9A84C" }}
                       />
                       <div>
                         <p className="text-[9px] font-bold text-slate-885 uppercase tracking-wider">Accent</p>
-                        <p className="text-[8px] text-[#E1E0CC]/70 font-mono mt-0.5">{colors.secondaryHex || "#C9A84C"}</p>
+                        <p className="text-[8px] text-gray-300 font-mono mt-0.5">{colors.secondaryHex || "#C9A84C"}</p>
                       </div>
                     </div>
                     {/* Dark neutral */}
                     <div className="space-y-2">
-                      <div className="h-14 w-full rounded-xl border border-[#E1E0CC]/10 bg-[#101010]" />
+                      <div className="h-14 w-full rounded-2xl border border-[#E1E0CC]/10 bg-[#101010]" />
                       <div>
                         <p className="text-[9px] font-bold text-slate-885 uppercase tracking-wider">Background</p>
-                        <p className="text-[8px] text-[#E1E0CC]/70 font-mono mt-0.5">#0F172A</p>
+                        <p className="text-[8px] text-gray-300 font-mono mt-0.5">#0F172A</p>
                       </div>
                     </div>
                     {/* White/light */}
                     <div className="space-y-2">
-                      <div className="h-14 w-full rounded-xl border border-[#E1E0CC]/10 bg-[#101010]" />
+                      <div className="h-14 w-full rounded-2xl border border-[#E1E0CC]/10 bg-[#101010]" />
                       <div>
                         <p className="text-[9px] font-bold text-slate-885 uppercase tracking-wider">Highlight</p>
-                        <p className="text-[8px] text-[#E1E0CC]/70 font-mono mt-0.5">#F8FAFC</p>
+                        <p className="text-[8px] text-gray-300 font-mono mt-0.5">#F8FAFC</p>
                       </div>
                     </div>
                   </div>
@@ -1360,24 +1360,24 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
 
                 {/* BLOCK C: Typography (3 cols) */}
                 <div className="md:col-span-3 bg-[#101010]/50 border border-[#E1E0CC]/10 rounded-2xl p-5 flex flex-col gap-3 shadow-none">
-                  <p className="text-[9px] font-black text-[#E1E0CC]/70 uppercase tracking-[0.2em]">Typography System</p>
+                  <p className="text-[9px] font-black text-gray-300 uppercase tracking-[0.2em]">Typography System</p>
                   <div className="space-y-4 flex-1">
                     <div>
-                      <span className="text-[8px] text-[#E1E0CC]/70 block mb-1 uppercase tracking-wider">Headline</span>
+                      <span className="text-[8px] text-gray-300 block mb-1 uppercase tracking-wider">Headline</span>
                       <span className="text-lg font-bold text-[#E1E0CC] block tracking-tight" style={{ fontFamily: typography.primaryFont }}>
                         {typography.primaryFont}
                       </span>
-                      <span className="text-[9px] text-[#E1E0CC]/70 font-mono block mt-1">AaBbCc 123</span>
+                      <span className="text-[9px] text-gray-300 font-mono block mt-1">AaBbCc 123</span>
                     </div>
                     <div>
-                      <span className="text-[8px] text-[#E1E0CC]/70 block mb-1 uppercase tracking-wider">Body</span>
+                      <span className="text-[8px] text-gray-300 block mb-1 uppercase tracking-wider">Body</span>
                       <span className="text-sm text-[#E1E0CC] block" style={{ fontFamily: typography.bodyFont }}>
                         {typography.bodyFont}
                       </span>
-                      <span className="text-[9px] text-[#E1E0CC]/70 font-mono block mt-1">aAbBcC 456</span>
+                      <span className="text-[9px] text-gray-300 font-mono block mt-1">aAbBcC 456</span>
                     </div>
                   </div>
-                  <p className="text-[8px] text-[#E1E0CC]/70 border-t border-[#E1E0CC]/10 pt-2 leading-relaxed font-mono">
+                  <p className="text-[8px] text-gray-300 border-t border-[#E1E0CC]/10 pt-2 leading-relaxed font-mono">
                     {typography.usage}
                   </p>
                 </div>
@@ -1386,14 +1386,14 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
 
                 {/* BLOCK D: Brand Mood & Tone — TEXT ONLY (5 cols) */}
                 <div className="md:col-span-5 bg-[#101010]/50 border border-[#E1E0CC]/10 rounded-2xl p-5 flex flex-col gap-4 shadow-none">
-                  <p className="text-[9px] font-black text-[#E1E0CC]/70 uppercase tracking-[0.2em]">Brand Mood & Tone</p>
+                  <p className="text-[9px] font-black text-gray-300 uppercase tracking-[0.2em]">Brand Mood & Tone</p>
 
                   {/* Personality tags */}
                   <div className="flex flex-wrap gap-2">
                     {(dna?.brand_values || []).map((v) => (
                       <span
                         key={v}
-                        className="text-[10px] font-black uppercase tracking-wider px-3 py-1.5 rounded-lg border bg-black text-[#0A0A0A] border-[#E1E0CC]/15"
+                        className="text-[10px] font-black uppercase tracking-wider px-3 py-1.5 rounded-lg border bg-black text-[#0A0A0A] border-[#E1E0CC]/10"
                       >
                         {v}
                       </span>
@@ -1402,7 +1402,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
 
                   {/* Tone descriptors */}
                   <div className="space-y-2 flex-1">
-                    <p className="text-[8px] text-[#E1E0CC]/70 uppercase tracking-wider">Voice Attributes</p>
+                    <p className="text-[8px] text-gray-300 uppercase tracking-wider">Voice Attributes</p>
                     <div className="space-y-1.5">
                       {[
                         { label: "Tone", value: dna?.brand_personality || "Professional" },
@@ -1410,15 +1410,15 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                         { label: "Mission", value: dna?.mission || "Not defined" },
                       ].map(({ label, value }) => (
                         <div key={label} className="flex gap-2 text-[9px]">
-                          <span className="text-[#E1E0CC]/70 uppercase tracking-wider w-14 shrink-0">{label}</span>
-                          <span className="text-[#E1E0CC]/70 leading-snug line-clamp-2">{value}</span>
+                          <span className="text-gray-300 uppercase tracking-wider w-14 shrink-0">{label}</span>
+                          <span className="text-gray-300 leading-snug line-clamp-2">{value}</span>
                         </div>
                       ))}
                     </div>
                   </div>
 
                   {/* Separator words */}
-                  <div className="flex items-center gap-2 pt-2 border-t border-[#E1E0CC]/10 text-[8px] font-black text-[#E1E0CC]/70 uppercase tracking-widest">
+                  <div className="flex items-center gap-2 pt-2 border-t border-[#E1E0CC]/10 text-[8px] font-black text-gray-300 uppercase tracking-widest">
                     <span>Luxurious</span>
                     <span>•</span>
                     <span>Timeless</span>
@@ -1430,7 +1430,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                 {/* BLOCK E: Social Post Visual Direction — approved moodboard (7 cols) */}
                 <div className="md:col-span-7 bg-[#101010]/50 border border-[#E1E0CC]/10 rounded-2xl overflow-hidden flex flex-col shadow-none">
                   <div className="px-5 pt-5 pb-3">
-                    <p className="text-[9px] font-black text-[#E1E0CC]/70 uppercase tracking-[0.2em]">Social Post Visual Direction</p>
+                    <p className="text-[9px] font-black text-gray-300 uppercase tracking-[0.2em]">Social Post Visual Direction</p>
                   </div>
                   {moodboard?.imageUrl ? (
                     <div className="flex-1 relative">
@@ -1449,8 +1449,8 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                   ) : (
                     <div className="flex-1 flex items-center justify-center p-6 text-center">
                       <div>
-                        <p className="text-[#E1E0CC]/70 text-xs font-semibold">No moodboard approved yet.</p>
-                        <p className="text-[#E1E0CC]/70 text-[10px] mt-1 leading-snug">Generate and approve a direction in the onboarding visual direction step.</p>
+                        <p className="text-gray-300 text-xs font-semibold">No moodboard approved yet.</p>
+                        <p className="text-gray-300 text-[10px] mt-1 leading-snug">Generate and approve a direction in the onboarding visual direction step.</p>
                       </div>
                     </div>
                   )}
@@ -1459,8 +1459,8 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                 {/* ── ROW 3 — Full width: Visual Brain Summary ── */}
                 <div className="md:col-span-12 bg-[#101010]/80 border border-[#E1E0CC]/10 rounded-2xl p-5 flex flex-col md:flex-row md:items-center gap-5 shadow-none">
                   <div className="space-y-2 flex-1">
-                    <p className="text-[9px] font-black text-[#E1E0CC]/70 uppercase tracking-[0.2em]">Visual Brand Summary</p>
-                    <p className="text-xs text-[#E1E0CC]/70 leading-relaxed font-medium">
+                    <p className="text-[9px] font-black text-gray-300 uppercase tracking-[0.2em]">Visual Brand Summary</p>
+                    <p className="text-xs text-gray-300 leading-relaxed font-medium">
                       {dna?.business_description}
                     </p>
                   </div>
@@ -1487,57 +1487,57 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 
                 {/* Box 1: Company Definition */}
-                <div className="bg-[#0A0A0A] border border-[#E1E0CC]/15/80 rounded-2xl p-5 space-y-4 shadow-[0_4px_20px_rgb(0,0,0,0.01)]">
-                  <h3 className="text-xs font-bold text-[#E1E0CC]/50 uppercase tracking-widest flex items-center gap-1.5">
+                <div className="bg-[#101010] border border-[#E1E0CC]/10/80 rounded-2xl p-5 space-y-4 shadow-[0_4px_20px_rgb(0,0,0,0.01)]">
+                  <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1.5">
                     <Building className="w-4 h-4 text-brand-secondary" />
                     Company Definition
                   </h3>
                   
                   <div className="space-y-2 text-xs">
                     <div className="flex flex-col gap-1 border-b border-[#E1E0CC]/10 pb-2">
-                      <span className="text-[#E1E0CC]/50 font-medium">Business Description</span>
+                      <span className="text-gray-400 font-medium">Business Description</span>
                       <p className="text-[#E1E0CC]/80 leading-relaxed">{dna?.business_description}</p>
                     </div>
                     {dna?.website && (
                       <div className="flex justify-between border-b border-[#E1E0CC]/10 pb-2">
-                        <span className="text-[#E1E0CC]/50">Website</span>
+                        <span className="text-gray-400">Website</span>
                         <a href={dna?.website} target="_blank" rel="noreferrer" className="text-brand-secondary hover:underline font-semibold">{dna?.website}</a>
                       </div>
                     )}
                     <div className="flex justify-between">
-                      <span className="text-[#E1E0CC]/50">USP (Unique Value)</span>
+                      <span className="text-gray-400">USP (Unique Value)</span>
                       <span className="font-semibold text-[#E1E0CC] text-right max-w-[200px]">{dna?.usp}</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Box 2: Mission, Vision & Personality */}
-                <div className="bg-[#0A0A0A] border border-[#E1E0CC]/15/80 rounded-2xl p-5 space-y-4 shadow-[0_4px_20px_rgb(0,0,0,0.01)]">
-                  <h3 className="text-xs font-bold text-[#E1E0CC]/50 uppercase tracking-widest flex items-center gap-1.5">
+                <div className="bg-[#101010] border border-[#E1E0CC]/10/80 rounded-2xl p-5 space-y-4 shadow-[0_4px_20px_rgb(0,0,0,0.01)]">
+                  <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1.5">
                     <Compass className="w-4 h-4 text-brand-secondary" />
                     Brand Identity DNA
                   </h3>
                   
                   <div className="space-y-2 text-xs">
                     <div className="flex flex-col gap-1 border-b border-[#E1E0CC]/10 pb-2">
-                      <span className="text-[#E1E0CC]/50 font-medium">Mission</span>
+                      <span className="text-gray-400 font-medium">Mission</span>
                       <p className="text-[#E1E0CC]/80 font-medium">{dna?.mission}</p>
                     </div>
                     {dna?.vision && (
                       <div className="flex flex-col gap-1 border-b border-[#E1E0CC]/10 pb-2">
-                        <span className="text-[#E1E0CC]/50 font-medium">Vision</span>
+                        <span className="text-gray-400 font-medium">Vision</span>
                         <p className="text-[#E1E0CC]/80">{dna?.vision}</p>
                       </div>
                     )}
                     <div className="flex justify-between border-b border-[#E1E0CC]/10 pb-2">
-                      <span className="text-[#E1E0CC]/50">Brand Personality</span>
+                      <span className="text-gray-400">Brand Personality</span>
                       <span className="font-semibold text-[#E1E0CC] capitalize">{dna?.brand_personality}</span>
                     </div>
                     <div className="flex flex-col gap-1.5">
-                      <span className="text-[#E1E0CC]/50">Core Brand Values</span>
+                      <span className="text-gray-400">Core Brand Values</span>
                       <div className="flex flex-wrap gap-1">
                         {(dna?.brand_values || []).map((v) => (
-                          <span key={v} className="px-2 py-1 rounded bg-black border border-[#E1E0CC]/15 text-[10px] text-[#E1E0CC]/70 font-semibold">{v}</span>
+                          <span key={v} className="px-2 py-1 rounded bg-black border border-[#E1E0CC]/10 text-[10px] text-gray-300 font-semibold">{v}</span>
                         ))}
                       </div>
                     </div>
@@ -1545,8 +1545,8 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                 </div>
 
                 {/* Box 3: Offerings & Pricing */}
-                <div className="bg-[#0A0A0A] border border-[#E1E0CC]/15/80 rounded-2xl p-5 space-y-4 shadow-[0_4px_20px_rgb(0,0,0,0.01)]">
-                  <h3 className="text-xs font-bold text-[#E1E0CC]/50 uppercase tracking-widest flex items-center gap-1.5">
+                <div className="bg-[#101010] border border-[#E1E0CC]/10/80 rounded-2xl p-5 space-y-4 shadow-[0_4px_20px_rgb(0,0,0,0.01)]">
+                  <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1.5">
                     <Tag className="w-4 h-4 text-brand-secondary" />
                     Offerings & Commercials
                   </h3>
@@ -1554,7 +1554,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                   <div className="space-y-3 text-xs">
                     {dna?.products && dna?.products.length > 0 && (
                       <div className="flex flex-col gap-1.5 border-b border-[#E1E0CC]/10 pb-2">
-                        <span className="text-[#E1E0CC]/50">Products</span>
+                        <span className="text-gray-400">Products</span>
                         <div className="flex flex-wrap gap-1">
                           {dna?.products.map(p => (
                             <span key={p} className="px-2 py-1 rounded bg-[#E1E0CC]/10/50 border border-[#E1E0CC]/20 text-[10px] text-[#E1E0CC] font-semibold">{p}</span>
@@ -1564,7 +1564,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                     )}
                     {dna?.services && dna?.services.length > 0 && (
                       <div className="flex flex-col gap-1.5 border-b border-[#E1E0CC]/10 pb-2">
-                        <span className="text-[#E1E0CC]/50">Services</span>
+                        <span className="text-gray-400">Services</span>
                         <div className="flex flex-wrap gap-1">
                           {dna?.services.map(s => (
                             <span key={s} className="px-2 py-1 rounded bg-[#E1E0CC]/10/50 border border-[#E1E0CC]/20 text-[10px] text-[#E1E0CC] font-semibold">{s}</span>
@@ -1573,37 +1573,37 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                       </div>
                     )}
                     <div className="flex justify-between">
-                      <span className="text-[#E1E0CC]/50">Pricing Strategy</span>
+                      <span className="text-gray-400">Pricing Strategy</span>
                       <span className="font-semibold text-[#E1E0CC]">{dna?.pricing}</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Box 4: Target Audience Profile */}
-                <div className="bg-[#0A0A0A] border border-[#E1E0CC]/15/80 rounded-2xl p-5 space-y-4 shadow-[0_4px_20px_rgb(0,0,0,0.01)]">
-                  <h3 className="text-xs font-bold text-[#E1E0CC]/50 uppercase tracking-widest flex items-center gap-1.5">
+                <div className="bg-[#101010] border border-[#E1E0CC]/10/80 rounded-2xl p-5 space-y-4 shadow-[0_4px_20px_rgb(0,0,0,0.01)]">
+                  <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1.5">
                     <Users className="w-4 h-4 text-brand-secondary" />
                     Target Audience & Market
                   </h3>
                   
                   <div className="space-y-3 text-xs">
                     <div className="flex flex-col gap-1 border-b border-[#E1E0CC]/10 pb-2">
-                      <span className="text-[#E1E0CC]/50 font-medium">Target Demographics</span>
+                      <span className="text-gray-400 font-medium">Target Demographics</span>
                       <p className="text-[#E1E0CC]/80">{dna?.target_audience}</p>
                     </div>
                     {dna?.customer_personas && (
                       <div className="flex flex-col gap-1 border-b border-[#E1E0CC]/10 pb-2">
-                        <span className="text-[#E1E0CC]/50 font-medium">Customer Persona</span>
-                        <p className="text-[#E1E0CC]/70 italic leading-relaxed">{dna?.customer_personas}</p>
+                        <span className="text-gray-400 font-medium">Customer Persona</span>
+                        <p className="text-gray-300 italic leading-relaxed">{dna?.customer_personas}</p>
                       </div>
                     )}
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <span className="text-[#E1E0CC]/50 block mb-1">Country Focus</span>
+                        <span className="text-gray-400 block mb-1">Country Focus</span>
                         <span className="font-semibold text-[#E1E0CC]">{dna?.country}</span>
                       </div>
                       <div>
-                        <span className="text-[#E1E0CC]/50 block mb-1">Languages</span>
+                        <span className="text-gray-400 block mb-1">Languages</span>
                         <span className="font-semibold text-[#E1E0CC]">{(dna?.languages || []).join(", ")}</span>
                       </div>
                     </div>
@@ -1614,8 +1614,8 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
 
               {/* Box 5: Brand Assets & Media Locker */}
               {assets && (
-                <div className="bg-[#0A0A0A] border border-[#E1E0CC]/15/80 rounded-2xl p-6 space-y-5 shadow-[0_4px_20px_rgb(0,0,0,0.01)]">
-                  <h3 className="text-xs font-bold text-[#E1E0CC]/50 uppercase tracking-widest flex items-center gap-1.5 border-b border-[#E1E0CC]/10 pb-3">
+                <div className="bg-[#101010] border border-[#E1E0CC]/10/80 rounded-2xl p-6 space-y-5 shadow-[0_4px_20px_rgb(0,0,0,0.01)]">
+                  <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1.5 border-b border-[#E1E0CC]/10 pb-3">
                     <Image className="w-4 h-4 text-brand-secondary" />
                     Brand Assets & Media Locker
                   </h3>
@@ -1625,7 +1625,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                     {/* Logo & Guideline Column */}
                     <div className="space-y-4">
                       <div>
-                        <span className="text-[#E1E0CC]/50 block mb-1.5 font-semibold">Active Logo Graphic</span>
+                        <span className="text-gray-400 block mb-1.5 font-semibold">Active Logo Graphic</span>
                         {assets.logo_url ? (
                           (() => {
                             const activeFontName = typography.primaryFont || "Outfit";
@@ -1643,7 +1643,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                               ? dna?.brand_name.toUpperCase() 
                               : dna?.brand_name;
                             return (
-                              <div className="w-32 h-32 bg-[#0A0A0A] border border-[#E1E0CC]/15 rounded-xl flex flex-col items-center justify-center p-4 relative overflow-hidden shadow-inner bg-gradient-to-b from-white to-gray-50/30">
+                              <div className="w-32 h-32 bg-[#101010] border border-[#E1E0CC]/10 rounded-2xl flex flex-col items-center justify-center p-4 relative overflow-hidden shadow-inner bg-gradient-to-b from-white to-gray-50/30">
                                 <div className="flex-1 flex items-center justify-center w-full">
                                   <img src={assets.logo_url} alt="Symbol Mark" className="max-h-[55%] max-w-[55%] object-contain" />
                                 </div>
@@ -1659,9 +1659,9 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                             );
                           })()
                         ) : assets.logo_studio_data?.assets?.primaryLogoSvg ? (
-                          <div className="w-24 h-24 bg-black rounded-xl flex items-center justify-center p-2 shadow-none" dangerouslySetInnerHTML={{ __html: assets.logo_studio_data.assets.primaryLogoSvg }} />
+                          <div className="w-24 h-24 bg-black rounded-2xl flex items-center justify-center p-2 shadow-none" dangerouslySetInnerHTML={{ __html: assets.logo_studio_data.assets.primaryLogoSvg }} />
                         ) : (
-                          <span className="text-[#E1E0CC]/50 italic text-[10px]">No logo uploaded or generated</span>
+                          <span className="text-gray-400 italic text-[10px]">No logo uploaded or generated</span>
                         )}
                       </div>
                     </div>
@@ -1672,7 +1672,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         {/* Product Photos */}
                         <div className="space-y-1.5">
-                          <span className="text-[#E1E0CC]/50 block font-semibold">Product Images ({assets.product_images?.length || 0})</span>
+                          <span className="text-gray-400 block font-semibold">Product Images ({assets.product_images?.length || 0})</span>
                           {assets.product_images && assets.product_images.length > 0 ? (
                             <div className="flex flex-wrap gap-1">
                               {assets.product_images.map((img, i) => (
@@ -1682,13 +1682,13 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                               ))}
                             </div>
                           ) : (
-                            <span className="text-[#E1E0CC]/50 italic text-[9px] block">No product images</span>
+                            <span className="text-gray-400 italic text-[9px] block">No product images</span>
                           )}
                         </div>
 
                         {/* Team Photos */}
                         <div className="space-y-1.5">
-                          <span className="text-[#E1E0CC]/50 block font-semibold">Team Photos ({assets.team_photos?.length || 0})</span>
+                          <span className="text-gray-400 block font-semibold">Team Photos ({assets.team_photos?.length || 0})</span>
                           {assets.team_photos && assets.team_photos.length > 0 ? (
                             <div className="flex flex-wrap gap-1">
                               {assets.team_photos.map((img, i) => (
@@ -1698,13 +1698,13 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                               ))}
                             </div>
                           ) : (
-                            <span className="text-[#E1E0CC]/50 italic text-[9px] block">No team photos</span>
+                            <span className="text-gray-400 italic text-[9px] block">No team photos</span>
                           )}
                         </div>
 
                         {/* Office Workspace */}
                         <div className="space-y-1.5">
-                          <span className="text-[#E1E0CC]/50 block font-semibold">Office Images ({assets.office_images?.length || 0})</span>
+                          <span className="text-gray-400 block font-semibold">Office Images ({assets.office_images?.length || 0})</span>
                           {assets.office_images && assets.office_images.length > 0 ? (
                             <div className="flex flex-wrap gap-1">
                               {assets.office_images.map((img, i) => (
@@ -1714,7 +1714,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                               ))}
                             </div>
                           ) : (
-                            <span className="text-[#E1E0CC]/50 italic text-[9px] block">No office images</span>
+                            <span className="text-gray-400 italic text-[9px] block">No office images</span>
                           )}
                         </div>
                       </div>
@@ -1723,7 +1723,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-[#E1E0CC]/10 pt-3">
                         {/* Brand Videos */}
                         <div className="space-y-1.5">
-                          <span className="text-[#E1E0CC]/50 block font-semibold">Brand Videos ({assets.brand_videos?.length || 0})</span>
+                          <span className="text-gray-400 block font-semibold">Brand Videos ({assets.brand_videos?.length || 0})</span>
                           {assets.brand_videos && assets.brand_videos.length > 0 ? (
                             <div className="flex flex-wrap gap-1">
                               {assets.brand_videos.map((vid, i) => (
@@ -1733,29 +1733,29 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                               ))}
                             </div>
                           ) : (
-                            <span className="text-[#E1E0CC]/50 italic text-[9px] block">No videos uploaded</span>
+                            <span className="text-gray-400 italic text-[9px] block">No videos uploaded</span>
                           )}
                         </div>
 
                         {/* Custom Fonts */}
                         <div className="space-y-1.5">
-                          <span className="text-[#E1E0CC]/50 block font-semibold">Brand Fonts ({assets.fonts?.length || 0})</span>
+                          <span className="text-gray-400 block font-semibold">Brand Fonts ({assets.fonts?.length || 0})</span>
                           {assets.fonts && assets.fonts.length > 0 ? (
                             <div className="flex flex-wrap gap-1">
                               {assets.fonts.map((f, i) => (
-                                <a key={i} href={f} target="_blank" rel="noreferrer" className="px-2 py-1 rounded bg-black border border-[#E1E0CC]/15 text-[8px] font-mono font-bold text-[#E1E0CC]/80 hover:bg-[#E1E0CC]/10">
+                                <a key={i} href={f} target="_blank" rel="noreferrer" className="px-2 py-1 rounded bg-black border border-[#E1E0CC]/10 text-[8px] font-mono font-bold text-[#E1E0CC]/80 hover:bg-[#E1E0CC]/10">
                                   FONT {i + 1}
                                 </a>
                               ))}
                             </div>
                           ) : (
-                            <span className="text-[#E1E0CC]/50 italic text-[9px] block">No fonts uploaded</span>
+                            <span className="text-gray-400 italic text-[9px] block">No fonts uploaded</span>
                           )}
                         </div>
 
                         {/* Custom Icons */}
                         <div className="space-y-1.5">
-                          <span className="text-[#E1E0CC]/50 block font-semibold">Brand Icons ({assets.icons?.length || 0})</span>
+                          <span className="text-gray-400 block font-semibold">Brand Icons ({assets.icons?.length || 0})</span>
                           {assets.icons && assets.icons.length > 0 ? (
                             <div className="flex flex-wrap gap-1">
                               {assets.icons.map((img, i) => (
@@ -1765,7 +1765,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                               ))}
                             </div>
                           ) : (
-                            <span className="text-[#E1E0CC]/50 italic text-[9px] block">No icons uploaded</span>
+                            <span className="text-gray-400 italic text-[9px] block">No icons uploaded</span>
                           )}
                         </div>
                       </div>
@@ -1819,52 +1819,52 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                       return (
                         <div className="border-t border-[#E1E0CC]/10 pt-5 mt-5">
                           <style dangerouslySetInnerHTML={{ __html: getFontImport(typography.primaryFont) }} />
-                          <span className="text-[#E1E0CC]/50 block mb-3 font-bold uppercase tracking-wider text-[10px]">
+                          <span className="text-gray-400 block mb-3 font-bold uppercase tracking-wider text-[10px]">
                             Dynamic Logo Variations Suite (12+ Custom Layouts & Formats)
                           </span>
                           <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
                             {/* 1. Primary Full Color */}
-                            <div className="bg-black border border-[#E1E0CC]/10 rounded-xl p-3 flex flex-col justify-between items-center text-center shadow-none">
-                              <div className="w-14 h-14 flex items-center justify-center p-1 bg-[#0A0A0A] rounded-lg border border-[#E1E0CC]/10">
+                            <div className="bg-black border border-[#E1E0CC]/10 rounded-2xl p-3 flex flex-col justify-between items-center text-center shadow-none">
+                              <div className="w-14 h-14 flex items-center justify-center p-1 bg-[#101010] rounded-lg border border-[#E1E0CC]/10">
                                 <img src={logoSource} alt="Primary" className="max-w-full max-h-full object-contain" />
                               </div>
                               <span className="text-[8px] font-bold text-[#E1E0CC]/60 mt-2 block">Primary Full Color</span>
                             </div>
 
                             {/* 2. Solid Black Silhouette */}
-                            <div className="bg-[#0A0A0A] border border-[#E1E0CC]/10 rounded-xl p-3 flex flex-col justify-between items-center text-center shadow-none">
-                              <div className="w-14 h-14 flex items-center justify-center p-1 bg-[#0A0A0A] rounded-lg">
+                            <div className="bg-[#101010] border border-[#E1E0CC]/10 rounded-2xl p-3 flex flex-col justify-between items-center text-center shadow-none">
+                              <div className="w-14 h-14 flex items-center justify-center p-1 bg-[#101010] rounded-lg">
                                 <img src={logoSource} alt="Solid Black" className="max-w-full max-h-full object-contain" style={{ filter: "grayscale(1) contrast(1000%)" }} />
                               </div>
                               <span className="text-[8px] font-bold text-[#E1E0CC]/60 mt-2 block">Black Version</span>
                             </div>
 
                             {/* 3. Solid White (Inverted) */}
-                            <div className="bg-black border border-[#E1E0CC]/50 rounded-xl p-3 flex flex-col justify-between items-center text-center shadow-none">
+                            <div className="bg-black border border-[#E1E0CC]/50 rounded-2xl p-3 flex flex-col justify-between items-center text-center shadow-none">
                               <div className="w-14 h-14 flex items-center justify-center p-1 bg-black rounded-lg">
                                 <img src={logoSource} alt="Solid White" className="max-w-full max-h-full object-contain" style={{ filter: "grayscale(1) contrast(1000%) invert(1)" }} />
                               </div>
-                              <span className="text-[8px] font-bold text-[#E1E0CC]/50 mt-2 block">White Inverted</span>
+                              <span className="text-[8px] font-bold text-gray-400 mt-2 block">White Inverted</span>
                             </div>
 
                             {/* 4. Grayscale */}
-                            <div className="bg-black border border-[#E1E0CC]/10 rounded-xl p-3 flex flex-col justify-between items-center text-center shadow-none">
-                              <div className="w-14 h-14 flex items-center justify-center p-1 bg-[#0A0A0A] rounded-lg border border-[#E1E0CC]/10">
+                            <div className="bg-black border border-[#E1E0CC]/10 rounded-2xl p-3 flex flex-col justify-between items-center text-center shadow-none">
+                              <div className="w-14 h-14 flex items-center justify-center p-1 bg-[#101010] rounded-lg border border-[#E1E0CC]/10">
                                 <img src={logoSource} alt="Grayscale" className="max-w-full max-h-full object-contain" style={{ filter: "grayscale(1)" }} />
                               </div>
                               <span className="text-[8px] font-bold text-[#E1E0CC]/60 mt-2 block">Grayscale</span>
                             </div>
 
                             {/* 5. Watermark */}
-                            <div className="bg-black border border-[#E1E0CC]/10 rounded-xl p-3 flex flex-col justify-between items-center text-center shadow-none">
-                              <div className="w-14 h-14 flex items-center justify-center p-1 bg-[#0A0A0A] rounded-lg border border-[#E1E0CC]/10 relative">
+                            <div className="bg-black border border-[#E1E0CC]/10 rounded-2xl p-3 flex flex-col justify-between items-center text-center shadow-none">
+                              <div className="w-14 h-14 flex items-center justify-center p-1 bg-[#101010] rounded-lg border border-[#E1E0CC]/10 relative">
                                 <img src={logoSource} alt="Watermark" className="max-w-full max-h-full object-contain opacity-20" />
                               </div>
                               <span className="text-[8px] font-bold text-[#E1E0CC]/60 mt-2 block">Watermark (20% Op)</span>
                             </div>
 
                             {/* 6. Favicon / Icon Version */}
-                            <div className="bg-black border border-[#E1E0CC]/10 rounded-xl p-3 flex flex-col justify-between items-center text-center shadow-none">
+                            <div className="bg-black border border-[#E1E0CC]/10 rounded-2xl p-3 flex flex-col justify-between items-center text-center shadow-none">
                               <div className="w-14 h-14 flex items-center justify-center">
                                 <div className="w-7 h-7 rounded-lg bg-[#E1E0CC] border border-white/10 flex items-center justify-center p-0.5 overflow-hidden shadow-none">
                                   <img src={logoSource} alt="Favicon" className="max-w-full max-h-full object-contain" />
@@ -1874,7 +1874,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                             </div>
 
                             {/* 7. Wordmark / Typographic */}
-                            <div className="bg-black border border-[#E1E0CC]/10 rounded-xl p-3 flex flex-col justify-between items-center text-center shadow-none">
+                            <div className="bg-black border border-[#E1E0CC]/10 rounded-2xl p-3 flex flex-col justify-between items-center text-center shadow-none">
                               <div className="w-14 h-14 flex items-center justify-center">
                                 <span 
                                   className={`text-[10px] text-[#E1E0CC] text-center font-bold ${getFontStyle(typography.primaryFont)}`}
@@ -1887,8 +1887,8 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                             </div>
 
                             {/* 8. Horizontal Layout */}
-                            <div className="bg-black border border-[#E1E0CC]/10 rounded-xl p-3 flex flex-col justify-between items-center text-center shadow-none col-span-2 sm:col-span-1">
-                              <div className="w-full h-14 flex items-center justify-center gap-1.5 px-1 bg-[#0A0A0A] rounded-lg border border-[#E1E0CC]/10">
+                            <div className="bg-black border border-[#E1E0CC]/10 rounded-2xl p-3 flex flex-col justify-between items-center text-center shadow-none col-span-2 sm:col-span-1">
+                              <div className="w-full h-14 flex items-center justify-center gap-1.5 px-1 bg-[#101010] rounded-lg border border-[#E1E0CC]/10">
                                 <img src={logoSource} alt="Icon" className="w-4 h-4 object-contain" style={{ filter: "grayscale(1) contrast(1000%)" }} />
                                 <span 
                                   className="text-[8px] font-bold text-[#E1E0CC] uppercase truncate max-w-[50px]"
@@ -1901,8 +1901,8 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                             </div>
 
                             {/* 9. Stacked / Vertical Layout */}
-                            <div className="bg-black border border-[#E1E0CC]/10 rounded-xl p-3 flex flex-col justify-between items-center text-center shadow-none">
-                              <div className="w-14 h-14 flex flex-col items-center justify-center gap-0.5 bg-[#0A0A0A] rounded-lg border border-[#E1E0CC]/10">
+                            <div className="bg-black border border-[#E1E0CC]/10 rounded-2xl p-3 flex flex-col justify-between items-center text-center shadow-none">
+                              <div className="w-14 h-14 flex flex-col items-center justify-center gap-0.5 bg-[#101010] rounded-lg border border-[#E1E0CC]/10">
                                 <img src={logoSource} alt="Icon" className="w-4 h-4 object-contain" style={{ filter: "grayscale(1) contrast(1000%)" }} />
                                 <span 
                                   className="text-[7px] font-bold text-[#E1E0CC] max-w-[45px] truncate text-center uppercase"
@@ -1915,7 +1915,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                             </div>
 
                             {/* 10. Vintage Style */}
-                            <div className="bg-[#FAF6EE] border border-[#EBE3D5] rounded-xl p-3 flex flex-col justify-between items-center text-center shadow-none">
+                            <div className="bg-[#FAF6EE] border border-[#EBE3D5] rounded-2xl p-3 flex flex-col justify-between items-center text-center shadow-none">
                               <div className="w-14 h-14 flex items-center justify-center p-1 bg-[#FAF6EE] rounded-lg">
                                 <img src={logoSource} alt="Vintage" className="max-w-full max-h-full object-contain" style={{ filter: "sepia(0.8) contrast(1.2)" }} />
                               </div>
@@ -1923,15 +1923,15 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                             </div>
 
                             {/* 11. Minimalist Style */}
-                            <div className="bg-black border border-[#E1E0CC]/10 rounded-xl p-3 flex flex-col justify-between items-center text-center shadow-none">
-                              <div className="w-14 h-14 flex items-center justify-center p-1 bg-[#0A0A0A] rounded-lg border border-[#E1E0CC]/10">
+                            <div className="bg-black border border-[#E1E0CC]/10 rounded-2xl p-3 flex flex-col justify-between items-center text-center shadow-none">
+                              <div className="w-14 h-14 flex items-center justify-center p-1 bg-[#101010] rounded-lg border border-[#E1E0CC]/10">
                                 <img src={logoSource} alt="Minimalist" className="max-w-full max-h-full object-contain" style={{ filter: "contrast(1.5) brightness(1.05)" }} />
                               </div>
                               <span className="text-[8px] font-bold text-[#E1E0CC]/60 mt-2 block">Minimalist</span>
                             </div>
 
                             {/* 12. Emblem / Badge Layout */}
-                            <div className="bg-black border border-[#E1E0CC]/10 rounded-xl p-3 flex flex-col justify-between items-center text-center shadow-none">
+                            <div className="bg-black border border-[#E1E0CC]/10 rounded-2xl p-3 flex flex-col justify-between items-center text-center shadow-none">
                               <div className="w-14 h-14 flex items-center justify-center">
                                 <div className="w-9 h-9 rounded-full border-2 border-dashed border-[#E1E0CC]/10 flex items-center justify-center p-1 overflow-hidden">
                                   <img src={logoSource} alt="Emblem" className="max-w-full max-h-full object-contain" />
@@ -1948,27 +1948,27 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
 
                   {/* If generated via AI Logo Studio, show colors & typographies specifications */}
                   {assets.logo_studio_data?.colors && (
-                    <div className="border-t border-[#E1E0CC]/10 pt-4 grid grid-cols-2 sm:grid-cols-4 gap-4 text-[10px] text-[#E1E0CC]/50 font-mono">
+                    <div className="border-t border-[#E1E0CC]/10 pt-4 grid grid-cols-2 sm:grid-cols-4 gap-4 text-[10px] text-gray-400 font-mono">
                       <div>
-                        <span className="text-[9px] text-[#E1E0CC]/50 block font-normal">PRIMARY HEX</span>
+                        <span className="text-[9px] text-gray-400 block font-normal">PRIMARY HEX</span>
                         <div className="flex items-center gap-1.5 font-bold text-[#E1E0CC]">
-                          <span className="w-3 h-3 rounded border border-[#E1E0CC]/15" style={{ backgroundColor: assets.logo_studio_data.colors.primaryHex }} />
+                          <span className="w-3 h-3 rounded border border-[#E1E0CC]/10" style={{ backgroundColor: assets.logo_studio_data.colors.primaryHex }} />
                           {assets.logo_studio_data.colors.primaryHex}
                         </div>
                       </div>
                       <div>
-                        <span className="text-[9px] text-[#E1E0CC]/50 block font-normal">SECONDARY HEX</span>
+                        <span className="text-[9px] text-gray-400 block font-normal">SECONDARY HEX</span>
                         <div className="flex items-center gap-1.5 font-bold text-[#E1E0CC]">
-                          <span className="w-3 h-3 rounded border border-[#E1E0CC]/15" style={{ backgroundColor: assets.logo_studio_data.colors.secondaryHex }} />
+                          <span className="w-3 h-3 rounded border border-[#E1E0CC]/10" style={{ backgroundColor: assets.logo_studio_data.colors.secondaryHex }} />
                           {assets.logo_studio_data.colors.secondaryHex}
                         </div>
                       </div>
                       <div>
-                        <span className="text-[9px] text-[#E1E0CC]/50 block font-normal">CMYK</span>
+                        <span className="text-[9px] text-gray-400 block font-normal">CMYK</span>
                         <div className="font-bold text-[#E1E0CC]/80">{assets.logo_studio_data.colors.primaryCmyk}</div>
                       </div>
                       <div>
-                        <span className="text-[9px] text-[#E1E0CC]/50 block font-normal">PANTONE APPROX</span>
+                        <span className="text-[9px] text-gray-400 block font-normal">PANTONE APPROX</span>
                         <div className="font-bold text-[#E1E0CC]/80">{assets.logo_studio_data.colors.pantoneApprox}</div>
                       </div>
                     </div>
@@ -1984,7 +1984,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
             <div className="space-y-8 animate-fade-up">
               
               {/* MAIN USP HERO: AUTOMATE YOUR BRAND */}
-              <div className="relative overflow-hidden rounded-2xl bg-[#101010] border border-[#E1E0CC]/15 p-6 sm:p-8 shadow-none text-white">
+              <div className="relative overflow-hidden rounded-2xl bg-[#101010] border border-[#E1E0CC]/10 p-6 sm:p-8 shadow-none text-white">
                 <div className="relative z-10 space-y-6">
                   {/* Top USP Banner Title */}
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#E1E0CC]/50 pb-6">
@@ -1998,13 +1998,13 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                         <span className={`text-[11px] font-bold tracking-wide px-3 py-1 rounded-full flex items-center gap-1.5 ${
                           isAutopilotActive 
                             ? "bg-[#E1E0CC]/15 text-[#E1E0CC]" 
-                            : "bg-black/50 text-[#E1E0CC]/50"
+                            : "bg-black/50 text-gray-400"
                         }`}>
                           <span className={`w-1.5 h-1.5 rounded-full ${isAutopilotActive ? "bg-[#E1E0CC]/10 animate-pulse" : "bg-gray-400"}`} />
                           {isAutopilotActive ? "AUTO-PILOT ACTIVE" : "AUTO-PILOT PAUSED"}
                         </span>
                       </h2>
-                      <p className="text-xs text-[#E1E0CC]/50 leading-relaxed">
+                      <p className="text-xs text-gray-400 leading-relaxed">
                         Connect your social channels once. Our autonomous AI engine plans, generates, designs, and auto-posts 30 days of brand strategy directly to your target channels.
                       </p>
                     </div>
@@ -2012,7 +2012,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                     {/* Auto-Pilot Toggle Button */}
                     <button
                       onClick={() => setIsAutopilotActive(!isAutopilotActive)}
-                      className={`px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 shrink-0 ${
+                      className={`px-5 py-2.5 rounded-2xl text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 shrink-0 ${
                         isAutopilotActive 
                           ? "bg-[#E1E0CC] text-[#101010] hover:bg-[#101010] hover:text-white border border-transparent hover:border-[#E1E0CC]/50" 
                           : "bg-[#E1E0CC] text-[#101010] hover:bg-white"
@@ -2026,7 +2026,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                   {/* Connected Social Media Channels Grid (Instagram Exclusive) */}
                   <div>
                     <div className="flex items-center justify-between mb-3">
-                      <span className="text-[10px] font-mono font-bold uppercase text-[#E1E0CC]/50 tracking-wider">
+                      <span className="text-[10px] font-mono font-bold uppercase text-gray-400 tracking-wider">
                         Connected Publishing Target (Instagram Active)
                       </span>
                       <button
@@ -2037,11 +2037,11 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                       </button>
                     </div>
                     
-                    <div className="bg-black/50 border border-[#E1E0CC]/15 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="bg-black/50 border border-[#E1E0CC]/10 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
                           <span className="text-xs font-bold uppercase text-white tracking-wider">Instagram Business</span>
-                          <span className="text-[9px] font-mono font-bold px-2 py-0.5 rounded bg-[#E1E0CC]/10/10 text-[#E1E0CC]/70 border border-[#E1E0CC]/20/20 flex items-center gap-1">
+                          <span className="text-[9px] font-mono font-bold px-2 py-0.5 rounded bg-[#E1E0CC]/10/10 text-gray-300 border border-[#E1E0CC]/20/20 flex items-center gap-1">
                             <span className="w-1.5 h-1.5 rounded-full bg-[#E1E0CC]/10 animate-pulse" />
                             PRIMARY & EXCLUSIVE PLATFORM
                           </span>
@@ -2056,13 +2056,13 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                           <span className="text-xs font-bold text-white block">
                             {calendar.length} Posts Planned
                           </span>
-                          <span className="text-[9px] text-[#E1E0CC]/50">
+                          <span className="text-[9px] text-gray-400">
                             {calendar.filter(i => i.status === "completed").length} Completed • {calendar.filter(i => i.status === "scheduled" || !i.status).length} Auto-Scheduled
                           </span>
                         </div>
                         <button
                           onClick={() => setIsInstagramModalOpen(true)}
-                          className="px-3.5 py-2 bg-[#E1E0CC] hover:bg-white text-[#101010] font-mono text-[10px] font-bold uppercase rounded-lg border border-[#E1E0CC]/40 transition-all cursor-pointer"
+                          className="px-3.5 py-2 bg-primary hover:bg-[#E1E0CC] text-black font-medium text-sm rounded-full transition-all cursor-pointer"
                         >
                           Settings
                         </button>
@@ -2071,13 +2071,13 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                   </div>
 
                   {/* Engine Rules & Schedule */}
-                  <div className="bg-gray-850 border border-[#E1E0CC]/50 rounded-xl p-4 grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                  <div className="bg-gray-850 border border-[#E1E0CC]/50 rounded-2xl p-4 grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-[#E1E0CC]/90 rounded-lg text-[#E1E0CC]">
                         <Calendar className="w-4 h-4" />
                       </div>
                       <div>
-                        <span className="text-[9px] text-[#E1E0CC]/50 uppercase font-mono font-bold tracking-wider block">Posting Schedule</span>
+                        <span className="text-[9px] text-gray-400 uppercase font-mono font-bold tracking-wider block">Posting Schedule</span>
                         <span className="font-semibold text-white text-xs">1 Post / Day (09:30 AM EST)</span>
                       </div>
                     </div>
@@ -2087,7 +2087,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                         <Globe className="w-4 h-4" />
                       </div>
                       <div>
-                        <span className="text-[9px] text-[#E1E0CC]/50 uppercase font-mono font-bold tracking-wider block">Target Timezone</span>
+                        <span className="text-[9px] text-gray-400 uppercase font-mono font-bold tracking-wider block">Target Timezone</span>
                         <span className="font-semibold text-white text-xs">US / Eastern (EST Peak Window)</span>
                       </div>
                     </div>
@@ -2097,7 +2097,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                         <ShieldCheck className="w-4 h-4" />
                       </div>
                       <div>
-                        <span className="text-[9px] text-[#E1E0CC]/50 uppercase font-mono font-bold tracking-wider block">Publishing Mode</span>
+                        <span className="text-[9px] text-gray-400 uppercase font-mono font-bold tracking-wider block">Publishing Mode</span>
                         <span className="font-semibold text-white text-xs">Smart Review & AI Publishing</span>
                       </div>
                     </div>
@@ -2109,26 +2109,26 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
               <div className="space-y-4">
                 
                 {/* Header & Controls */}
-                <div className="bg-[#0A0A0A] border border-[#E1E0CC]/15/80 rounded-2xl p-5 shadow-[0_4px_20px_rgb(0,0,0,0.01)] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="bg-[#101010] border border-[#E1E0CC]/10/80 rounded-2xl p-5 shadow-[0_4px_20px_rgb(0,0,0,0.01)] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div>
                     <h3 className="text-sm font-bold text-[#E1E0CC] flex items-center gap-2 uppercase tracking-wider">
                       <Calendar className="w-4 h-4 text-[#E1E0CC]/80" />
                       30-Day Content Timeline
                     </h3>
-                    <p className="text-[11px] text-[#E1E0CC]/50 mt-0.5">
+                    <p className="text-[11px] text-gray-400 mt-0.5">
                       Detailed post blueprints, concept briefs, prompts, and direct AI studio generators.
                     </p>
                   </div>
 
                   <div className="flex items-center gap-2">
                     {/* Format Filter */}
-                    <div className="flex items-center bg-[#E1E0CC]/10 p-1 rounded-xl text-[10px] font-bold">
+                    <div className="flex items-center bg-[#E1E0CC]/10 p-1 rounded-2xl text-[10px] font-bold">
                       {["all", "carousel", "static"].map((type) => (
                         <button
                           key={type}
                           onClick={() => setCalendarFilterType(type)}
                           className={`px-3 py-1.5 rounded-lg capitalize transition-all ${
-                            calendarFilterType === type ? "bg-[#0A0A0A] text-[#E1E0CC] shadow-none" : "text-[#E1E0CC]/60 hover:text-[#E1E0CC]"
+                            calendarFilterType === type ? "bg-[#101010] text-[#E1E0CC] shadow-none" : "text-[#E1E0CC]/60 hover:text-[#E1E0CC]"
                           }`}
                         >
                           {type}
@@ -2138,7 +2138,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
 
                     <button
                       onClick={() => setIsCampaignModalOpen(true)}
-                      className="px-4 py-2 bg-[#101010] text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-brand-darkHover transition-all flex items-center gap-1.5 shadow-none"
+                      className="px-4 py-2 bg-[#101010] text-white rounded-2xl text-xs font-bold uppercase tracking-wider hover:bg-brand-darkHover transition-all flex items-center gap-1.5 shadow-none"
                     >
                       <Plus className="w-3.5 h-3.5" />
                       Plan New Campaign
@@ -2149,9 +2149,9 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                 {/* Content Cards Grid */}
                 <div className="space-y-4">
                   {calendar.length === 0 ? (
-                    <div className="bg-[#0A0A0A] border border-[#E1E0CC]/15/80 rounded-2xl p-12 text-center space-y-3">
-                      <Loader2 className="w-6 h-6 text-[#E1E0CC]/50 animate-spin mx-auto" />
-                      <p className="text-[#E1E0CC]/50 italic text-xs font-mono">Compiling 30-day strategy timeline...</p>
+                    <div className="bg-[#101010] border border-[#E1E0CC]/10/80 rounded-2xl p-12 text-center space-y-3">
+                      <Loader2 className="w-6 h-6 text-gray-400 animate-spin mx-auto" />
+                      <p className="text-gray-400 italic text-xs font-mono">Compiling 30-day strategy timeline...</p>
                     </div>
                   ) : (
                     calendar
@@ -2165,7 +2165,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                         return (
                           <div 
                             key={item.id || idx} 
-                            className="bg-[#0A0A0A] border border-[#E1E0CC]/15/80 rounded-2xl p-6 shadow-[0_4px_20px_rgb(0,0,0,0.01)] hover:border-[#E1E0CC]/20 transition-all space-y-4"
+                            className="bg-[#101010] border border-[#E1E0CC]/10/80 rounded-2xl p-6 shadow-[0_4px_20px_rgb(0,0,0,0.01)] hover:border-[#E1E0CC]/20 transition-all space-y-4"
                           >
                             {/* Card Top Header */}
                             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#E1E0CC]/10 pb-3">
@@ -2173,8 +2173,8 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                                 <span className="px-2.5 py-1 bg-[#E1E0CC] text-[#101010] font-mono text-[10px] font-bold rounded-md">
                                   {item.date || `DAY ${idx + 1}`}
                                 </span>
-                                <span className="text-[10px] font-mono text-[#E1E0CC]/50 font-semibold flex items-center gap-1">
-                                  <Clock className="w-3 h-3 text-[#E1E0CC]/50" />
+                                <span className="text-[10px] font-mono text-gray-400 font-semibold flex items-center gap-1">
+                                  <Clock className="w-3 h-3 text-gray-400" />
                                   09:30 AM EST (Optimal Peak Window)
                                 </span>
                               </div>
@@ -2216,29 +2216,29 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                                 <h4 className="text-sm font-bold text-[#E1E0CC] leading-snug">
                                   {item.title}
                                 </h4>
-                                <span className="text-[10px] font-mono font-bold text-[#E1E0CC]/70 bg-[#E1E0CC]/10 px-2.5 py-1 rounded-md border border-[#E1E0CC]/15 w-fit shrink-0 flex items-center gap-1">
+                                <span className="text-[10px] font-mono font-bold text-gray-300 bg-[#E1E0CC]/10 px-2.5 py-1 rounded-md border border-[#E1E0CC]/10 w-fit shrink-0 flex items-center gap-1">
                                   <Target className="w-3 h-3 text-[#E1E0CC]/60" />
                                   {item.goal || item.category || 'Thought Leadership & Lead Gen'}
                                 </span>
                               </div>
 
                               {/* Detailed Concept Brief Box */}
-                              <div className="bg-black border border-[#E1E0CC]/10 rounded-xl p-4 space-y-2">
+                              <div className="bg-black border border-[#E1E0CC]/10 rounded-2xl p-4 space-y-2">
                                 <div className="flex items-center justify-between">
-                                  <span className="text-[9px] font-mono font-bold uppercase tracking-wider text-[#E1E0CC]/50">
+                                  <span className="text-[9px] font-mono font-bold uppercase tracking-wider text-gray-400">
                                     Visual Concept & Execution Prompt
                                   </span>
-                                  <span className="text-[9px] font-mono text-[#E1E0CC]/50">
+                                  <span className="text-[9px] font-mono text-gray-400">
                                     Brand Vibe: {dna?.brand_personality || "Luxury Minimalist"}
                                   </span>
                                 </div>
-                                <p className="text-xs text-[#E1E0CC]/70 leading-relaxed font-normal">
+                                <p className="text-xs text-gray-300 leading-relaxed font-normal">
                                   {item.concept_brief || item.description || item.title}
                                 </p>
                               </div>
 
                               {/* Publishing Channels */}
-                              <div className="flex items-center gap-2 text-[10px] text-[#E1E0CC]/50 font-semibold">
+                              <div className="flex items-center gap-2 text-[10px] text-gray-400 font-semibold">
                                 <span>Publishing Target:</span>
                                 <div className="flex items-center gap-1.5">
                                   <span className="bg-[#E1E0CC] text-[#101010] px-2.5 py-0.5 rounded text-[9px] font-mono font-bold uppercase border border-[#E1E0CC]/50">
@@ -2254,7 +2254,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                                 {/* Redirection Button */}
                                 <button
                                   onClick={() => handleRedirectToStudio(item)}
-                                  className="px-4 py-2 bg-[#101010] hover:bg-brand-darkHover text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-none flex items-center gap-2 cursor-pointer"
+                                  className="px-4 py-2 bg-[#101010] hover:bg-brand-darkHover text-white font-bold text-xs uppercase tracking-wider rounded-2xl transition-all shadow-none flex items-center gap-2 cursor-pointer"
                                 >
                                   <Sparkles className="w-3.5 h-3.5 text-brand-secondary" />
                                   <span>Generate in Studio</span>
@@ -2300,7 +2300,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                                         setGeneratingAssetId(null);
                                       }
                                     }}
-                                    className="px-3.5 py-2 bg-[#E1E0CC]/10 hover:bg-[#E1E0CC]/20 text-[#E1E0CC] font-bold text-xs uppercase tracking-wider rounded-xl transition-all flex items-center gap-1.5 disabled:opacity-50 cursor-pointer border border-[#E1E0CC]/15"
+                                    className="px-3.5 py-2 bg-[#E1E0CC]/10 hover:bg-[#E1E0CC]/20 text-[#E1E0CC] font-bold text-xs uppercase tracking-wider rounded-2xl transition-all flex items-center gap-1.5 disabled:opacity-50 cursor-pointer border border-[#E1E0CC]/10"
                                   >
                                     {generatingAssetId === item.id ? (
                                       <>
@@ -2317,7 +2317,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                                 <button
                                   disabled={publishingInstagramId === item.id}
                                   onClick={() => handlePublishToInstagram(item)}
-                                  className="px-3.5 py-2 bg-[#E1E0CC] hover:bg-white text-[#101010] font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-none flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                                  className="px-5 py-2 bg-primary text-black font-medium rounded-full transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 hover:bg-[#E1E0CC]"
                                 >
                                   {publishingInstagramId === item.id ? (
                                     <>
@@ -2337,7 +2337,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                                     href={publishedPostLink.url}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="px-3 py-1.5 bg-[#E1E0CC]/10 text-[#E1E0CC] border border-[#E1E0CC]/20 rounded-xl text-[10px] font-mono font-bold flex items-center gap-1 hover:underline"
+                                    className="px-3 py-1.5 bg-[#E1E0CC]/10 text-[#E1E0CC] border border-[#E1E0CC]/20 rounded-2xl text-[10px] font-mono font-bold flex items-center gap-1 hover:underline"
                                   >
                                     <Check className="w-3 h-3 text-[#E1E0CC]" />
                                     <span>Live on IG</span>
@@ -2354,7 +2354,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                                     setIsVideoPlaying(false);
                                     setVideoTimer(0);
                                   }}
-                                  className="px-4 py-2 bg-[#E1E0CC]/10 hover:bg-[#E1E0CC]/10 text-[#E1E0CC] font-bold text-xs uppercase tracking-wider rounded-xl border border-[#E1E0CC]/20 transition-all flex items-center gap-1.5 cursor-pointer"
+                                  className="px-4 py-2 bg-[#E1E0CC]/10 hover:bg-[#E1E0CC]/10 text-[#E1E0CC] font-bold text-xs uppercase tracking-wider rounded-2xl border border-[#E1E0CC]/20 transition-all flex items-center gap-1.5 cursor-pointer"
                                 >
                                   <Eye className="w-3.5 h-3.5" />
                                   <span>View Asset</span>
@@ -2378,18 +2378,18 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
           {activeTab === "studio" && (
             <div className="space-y-6 animate-fade-up">
               {/* Header */}
-              <div className="bg-[#0A0A0A] border border-[#E1E0CC]/15/80 rounded-2xl p-5 shadow-[0_4px_20px_rgb(0,0,0,0.01)] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="bg-[#101010] border border-[#E1E0CC]/10/80 rounded-2xl p-5 shadow-[0_4px_20px_rgb(0,0,0,0.01)] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                   <h3 className="text-sm font-bold text-[#E1E0CC] flex items-center gap-1.5 uppercase tracking-wider">
                     <Image className="w-4 h-4 text-[#0A0A0A]" />
                     Post Generator Studio
                   </h3>
-                  <p className="text-[11px] text-[#E1E0CC]/50 mt-0.5">
+                  <p className="text-[11px] text-gray-400 mt-0.5">
                     Generate premium, brand-consistent marketing graphics using Flux Schnell.
                   </p>
                 </div>
                 {/* Active Brand Visual Indicator */}
-                <div className="flex items-center gap-2 bg-[#0D0D0D] px-3.5 py-2 rounded-xl border border-[#E1E0CC]/50 text-[10px] text-[#E1E0CC]/50">
+                <div className="flex items-center gap-2 bg-[#0D0D0D] px-3.5 py-2 rounded-2xl border border-[#E1E0CC]/50 text-[10px] text-gray-400">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#E1E0CC]/10 animate-pulse" />
                   <span>Brand Guidelines Active</span>
                   <div className="flex items-center gap-1 ml-1.5 border-l border-[#E1E0CC]/50 pl-2">
@@ -2403,22 +2403,22 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
                 
                 {/* Left panel: Prompt & Settings (5 Cols) */}
-                <div className="lg:col-span-5 bg-[#0A0A0A] border border-[#E1E0CC]/15 rounded-2xl p-5 shadow-none space-y-5">
+                <div className="lg:col-span-5 bg-[#101010] border border-[#E1E0CC]/10 rounded-2xl p-5 shadow-none space-y-5">
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold text-[#E1E0CC]/50 uppercase tracking-wider block">
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
                       Describe your post topic / idea
                     </label>
                     <textarea
                       value={postPrompt}
                       onChange={(e) => setPostPrompt(e.target.value)}
                       placeholder="e.g. A premium, minimal advertisement post showcasing a luxury watch with sleek metallic textures and dark dramatic lighting..."
-                      className="w-full h-32 px-3 py-2.5 rounded-xl border border-[#E1E0CC]/15 focus:border-[#0A0A0A] text-xs bg-[#0A0A0A] text-[#E1E0CC] outline-none resize-none leading-relaxed"
+                      className="w-full h-32 px-3 py-2.5 rounded-2xl border border-[#E1E0CC]/10 focus:border-[#0A0A0A] text-xs bg-[#101010] text-[#E1E0CC] outline-none resize-none leading-relaxed"
                     />
                   </div>
 
                   {/* Ratio Selector */}
                   <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-[#E1E0CC]/50 uppercase tracking-wider block">
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
                       Aspect Ratio
                     </label>
                     <div className="grid grid-cols-3 gap-2">
@@ -2433,10 +2433,10 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                             key={r.id}
                             type="button"
                             onClick={() => setPostAspectRatio(r.id)}
-                            className={`p-2.5 rounded-xl border text-center transition-all flex flex-col items-center justify-center gap-0.5
+                            className={`p-2.5 rounded-2xl border text-center transition-all flex flex-col items-center justify-center gap-0.5
                               ${active
                                 ? "bg-[#E1E0CC] border-[#E1E0CC] text-[#101010]"
-                                : "bg-[#0A0A0A] border-[#E1E0CC]/15 text-[#E1E0CC]/50 hover:bg-[#101010] hover:text-[#E1E0CC]/80"
+                                : "bg-[#101010] border-[#E1E0CC]/10 text-gray-400 hover:bg-[#101010] hover:text-[#E1E0CC]/80"
                               }`}
                           >
                             <span className="text-xs font-bold">{r.label}</span>
@@ -2452,7 +2452,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                     type="button"
                     onClick={handleGeneratePost}
                     disabled={isGeneratingPost || !postPrompt.trim()}
-                    className="w-full py-3 bg-[#E1E0CC] text-[#101010] hover:bg-[#101010] hover:text-white border border-transparent hover:border-[#E1E0CC]/50 font-bold text-xs uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                    className="w-full py-3 bg-primary text-black font-medium text-sm rounded-full transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer hover:bg-[#E1E0CC] hover:scale-[1.02]"
                   >
                     {isGeneratingPost ? (
                       <>
@@ -2469,20 +2469,20 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
 
                   {/* Brand Guidelines alignment card */}
                   {dna && (
-                    <div className="bg-black border border-[#E1E0CC]/10 rounded-xl p-3.5 text-[10px] text-[#E1E0CC]/60 space-y-1.5">
+                    <div className="bg-black border border-[#E1E0CC]/10 rounded-2xl p-3.5 text-[10px] text-[#E1E0CC]/60 space-y-1.5">
                       <p className="font-bold text-[#E1E0CC]/80 uppercase tracking-wider">Brand DNA Context (Locked-in)</p>
                       <div className="grid grid-cols-2 gap-2 text-[9px] pt-1">
                         <div>
-                          <span className="text-[#E1E0CC]/50 uppercase tracking-wider block">Personality</span>
+                          <span className="text-gray-400 uppercase tracking-wider block">Personality</span>
                           <span className="font-semibold text-[#E1E0CC]/80 capitalize">{dna?.brand_personality}</span>
                         </div>
                         <div>
-                          <span className="text-[#E1E0CC]/50 uppercase tracking-wider block">Industry</span>
+                          <span className="text-gray-400 uppercase tracking-wider block">Industry</span>
                           <span className="font-semibold text-[#E1E0CC]/80">{dna?.industry}</span>
                         </div>
                         {dna?.approved_moodboard && (
                           <div className="col-span-2">
-                            <span className="text-[#E1E0CC]/50 uppercase tracking-wider block">Visual Direction</span>
+                            <span className="text-gray-400 uppercase tracking-wider block">Visual Direction</span>
                             <span className="font-semibold text-[#E1E0CC]/80">{dna?.approved_moodboard.name}</span>
                           </div>
                         )}
@@ -2491,7 +2491,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                   )}
 
                   {postError && (
-                    <div className="p-3 bg-[#E1E0CC]/10 border border-[#E1E0CC]/20 rounded-xl text-[10px] text-[#E1E0CC] leading-normal">
+                    <div className="p-3 bg-[#E1E0CC]/10 border border-[#E1E0CC]/20 rounded-2xl text-[10px] text-[#E1E0CC] leading-normal">
                       {postError}
                     </div>
                   )}
@@ -2514,7 +2514,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                         {/* Header */}
                         <div className="p-3 flex items-center justify-between border-b border-[#E1E0CC]/10">
                           <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-full bg-[#0A0A0A]/10 border border-[#0A0A0A]/30 flex items-center justify-center text-xs font-black text-white">
+                            <div className="w-8 h-8 rounded-full bg-[#101010]/10 border border-[#0A0A0A]/30 flex items-center justify-center text-xs font-black text-white">
                               {(dna?.brand_name || "B").charAt(0).toUpperCase()}
                             </div>
                             <div>
@@ -2522,7 +2522,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                               <p className="text-[8px] text-[#E1E0CC]/60">Sponsored</p>
                             </div>
                           </div>
-                          <span className="text-[#E1E0CC]/70 text-xs">•••</span>
+                          <span className="text-gray-300 text-xs">•••</span>
                         </div>
 
                         {/* Image body */}
@@ -2539,7 +2539,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                         </div>
 
                         {/* Footer action buttons */}
-                        <div className="p-3 flex items-center justify-between text-[#E1E0CC]/50 border-t border-[#E1E0CC]/10">
+                        <div className="p-3 flex items-center justify-between text-gray-400 border-t border-[#E1E0CC]/10">
                           <div className="flex items-center gap-4 text-xs">
                             <span className="cursor-pointer hover:text-white">♥</span>
                             <span className="cursor-pointer hover:text-white">💬</span>
@@ -2550,7 +2550,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                       </div>
 
                       {/* Download / Info block */}
-                      <div className="bg-black/40 border border-[#E1E0CC]/10 rounded-xl p-3.5 space-y-3">
+                      <div className="bg-black/40 border border-[#E1E0CC]/10 rounded-2xl p-3.5 space-y-3">
                         <div className="flex items-center justify-between">
                           <span className="text-[9px] font-black text-[#E1E0CC]/60 uppercase tracking-widest">Post Generation Details</span>
                           <button
@@ -2559,15 +2559,15 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                               const url = URL.createObjectURL(blob);
                               window.open(url, '_blank');
                             }}
-                            className="text-[9px] font-bold bg-[#0A0A0A] text-white px-3 py-1.5 rounded-lg hover:bg-[#0A0A0A]/80 transition-all uppercase tracking-wider"
+                            className="text-[9px] font-bold bg-[#101010] text-white px-3 py-1.5 rounded-lg hover:bg-[#101010]/80 transition-all uppercase tracking-wider"
                           >
                             Open HTML Render
                           </button>
                         </div>
                         {generatedPostPrompt && (
                           <div className="space-y-1">
-                            <span className="text-[8px] text-[#E1E0CC]/70 uppercase tracking-wider">Compiled AI Prompt</span>
-                            <p className="text-[10px] text-[#E1E0CC]/50 leading-relaxed font-mono bg-black/60 p-2.5 rounded-lg border border-[#E1E0CC]/50 max-h-24 overflow-y-auto">
+                            <span className="text-[8px] text-gray-300 uppercase tracking-wider">Compiled AI Prompt</span>
+                            <p className="text-[10px] text-gray-400 leading-relaxed font-mono bg-black/60 p-2.5 rounded-lg border border-[#E1E0CC]/50 max-h-24 overflow-y-auto">
                               {generatedPostPrompt}
                             </p>
                           </div>
@@ -2576,7 +2576,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                     </div>
                   ) : (
                     <div className="text-center space-y-4 max-w-sm px-6">
-                      <div className="w-14 h-14 rounded-2xl bg-[#E1E0CC] border border-[#E1E0CC]/50 flex items-center justify-center mx-auto text-[#E1E0CC]/70">
+                      <div className="w-14 h-14 rounded-2xl bg-[#E1E0CC] border border-[#E1E0CC]/50 flex items-center justify-center mx-auto text-gray-300">
                         <Image className="w-6 h-6" />
                       </div>
                       <div>
@@ -2597,19 +2597,19 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
           {activeTab === "carousel" && (
             <div className="space-y-6 animate-fade-up">
               {/* Header */}
-              <div className="bg-[#0A0A0A] border border-[#E1E0CC]/15/80 rounded-2xl p-5 shadow-[0_4px_20px_rgb(0,0,0,0.01)] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="bg-[#101010] border border-[#E1E0CC]/10/80 rounded-2xl p-5 shadow-[0_4px_20px_rgb(0,0,0,0.01)] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                   <h3 className="text-sm font-bold text-[#E1E0CC] flex items-center gap-1.5 uppercase tracking-wider">
                     <Plus className="w-4 h-4 text-[#0A0A0A]" />
                     Carousel Studio
                   </h3>
-                  <p className="text-[11px] text-[#E1E0CC]/50 mt-0.5">
+                  <p className="text-[11px] text-gray-400 mt-0.5">
                     Generate visual slide decks with matching background graphics & custom HTML overlays.
                   </p>
                 </div>
                 {/* Visual guidelines indicator */}
-                <div className="flex items-center gap-2 bg-[#0D0D0D] px-3.5 py-2 rounded-xl border border-[#E1E0CC]/50 text-[10px] text-[#E1E0CC]/50">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#0A0A0A] animate-pulse" />
+                <div className="flex items-center gap-2 bg-[#0D0D0D] px-3.5 py-2 rounded-2xl border border-[#E1E0CC]/50 text-[10px] text-gray-400">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#101010] animate-pulse" />
                   <span>Fluid Image Treatment Active</span>
                 </div>
               </div>
@@ -2618,16 +2618,16 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
                 
                 {/* Input Panel */}
-                <div className="lg:col-span-5 bg-[#0A0A0A] border border-[#E1E0CC]/15 rounded-2xl p-5 shadow-none space-y-5">
+                <div className="lg:col-span-5 bg-[#101010] border border-[#E1E0CC]/10 rounded-2xl p-5 shadow-none space-y-5">
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold text-[#E1E0CC]/50 uppercase tracking-wider block">
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
                       Carousel Objective / Concept
                     </label>
                     <textarea
                       value={carouselPrompt}
                       onChange={(e) => setCarouselPrompt(e.target.value)}
                       placeholder="e.g. 5 steps to curate the perfect weekend getaway. Focus on slow-living travel, nature escapes, and mental wellness..."
-                      className="w-full h-32 px-3 py-2.5 rounded-xl border border-[#E1E0CC]/15 focus:border-[#0A0A0A] text-xs bg-[#0A0A0A] text-[#E1E0CC] outline-none resize-none leading-relaxed"
+                      className="w-full h-32 px-3 py-2.5 rounded-2xl border border-[#E1E0CC]/10 focus:border-[#0A0A0A] text-xs bg-[#101010] text-[#E1E0CC] outline-none resize-none leading-relaxed"
                     />
                   </div>
 
@@ -2635,7 +2635,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                     type="button"
                     onClick={handleGenerateCarousel}
                     disabled={isGeneratingCarousel || !carouselPrompt.trim()}
-                    className="w-full py-3 bg-[#0A0A0A] hover:bg-[#0A0A0A]/90 text-[#090D16] font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-[#0A0A0A]/15 flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="w-full py-3 bg-[#101010] hover:bg-[#101010]/90 text-[#090D16] font-bold text-xs uppercase tracking-wider rounded-2xl transition-all shadow-lg shadow-[#0A0A0A]/15 flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     {isGeneratingCarousel ? (
                       <>
@@ -2651,13 +2651,13 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                   </button>
 
                   {carouselError && (
-                    <div className="p-3 bg-[#E1E0CC]/10 border border-[#E1E0CC]/20 rounded-xl text-[10px] text-[#E1E0CC]">
+                    <div className="p-3 bg-[#E1E0CC]/10 border border-[#E1E0CC]/20 rounded-2xl text-[10px] text-[#E1E0CC]">
                       {carouselError}
                     </div>
                   )}
 
                   {/* Settings specs info */}
-                  <div className="bg-black border border-[#E1E0CC]/10 rounded-xl p-3.5 text-[9px] text-[#E1E0CC]/60 space-y-2">
+                  <div className="bg-black border border-[#E1E0CC]/10 rounded-2xl p-3.5 text-[9px] text-[#E1E0CC]/60 space-y-2">
                     <p className="font-bold text-[#E1E0CC]/80 uppercase tracking-wider">CAROUSEL MECHANICS</p>
                     <ul className="space-y-1 list-disc pl-3.5 leading-relaxed">
                       <li>Generates a unified, matching visual backdrop using FLUX.</li>
@@ -2686,7 +2686,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                         {/* Post Header */}
                         <div className="p-3 flex items-center justify-between border-b border-[#E1E0CC]/10">
                           <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-full bg-[#0A0A0A]/20 border border-[#0A0A0A]/40 flex items-center justify-center text-xs font-black text-white">
+                            <div className="w-8 h-8 rounded-full bg-[#101010]/20 border border-[#0A0A0A]/40 flex items-center justify-center text-xs font-black text-white">
                               {(dna?.brand_name || "B").charAt(0).toUpperCase()}
                             </div>
                             <div>
@@ -2695,10 +2695,10 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-mono font-bold text-[#E1E0CC]/50 bg-black/60 px-2 py-0.5 rounded border border-[#E1E0CC]/50">
+                            <span className="text-[10px] font-mono font-bold text-gray-400 bg-black/60 px-2 py-0.5 rounded border border-[#E1E0CC]/50">
                               {activeSlide + 1} / {carouselSlides.length}
                             </span>
-                            <span className="text-[#E1E0CC]/70 text-xs">•••</span>
+                            <span className="text-gray-300 text-xs">•••</span>
                           </div>
                         </div>
 
@@ -2760,7 +2760,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                         </div>
 
                         {/* Footer action bar & slide dots */}
-                        <div className="p-3 flex items-center justify-between text-[#E1E0CC]/50 border-t border-[#E1E0CC]/10 bg-[#0F0F0F]">
+                        <div className="p-3 flex items-center justify-between text-gray-400 border-t border-[#E1E0CC]/10 bg-[#0F0F0F]">
                           <div className="flex items-center gap-3 text-xs">
                             <span className="cursor-pointer hover:text-white">♥</span>
                             <span className="cursor-pointer hover:text-white">💬</span>
@@ -2774,7 +2774,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                                 key={i}
                                 onClick={() => setActiveSlide(i)}
                                 className={`h-1.5 rounded-full transition-all cursor-pointer ${
-                                  activeSlide === i ? "bg-[#0A0A0A] w-3" : "bg-gray-700 hover:bg-black0 w-1.5"
+                                  activeSlide === i ? "bg-[#101010] w-3" : "bg-gray-700 hover:bg-black0 w-1.5"
                                 }`}
                               />
                             ))}
@@ -2792,7 +2792,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                             <button
                               disabled={activeSlide === carouselSlides.length - 1}
                               onClick={() => setActiveSlide(prev => Math.min(carouselSlides.length - 1, prev + 1))}
-                              className="px-2 py-0.5 bg-[#0A0A0A] text-white rounded text-[10px] font-bold disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-700 transition-all cursor-pointer"
+                              className="px-2 py-0.5 bg-[#101010] text-white rounded text-[10px] font-bold disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-700 transition-all cursor-pointer"
                             >
                               →
                             </button>
@@ -2801,7 +2801,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                       </div>
 
                       {/* Clean Export Footer (Removed HTML generated tag) */}
-                      <div className="bg-black/40 border border-[#E1E0CC]/10 rounded-xl p-3.5 flex items-center justify-between">
+                      <div className="bg-black/40 border border-[#E1E0CC]/10 rounded-2xl p-3.5 flex items-center justify-between">
                         <div className="space-y-0.5">
                           <span className="text-[10px] font-bold text-white block">Slide {activeSlide + 1} of {carouselSlides.length}</span>
                           <span className="text-[9px] text-[#E1E0CC]/60 block">High-resolution vector HTML layer with brand color palette</span>
@@ -2813,7 +2813,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                             const url = URL.createObjectURL(blob);
                             window.open(url, '_blank');
                           }}
-                          className="text-[9px] font-bold bg-[#0A0A0A] text-white px-3 py-1.5 rounded-lg hover:bg-[#0A0A0A]/80 transition-all uppercase tracking-wider cursor-pointer"
+                          className="text-[9px] font-bold bg-[#101010] text-white px-3 py-1.5 rounded-lg hover:bg-[#101010]/80 transition-all uppercase tracking-wider cursor-pointer"
                         >
                           Open Slide Render
                         </button>
@@ -2822,7 +2822,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                     </div>
                   ) : (
                     <div className="text-center space-y-4 max-w-sm px-6 my-auto mx-auto">
-                      <div className="w-14 h-14 rounded-2xl bg-[#E1E0CC] border border-[#E1E0CC]/50 flex items-center justify-center mx-auto text-[#E1E0CC]/70">
+                      <div className="w-14 h-14 rounded-2xl bg-[#E1E0CC] border border-[#E1E0CC]/50 flex items-center justify-center mx-auto text-gray-300">
                         <Plus className="w-6 h-6" />
                       </div>
                       <div>
@@ -2843,17 +2843,17 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
           {activeTab === "video" && (
             <div className="space-y-6 animate-fade-up">
               {/* Header */}
-              <div className="bg-[#0A0A0A] border border-[#E1E0CC]/15/80 rounded-2xl p-5 shadow-[0_4px_20px_rgb(0,0,0,0.01)] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="bg-[#101010] border border-[#E1E0CC]/10/80 rounded-2xl p-5 shadow-[0_4px_20px_rgb(0,0,0,0.01)] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                   <h3 className="text-sm font-bold text-[#E1E0CC] flex items-center gap-1.5 uppercase tracking-wider">
                     <Video className="w-4 h-4 text-[#0A0A0A]" />
                     Video Studio
                   </h3>
-                  <p className="text-[11px] text-[#E1E0CC]/50 mt-0.5">
+                  <p className="text-[11px] text-gray-400 mt-0.5">
                     Generate cinematic social ads & video campaigns using the LongCat-Video 13.6B generation engine.
                   </p>
                 </div>
-                <div className="flex items-center gap-2 bg-[#0D0D0D] px-3.5 py-2 rounded-xl border border-[#E1E0CC]/50 text-[10px] text-[#E1E0CC]/50">
+                <div className="flex items-center gap-2 bg-[#0D0D0D] px-3.5 py-2 rounded-2xl border border-[#E1E0CC]/50 text-[10px] text-gray-400">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#E1E0CC]/10 animate-pulse" />
                   <span>Meituan LongCat Engine Active</span>
                 </div>
@@ -2863,22 +2863,22 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
                 
                 {/* Input Panel */}
-                <div className="lg:col-span-5 bg-[#0A0A0A] border border-[#E1E0CC]/15 rounded-2xl p-5 shadow-none space-y-5">
+                <div className="lg:col-span-5 bg-[#101010] border border-[#E1E0CC]/10 rounded-2xl p-5 shadow-none space-y-5">
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold text-[#E1E0CC]/50 uppercase tracking-wider block">
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
                       Video Scene / Concept Description
                     </label>
                     <textarea
                       value={videoPrompt}
                       onChange={(e) => setVideoPrompt(e.target.value)}
                       placeholder="e.g. A panning cinematic shot of a luxury boutique resort room in Maharashtra with sunlight casting long shadows. A hot cup of tea steaming gently on a low wooden table..."
-                      className="w-full h-32 px-3 py-2.5 rounded-xl border border-[#E1E0CC]/15 focus:border-[#0A0A0A] text-xs bg-[#0A0A0A] text-[#E1E0CC] outline-none resize-none leading-relaxed"
+                      className="w-full h-32 px-3 py-2.5 rounded-2xl border border-[#E1E0CC]/10 focus:border-[#0A0A0A] text-xs bg-[#101010] text-[#E1E0CC] outline-none resize-none leading-relaxed"
                     />
                   </div>
 
                   {/* Duration Selector */}
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold text-[#E1E0CC]/50 uppercase tracking-wider block">
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
                       Duration Scale (Meituan Long Video)
                     </label>
                     <div className="grid grid-cols-3 gap-2">
@@ -2887,10 +2887,10 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                           key={dur}
                           type="button"
                           onClick={() => setVideoDuration(dur)}
-                          className={`py-2 rounded-xl text-xs font-bold transition-all border uppercase tracking-wider
+                          className={`py-2 rounded-2xl text-xs font-bold transition-all border uppercase tracking-wider
                             ${videoDuration === dur
-                              ? "bg-[#0A0A0A] text-[#090D16] border-[#0A0A0A]"
-                              : "bg-[#0A0A0A] text-[#E1E0CC]/70 border-[#E1E0CC]/15 hover:bg-black"
+                              ? "bg-[#101010] text-[#090D16] border-[#0A0A0A]"
+                              : "bg-[#101010] text-gray-300 border-[#E1E0CC]/10 hover:bg-black"
                             }`}
                         >
                           {dur}
@@ -2903,7 +2903,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                     type="button"
                     onClick={handleGenerateVideo}
                     disabled={isGeneratingVideo || !videoPrompt.trim()}
-                    className="w-full py-3 bg-[#0A0A0A] hover:bg-[#0A0A0A]/90 text-[#090D16] font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-[#0A0A0A]/15 flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="w-full py-3 bg-[#101010] hover:bg-[#101010]/90 text-[#090D16] font-bold text-xs uppercase tracking-wider rounded-2xl transition-all shadow-lg shadow-[#0A0A0A]/15 flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     {isGeneratingVideo ? (
                       <>
@@ -2919,13 +2919,13 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                   </button>
 
                   {videoError && (
-                    <div className="p-3 bg-[#E1E0CC]/10 border border-[#E1E0CC]/20 rounded-xl text-[10px] text-[#E1E0CC]">
+                    <div className="p-3 bg-[#E1E0CC]/10 border border-[#E1E0CC]/20 rounded-2xl text-[10px] text-[#E1E0CC]">
                       {videoError}
                     </div>
                   )}
 
                   {/* Mechanics Details */}
-                  <div className="bg-black border border-[#E1E0CC]/10 rounded-xl p-3.5 text-[9px] text-[#E1E0CC]/60 space-y-2">
+                  <div className="bg-black border border-[#E1E0CC]/10 rounded-2xl p-3.5 text-[9px] text-[#E1E0CC]/60 space-y-2">
                     <p className="font-bold text-[#E1E0CC]/80 uppercase tracking-wider">LONG CAT VIDEO SPECS</p>
                     <ul className="space-y-1 list-disc pl-3.5 leading-relaxed">
                       <li>Uses a 13.6B parameter Dense Transformer model.</li>
@@ -2965,22 +2965,22 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                       </div>
 
                       {/* Info & Prompts */}
-                      <div className="bg-black/40 border border-[#E1E0CC]/10 rounded-xl p-3.5 space-y-3">
+                      <div className="bg-black/40 border border-[#E1E0CC]/10 rounded-2xl p-3.5 space-y-3">
                         <div className="flex items-center justify-between">
                           <span className="text-[9px] font-black text-[#E1E0CC]/60 uppercase tracking-widest">Video Output Details</span>
                           <a
                             href={generatedVideoUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-[9px] font-bold bg-[#0A0A0A] text-white px-3 py-1.5 rounded-lg hover:bg-[#0A0A0A]/80 transition-all uppercase tracking-wider"
+                            className="text-[9px] font-bold bg-[#101010] text-white px-3 py-1.5 rounded-lg hover:bg-[#101010]/80 transition-all uppercase tracking-wider"
                           >
                             Download Video
                           </a>
                         </div>
                         {generatedVideoPrompt && (
                           <div className="space-y-1">
-                            <span className="text-[8px] text-[#E1E0CC]/70 uppercase tracking-wider">Compiled Video Motion Prompt</span>
-                            <p className="text-[10px] text-[#E1E0CC]/50 leading-relaxed font-mono bg-black/60 p-2.5 rounded-lg border border-[#E1E0CC]/50 max-h-24 overflow-y-auto">
+                            <span className="text-[8px] text-gray-300 uppercase tracking-wider">Compiled Video Motion Prompt</span>
+                            <p className="text-[10px] text-gray-400 leading-relaxed font-mono bg-black/60 p-2.5 rounded-lg border border-[#E1E0CC]/50 max-h-24 overflow-y-auto">
                               {generatedVideoPrompt}
                             </p>
                           </div>
@@ -2990,7 +2990,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                     </div>
                   ) : (
                     <div className="text-center space-y-4 max-w-sm px-6 my-auto mx-auto">
-                      <div className="w-14 h-14 rounded-2xl bg-[#E1E0CC] border border-[#E1E0CC]/50 flex items-center justify-center mx-auto text-[#E1E0CC]/70">
+                      <div className="w-14 h-14 rounded-2xl bg-[#E1E0CC] border border-[#E1E0CC]/50 flex items-center justify-center mx-auto text-gray-300">
                         <Video className="w-6 h-6" />
                       </div>
                       <div>
@@ -3012,13 +3012,13 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
           {activeTab === "settings" && (
             <div className="space-y-6 animate-fade-up">
               {/* Header */}
-              <div className="bg-[#0A0A0A] border border-[#E1E0CC]/15/80 rounded-2xl p-5 shadow-[0_4px_20px_rgb(0,0,0,0.01)] flex items-center justify-between">
+              <div className="bg-[#101010] border border-[#E1E0CC]/10/80 rounded-2xl p-5 shadow-[0_4px_20px_rgb(0,0,0,0.01)] flex items-center justify-between">
                 <div>
                   <h3 className="text-sm font-bold text-[#E1E0CC] flex items-center gap-1.5 uppercase tracking-wider">
                     <Settings className="w-4 h-4 text-brand-dark" />
                     SaaS Platform Settings
                   </h3>
-                  <p className="text-[11px] text-[#E1E0CC]/50 mt-0.5">
+                  <p className="text-[11px] text-gray-400 mt-0.5">
                     Manage your personal profile, workspaces, invite team members, and check billing.
                   </p>
                 </div>
@@ -3029,17 +3029,17 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                 {/* Left Inner Sub-Nav */}
                 <button
                   onClick={() => router.push("/onboarding")}
-                  className="w-full bg-[#0A0A0A] hover:bg-black text-white rounded-full py-4 text-xs font-bold uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-[0.98] shadow-none shadow-black/5"
+                  className="w-full bg-[#101010] hover:bg-black text-white rounded-full py-4 text-xs font-bold uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-[0.98] shadow-none shadow-black/5"
                 >
                   Start Brand Onboarding
                 </button>
-                <div className="w-full lg:w-48 bg-[#0A0A0A] border border-[#E1E0CC]/15/80 rounded-2xl p-3 shrink-0 h-fit space-y-1">
+                <div className="w-full lg:w-48 bg-[#101010] border border-[#E1E0CC]/10/80 rounded-2xl p-3 shrink-0 h-fit space-y-1">
                   <button
                     onClick={() => setSettingsTab("profile")}
-                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all text-left
+                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-2xl text-xs font-semibold transition-all text-left
                       ${settingsTab === "profile"
                         ? "bg-black border border-[#E1E0CC]/10 text-[#E1E0CC] shadow-[0_0_15px_rgba(225,224,204,0.03)]"
-                        : "text-[#E1E0CC]/50 hover:text-[#E1E0CC]/90 hover:bg-[#E1E0CC]/5"
+                        : "text-gray-400 hover:text-[#E1E0CC]/90 hover:bg-[#E1E0CC]/5"
                       }`}
                   >
                     <User className="w-3.5 h-3.5" />
@@ -3048,10 +3048,10 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
 
                   <button
                     onClick={() => setSettingsTab("workspace")}
-                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all text-left
+                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-2xl text-xs font-semibold transition-all text-left
                       ${settingsTab === "workspace"
                         ? "bg-black border border-[#E1E0CC]/10 text-[#E1E0CC] shadow-[0_0_15px_rgba(225,224,204,0.03)]"
-                        : "text-[#E1E0CC]/50 hover:text-[#E1E0CC]/90 hover:bg-[#E1E0CC]/5"
+                        : "text-gray-400 hover:text-[#E1E0CC]/90 hover:bg-[#E1E0CC]/5"
                       }`}
                   >
                     <Building className="w-3.5 h-3.5" />
@@ -3060,10 +3060,10 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
 
                   <button
                     onClick={() => setSettingsTab("team")}
-                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all text-left
+                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-2xl text-xs font-semibold transition-all text-left
                       ${settingsTab === "team"
                         ? "bg-black border border-[#E1E0CC]/10 text-[#E1E0CC] shadow-[0_0_15px_rgba(225,224,204,0.03)]"
-                        : "text-[#E1E0CC]/50 hover:text-[#E1E0CC]/90 hover:bg-[#E1E0CC]/5"
+                        : "text-gray-400 hover:text-[#E1E0CC]/90 hover:bg-[#E1E0CC]/5"
                       }`}
                   >
                     <Users className="w-3.5 h-3.5" />
@@ -3072,10 +3072,10 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
 
                   <button
                     onClick={() => setSettingsTab("billing")}
-                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all text-left
+                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-2xl text-xs font-semibold transition-all text-left
                       ${settingsTab === "billing"
                         ? "bg-black border border-[#E1E0CC]/10 text-[#E1E0CC] shadow-[0_0_15px_rgba(225,224,204,0.03)]"
-                        : "text-[#E1E0CC]/50 hover:text-[#E1E0CC]/90 hover:bg-[#E1E0CC]/5"
+                        : "text-gray-400 hover:text-[#E1E0CC]/90 hover:bg-[#E1E0CC]/5"
                       }`}
                   >
                     <CreditCard className="w-3.5 h-3.5" />
@@ -3084,14 +3084,14 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                 </div>
 
                 {/* Right Sub-Tab Content */}
-                <div className="flex-1 bg-[#0A0A0A] border border-[#E1E0CC]/15/80 rounded-2xl p-6 shadow-[0_4px_20px_rgb(0,0,0,0.01)] min-h-[400px]">
+                <div className="flex-1 bg-[#101010] border border-[#E1E0CC]/10/80 rounded-2xl p-6 shadow-[0_4px_20px_rgb(0,0,0,0.01)] min-h-[400px]">
                   
                   {/* profile tab */}
                   {settingsTab === "profile" && (
                     <form onSubmit={handleSaveProfile} className="space-y-6">
                       <div>
                         <h4 className="text-sm font-bold text-[#E1E0CC] mb-1">Profile Details</h4>
-                        <p className="text-[11px] text-[#E1E0CC]/50">Update your email, full name, and avatar settings.</p>
+                        <p className="text-[11px] text-gray-400">Update your email, full name, and avatar settings.</p>
                       </div>
 
                       <div className="space-y-4">
@@ -3101,7 +3101,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                             type="text"
                             disabled
                             value={currentUser?.email || ""}
-                            className="bg-black border border-[#E1E0CC]/15 text-[#E1E0CC]/50 outline-none rounded-xl px-3.5 py-2.5 text-xs cursor-not-allowed"
+                            className="bg-black border border-[#E1E0CC]/10 text-gray-400 outline-none rounded-2xl px-3.5 py-2.5 text-xs cursor-not-allowed"
                           />
                         </div>
 
@@ -3111,7 +3111,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                             type="text"
                             value={userName}
                             onChange={(e) => setUserName(e.target.value)}
-                            className="bg-[#0A0A0A] border border-[#E1E0CC]/15 focus:border-[#E1E0CC]/10 outline-none rounded-xl px-3.5 py-2.5 text-xs text-[#E1E0CC] transition-colors"
+                            className="bg-[#101010] border border-[#E1E0CC]/10 focus:border-[#E1E0CC]/10 outline-none rounded-2xl px-3.5 py-2.5 text-xs text-[#E1E0CC] transition-colors"
                           />
                         </div>
 
@@ -3121,7 +3121,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                             type="text"
                             value={userAvatar}
                             onChange={(e) => setUserAvatar(e.target.value)}
-                            className="bg-[#0A0A0A] border border-[#E1E0CC]/15 focus:border-[#E1E0CC]/10 outline-none rounded-xl px-3.5 py-2.5 text-xs text-[#E1E0CC] transition-colors placeholder-gray-400"
+                            className="bg-[#101010] border border-[#E1E0CC]/10 focus:border-[#E1E0CC]/10 outline-none rounded-2xl px-3.5 py-2.5 text-xs text-[#E1E0CC] transition-colors placeholder-gray-400"
                             placeholder="https://images.unsplash.com/..."
                           />
                         </div>
@@ -3131,7 +3131,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                         <button
                           type="submit"
                           disabled={isSavingProfile}
-                          className="px-4 py-2 bg-[#101010] hover:bg-brand-darkHover text-white text-xs font-bold rounded-xl flex items-center gap-1.5 transition-all disabled:opacity-50"
+                          className="px-4 py-2 bg-[#101010] hover:bg-brand-darkHover text-white text-xs font-bold rounded-2xl flex items-center gap-1.5 transition-all disabled:opacity-50"
                         >
                           {isSavingProfile ? (
                             <>
@@ -3154,7 +3154,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                     <div className="space-y-6">
                       <div>
                         <h4 className="text-sm font-bold text-[#E1E0CC] mb-1">Workspace Architecture</h4>
-                        <p className="text-[11px] text-[#E1E0CC]/50">View your active workspaces and create new marketing project groups.</p>
+                        <p className="text-[11px] text-gray-400">View your active workspaces and create new marketing project groups.</p>
                       </div>
 
                       {/* Active Workspaces List */}
@@ -3167,15 +3167,15 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                               <div
                                 key={w.id}
                                 onClick={() => setActiveWorkspace(w)}
-                                className={`p-4 border rounded-xl cursor-pointer transition-all flex items-center justify-between
+                                className={`p-4 border rounded-2xl cursor-pointer transition-all flex items-center justify-between
                                   ${activeWorkspace?.id === w.id
                                     ? "border-[#E1E0CC]/10 bg-black shadow-none"
-                                    : "border-[#E1E0CC]/15 hover:bg-black/50"
+                                    : "border-[#E1E0CC]/10 hover:bg-black/50"
                                   }`}
                               >
                                 <div>
                                   <h5 className="text-xs font-bold text-[#E1E0CC]">{w.name}</h5>
-                                  <p className="text-[10px] text-[#E1E0CC]/50 mt-0.5">Slug: /{w.slug}</p>
+                                  <p className="text-[10px] text-gray-400 mt-0.5">Slug: /{w.slug}</p>
                                 </div>
                                 {activeWorkspace?.id === w.id && (
                                   <span className="px-2 py-0.5 bg-[#101010] text-white rounded text-[8px] font-bold uppercase tracking-wider">Active</span>
@@ -3194,12 +3194,12 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                             placeholder="Workspace Name (e.g. Acme EMEA)"
                             value={newWorkspaceName}
                             onChange={(e) => setNewWorkspaceName(e.target.value)}
-                            className="flex-1 bg-[#0A0A0A] border border-[#E1E0CC]/15 focus:border-[#E1E0CC]/10 outline-none rounded-xl px-3.5 py-2 text-xs text-[#E1E0CC] transition-colors"
+                            className="flex-1 bg-[#101010] border border-[#E1E0CC]/10 focus:border-[#E1E0CC]/10 outline-none rounded-2xl px-3.5 py-2 text-xs text-[#E1E0CC] transition-colors"
                           />
                           <button
                             type="submit"
                             disabled={isCreatingWorkspace || !newWorkspaceName}
-                            className="bg-[#101010] hover:bg-brand-darkHover disabled:opacity-50 text-white font-bold text-xs rounded-xl px-4 py-2 flex items-center gap-1 transition-all"
+                            className="bg-[#101010] hover:bg-brand-darkHover disabled:opacity-50 text-white font-bold text-xs rounded-2xl px-4 py-2 flex items-center gap-1 transition-all"
                           >
                             {isCreatingWorkspace ? (
                               <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -3219,12 +3219,12 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <div>
                           <h4 className="text-sm font-bold text-[#E1E0CC] mb-1">Team & Members</h4>
-                          <p className="text-[11px] text-[#E1E0CC]/50">Invite colleagues, edit roles, and trace activity history logs.</p>
+                          <p className="text-[11px] text-gray-400">Invite colleagues, edit roles, and trace activity history logs.</p>
                         </div>
                       </div>
 
                       {/* Invite Form */}
-                      <form onSubmit={handleInvite} className="bg-black border border-[#E1E0CC]/15/60 rounded-xl p-4 space-y-3">
+                      <form onSubmit={handleInvite} className="bg-black border border-[#E1E0CC]/10/60 rounded-2xl p-4 space-y-3">
                         <h5 className="text-xs font-bold text-[#E1E0CC]">Invite New Colleague</h5>
                         <div className="flex flex-col sm:flex-row gap-2">
                           <input
@@ -3232,12 +3232,12 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                             placeholder="colleague@company.com"
                             value={inviteEmail}
                             onChange={(e) => setInviteEmail(e.target.value)}
-                            className="flex-1 bg-[#0A0A0A] border border-[#E1E0CC]/15 focus:border-[#E1E0CC]/10 outline-none rounded-xl px-3.5 py-2 text-xs text-[#E1E0CC] transition-colors"
+                            className="flex-1 bg-[#101010] border border-[#E1E0CC]/10 focus:border-[#E1E0CC]/10 outline-none rounded-2xl px-3.5 py-2 text-xs text-[#E1E0CC] transition-colors"
                           />
                           <select
                             value={inviteRole}
                             onChange={(e) => setInviteRole(e.target.value)}
-                            className="bg-[#0A0A0A] border border-[#E1E0CC]/15 outline-none rounded-xl px-3.5 py-2 text-xs text-[#E1E0CC] cursor-pointer"
+                            className="bg-[#101010] border border-[#E1E0CC]/10 outline-none rounded-2xl px-3.5 py-2 text-xs text-[#E1E0CC] cursor-pointer"
                           >
                             <option value="admin">Admin</option>
                             <option value="editor">Editor</option>
@@ -3246,7 +3246,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                           <button
                             type="submit"
                             disabled={isInviting || !inviteEmail}
-                            className="bg-[#101010] hover:bg-brand-darkHover disabled:opacity-50 text-white font-bold text-xs rounded-xl px-4 py-2 flex items-center gap-1 transition-all"
+                            className="bg-[#101010] hover:bg-brand-darkHover disabled:opacity-50 text-white font-bold text-xs rounded-2xl px-4 py-2 flex items-center gap-1 transition-all"
                           >
                             {isInviting ? (
                               <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -3261,30 +3261,30 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                       {/* Team Members List */}
                       <div className="space-y-3">
                         <h5 className="text-xs font-bold text-[#E1E0CC]">Active Team Members</h5>
-                        <div className="border border-[#E1E0CC]/15/80 rounded-xl divide-y divide-gray-150">
+                        <div className="border border-[#E1E0CC]/10/80 rounded-2xl divide-y divide-gray-150">
                           {teamMembers.map((m) => (
                             <div key={m.userId} className="p-3.5 flex items-center justify-between text-xs">
                               <div className="flex items-center gap-3">
                                 {m.avatarUrl ? (
-                                  <img src={m.avatarUrl} alt="Avatar" className="w-8 h-8 rounded-full object-cover border border-[#E1E0CC]/15" />
+                                  <img src={m.avatarUrl} alt="Avatar" className="w-8 h-8 rounded-full object-cover border border-[#E1E0CC]/10" />
                                 ) : (
                                   <div className="w-8 h-8 rounded-full bg-[#E1E0CC]/10 flex items-center justify-center font-bold text-[#E1E0CC]/60 uppercase">
                                     {m.name.charAt(0)}
                                   </div>
                                 )}
                                 <div>
-                                  <h6 className="font-bold text-[#E1E0CC]">{m.name} {m.userId === currentUser?.id && <span className="text-[#E1E0CC]/50 font-normal text-[10px]">(You)</span>}</h6>
-                                  <p className="text-[10px] text-[#E1E0CC]/50">{m.email}</p>
+                                  <h6 className="font-bold text-[#E1E0CC]">{m.name} {m.userId === currentUser?.id && <span className="text-gray-400 font-normal text-[10px]">(You)</span>}</h6>
+                                  <p className="text-[10px] text-gray-400">{m.email}</p>
                                 </div>
                               </div>
                               <div className="flex items-center gap-3">
-                                <span className="px-2 py-0.5 bg-gray-150 rounded text-[9px] font-bold uppercase tracking-wider text-[#E1E0CC]/70">
+                                <span className="px-2 py-0.5 bg-gray-150 rounded text-[9px] font-bold uppercase tracking-wider text-gray-300">
                                   {m.role}
                                 </span>
                                 {m.userId !== currentUser?.id && (
                                   <button
                                     onClick={() => handleRemoveMember(m.userId)}
-                                    className="p-1 text-[#E1E0CC]/50 hover:text-[#E1E0CC] rounded transition-all"
+                                    className="p-1 text-gray-400 hover:text-[#E1E0CC] rounded transition-all"
                                   >
                                     <Trash2 className="w-3.5 h-3.5" />
                                   </button>
@@ -3299,12 +3299,12 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                       {pendingInvitations.length > 0 && (
                         <div className="space-y-3">
                           <h5 className="text-xs font-bold text-[#E1E0CC]">Pending Invitations</h5>
-                          <div className="border border-[#E1E0CC]/15/80 rounded-xl divide-y divide-gray-150">
+                          <div className="border border-[#E1E0CC]/10/80 rounded-2xl divide-y divide-gray-150">
                             {pendingInvitations.map((inv) => (
                               <div key={inv.id} className="p-3 flex items-center justify-between text-xs">
                                 <div>
                                   <p className="font-bold text-[#E1E0CC]">{inv.email}</p>
-                                  <p className="text-[9px] text-[#E1E0CC]/50">Invited as {inv.role}</p>
+                                  <p className="text-[9px] text-gray-400">Invited as {inv.role}</p>
                                 </div>
                                 <button
                                   onClick={() => handleClearInvite(inv.id)}
@@ -3321,18 +3321,18 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                       {/* Audit Trail / Activity Logs */}
                       <div className="space-y-3 pt-6 border-t border-[#E1E0CC]/10">
                         <h5 className="text-xs font-bold text-[#E1E0CC] flex items-center gap-1">
-                          <Activity className="w-4 h-4 text-[#E1E0CC]/50" />
+                          <Activity className="w-4 h-4 text-gray-400" />
                           Security Activity Logs
                         </h5>
-                        <div className="border border-[#E1E0CC]/15/80 rounded-xl divide-y divide-gray-150 bg-black/50">
+                        <div className="border border-[#E1E0CC]/10/80 rounded-2xl divide-y divide-gray-150 bg-black/50">
                           {activityLogs.length === 0 ? (
-                            <div className="p-4 text-center text-[10px] text-[#E1E0CC]/50 font-mono">No recent logs recorded.</div>
+                            <div className="p-4 text-center text-[10px] text-gray-400 font-mono">No recent logs recorded.</div>
                           ) : (
                             activityLogs.map((log) => (
                               <div key={log.id} className="p-3 text-[10px] text-[#E1E0CC]/60 font-mono flex justify-between items-center">
                                 <div>
                                   <span className="text-[#E1E0CC] font-bold">Action: {log.action}</span>
-                                  <p className="text-[9px] text-[#E1E0CC]/50 mt-0.5">{JSON.stringify(log.details)}</p>
+                                  <p className="text-[9px] text-gray-400 mt-0.5">{JSON.stringify(log.details)}</p>
                                 </div>
                                 <span>{new Date(log.created_at).toLocaleTimeString()}</span>
                               </div>
@@ -3349,7 +3349,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                     <div className="space-y-6">
                       <div>
                         <h4 className="text-sm font-bold text-[#E1E0CC] mb-1">Billing & Quota</h4>
-                        <p className="text-[11px] text-[#E1E0CC]/50">Manage plan subscriptions, usage metrics and quotas.</p>
+                        <p className="text-[11px] text-gray-400">Manage plan subscriptions, usage metrics and quotas.</p>
                       </div>
 
                       {/* Active subscription card */}
@@ -3359,12 +3359,12 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                             <span className="text-[8px] font-black text-[#E1E0CC] uppercase tracking-widest font-mono">Active Plan</span>
                             <h4 className="text-base font-black tracking-wide mt-0.5">Automarc Pro Beta</h4>
                           </div>
-                          <span className="px-2.5 py-1 bg-[#0A0A0A]/10 backdrop-blur-md rounded-full text-[9px] font-black uppercase tracking-wider border border-white/15">Active</span>
+                          <span className="px-2.5 py-1 bg-[#101010]/10 backdrop-blur-md rounded-full text-[9px] font-black uppercase tracking-wider border border-white/15">Active</span>
                         </div>
                         <p className="text-xs text-[#E1E0CC] leading-relaxed max-w-sm">
                           Your account has full access to the AI Provider Router, Content planning mixes, logo studios, and LongCat-Video models.
                         </p>
-                        <div className="pt-3 border-t border-white/10 flex justify-between items-center text-[10px] text-[#E1E0CC]/50">
+                        <div className="pt-3 border-t border-white/10 flex justify-between items-center text-[10px] text-gray-400">
                           <span>Renews: 14 Aug 2026</span>
                           <span>Price: $0.00 (Beta Partner)</span>
                         </div>
@@ -3390,7 +3390,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                               <span className="text-[#E1E0CC] font-bold">38 / 100 media files</span>
                             </div>
                             <div className="h-2 bg-[#E1E0CC]/10 rounded-full overflow-hidden">
-                              <div className="h-full bg-[#0A0A0A] rounded-full" style={{ width: "38%" }} />
+                              <div className="h-full bg-[#101010] rounded-full" style={{ width: "38%" }} />
                             </div>
                           </div>
                         </div>
@@ -3408,13 +3408,13 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
         {/* Campaign Planning Modal Overlay */}
         {isCampaignModalOpen && (
           <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-            <div className="bg-[#0A0A0A] border border-[#E1E0CC]/15 rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4">
+            <div className="bg-[#101010] border border-[#E1E0CC]/10 rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-4">
               <div>
                 <h3 className="text-base font-bold text-[#E1E0CC] flex items-center gap-1.5">
                   <Sparkles className="w-5 h-5 text-brand-primary" />
                   Plan Custom AI Campaign
                 </h3>
-                <p className="text-xs text-[#E1E0CC]/50 mt-1">AI generates a detailed campaign and schedules 5 target post concepts.</p>
+                <p className="text-xs text-gray-400 mt-1">AI generates a detailed campaign and schedules 5 target post concepts.</p>
               </div>
 
               <div className="space-y-3 text-xs">
@@ -3425,7 +3425,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                     placeholder="e.g. Launching AI Scraper V2"
                     value={campaignTitle}
                     onChange={(e) => setCampaignTitle(e.target.value)}
-                    className="w-full bg-black border border-[#E1E0CC]/15 rounded-xl px-3 py-2 text-[#E1E0CC] outline-none focus:border-[#E1E0CC]/10"
+                    className="w-full bg-black border border-[#E1E0CC]/10 rounded-2xl px-3 py-2 text-[#E1E0CC] outline-none focus:border-[#E1E0CC]/10"
                   />
                 </div>
 
@@ -3434,7 +3434,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                   <select
                     value={campaignType}
                     onChange={(e) => setCampaignType(e.target.value)}
-                    className="w-full bg-black border border-[#E1E0CC]/15 rounded-xl px-3 py-2 text-[#E1E0CC] outline-none focus:border-[#E1E0CC]/10"
+                    className="w-full bg-black border border-[#E1E0CC]/10 rounded-2xl px-3 py-2 text-[#E1E0CC] outline-none focus:border-[#E1E0CC]/10"
                   >
                     <option>Product Launch</option>
                     <option>Sales & Promotion</option>
@@ -3451,7 +3451,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                     placeholder="Describe your campaign objectives, USPs to highlight..."
                     value={campaignDesc}
                     onChange={(e) => setCampaignDesc(e.target.value)}
-                    className="w-full bg-black border border-[#E1E0CC]/15 rounded-xl px-3 py-2 text-[#E1E0CC] outline-none focus:border-[#E1E0CC]/10 resize-none"
+                    className="w-full bg-black border border-[#E1E0CC]/10 rounded-2xl px-3 py-2 text-[#E1E0CC] outline-none focus:border-[#E1E0CC]/10 resize-none"
                   />
                 </div>
 
@@ -3471,7 +3471,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                             }
                           }}
                           className={`px-3 py-1.5 rounded-lg border font-bold capitalize transition-all
-                            ${active ? "bg-black/10 border-[#E1E0CC]/10 text-brand-primary" : "bg-black border-[#E1E0CC]/15 text-[#E1E0CC]/60"}`}
+                            ${active ? "bg-black/10 border-[#E1E0CC]/10 text-brand-primary" : "bg-black border-[#E1E0CC]/10 text-[#E1E0CC]/60"}`}
                         >
                           {platform}
                         </button>
@@ -3485,7 +3485,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                 <button
                   disabled={isSubmittingCampaign}
                   onClick={() => setIsCampaignModalOpen(false)}
-                  className="flex-1 py-2.5 rounded-xl border border-[#E1E0CC]/15 text-[#E1E0CC]/60 hover:bg-black font-bold text-xs uppercase"
+                  className="flex-1 py-2.5 rounded-2xl border border-[#E1E0CC]/10 text-[#E1E0CC]/60 hover:bg-black font-bold text-xs uppercase"
                 >
                   Cancel
                 </button>
@@ -3520,7 +3520,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                       setIsSubmittingCampaign(false);
                     }
                   }}
-                  className="flex-1 py-2.5 rounded-xl bg-[#101010] hover:bg-brand-darkHover text-white font-bold text-xs uppercase tracking-wider disabled:opacity-50"
+                  className="flex-1 py-2.5 rounded-2xl bg-[#101010] hover:bg-brand-darkHover text-white font-bold text-xs uppercase tracking-wider disabled:opacity-50"
                 >
                   {isSubmittingCampaign ? "AI Planning..." : "Generate Campaign"}
                 </button>
@@ -3532,15 +3532,15 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
         {/* Asset Viewer Modal Overlay */}
         {viewingAsset && (
           <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-            <div className="bg-[#0A0A0A] border border-[#E1E0CC]/15 rounded-3xl p-6 max-w-lg w-full shadow-2xl space-y-4 max-h-[85vh] overflow-y-auto">
+            <div className="bg-[#101010] border border-[#E1E0CC]/10 rounded-2xl p-6 max-w-lg w-full shadow-2xl space-y-4 max-h-[85vh] overflow-y-auto">
               <div className="flex justify-between items-center border-b border-[#E1E0CC]/10 pb-3">
                 <div>
-                  <span className="text-[8px] font-black text-[#E1E0CC]/50 uppercase tracking-widest font-mono">Assets Preview</span>
+                  <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest font-mono">Assets Preview</span>
                   <h3 className="text-base font-bold text-[#E1E0CC] capitalize">{viewingAsset.post_type} Asset Details</h3>
                 </div>
                 <button
                   onClick={() => setViewingAsset(null)}
-                  className="w-7 h-7 rounded-full bg-black border border-[#E1E0CC]/15 hover:bg-[#E1E0CC]/10 flex items-center justify-center font-bold text-[#E1E0CC]/50 hover:text-[#E1E0CC]/80 cursor-pointer"
+                  className="w-7 h-7 rounded-full bg-black border border-[#E1E0CC]/10 hover:bg-[#E1E0CC]/10 flex items-center justify-center font-bold text-gray-400 hover:text-[#E1E0CC]/80 cursor-pointer"
                 >
                   &times;
                 </button>
@@ -3550,8 +3550,8 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                 
                 {/* Copy Caption */}
                 <div className="space-y-1">
-                  <label className="text-[#E1E0CC]/50 font-bold uppercase tracking-wider text-[9px] block">Social Caption</label>
-                  <div className="p-3 bg-black border border-[#E1E0CC]/10 rounded-xl font-normal text-[#E1E0CC]/80 leading-relaxed whitespace-pre-wrap">
+                  <label className="text-gray-400 font-bold uppercase tracking-wider text-[9px] block">Social Caption</label>
+                  <div className="p-3 bg-black border border-[#E1E0CC]/10 rounded-2xl font-normal text-[#E1E0CC]/80 leading-relaxed whitespace-pre-wrap">
                     {viewingAsset.caption}
                   </div>
                 </div>
@@ -3559,14 +3559,14 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                 {/* Hooks & CTAs */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-[#E1E0CC]/50 font-bold uppercase tracking-wider text-[9px] block">Alternative Hook Idea</label>
-                    <div className="p-2.5 bg-black border border-[#E1E0CC]/10 rounded-xl text-[#E1E0CC]/70 font-medium leading-relaxed italic">
+                    <label className="text-gray-400 font-bold uppercase tracking-wider text-[9px] block">Alternative Hook Idea</label>
+                    <div className="p-2.5 bg-black border border-[#E1E0CC]/10 rounded-2xl text-gray-300 font-medium leading-relaxed italic">
                       {viewingAsset.hooks?.[0] || "None generated"}
                     </div>
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[#E1E0CC]/50 font-bold uppercase tracking-wider text-[9px] block">Primary CTA</label>
-                    <div className="p-2.5 bg-black border border-[#E1E0CC]/10 rounded-xl text-[#0A0A0A] font-bold">
+                    <label className="text-gray-400 font-bold uppercase tracking-wider text-[9px] block">Primary CTA</label>
+                    <div className="p-2.5 bg-black border border-[#E1E0CC]/10 rounded-2xl text-[#0A0A0A] font-bold">
                       {viewingAsset.ctas?.[0] || "None generated"}
                     </div>
                   </div>
@@ -3578,8 +3578,8 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                     {/* Format 1: Static Post Preview */}
                     {viewingAsset.post_type === "static" && viewingAsset.generated_assets.imageUrl && (
                       <div className="space-y-1">
-                        <label className="text-[#E1E0CC]/50 font-bold uppercase tracking-wider text-[9px] block">Static Feed Post Preview</label>
-                        <div className="relative aspect-square w-full rounded-2xl overflow-hidden border border-[#E1E0CC]/15 bg-[#101010] shadow-inner">
+                        <label className="text-gray-400 font-bold uppercase tracking-wider text-[9px] block">Static Feed Post Preview</label>
+                        <div className="relative aspect-square w-full rounded-2xl overflow-hidden border border-[#E1E0CC]/10 bg-[#101010] shadow-inner">
                           {/* Base Image */}
                           <img
                             src={viewingAsset.generated_assets.imageUrl}
@@ -3590,7 +3590,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                           <div className="absolute inset-0 p-5 flex flex-col justify-between bg-gradient-to-t from-black/80 via-transparent to-black/40">
                             {/* Header */}
                             <div className="flex items-center space-x-2">
-                              <div className="w-8 h-8 rounded-full bg-[#0A0A0A]/10 backdrop-blur-md border border-white/20 flex items-center justify-center font-bold text-white text-xs">
+                              <div className="w-8 h-8 rounded-full bg-[#101010]/10 backdrop-blur-md border border-white/20 flex items-center justify-center font-bold text-white text-xs">
                                 {dna?.brand_name?.[0] || "A"}
                               </div>
                               <div>
@@ -3599,7 +3599,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                               </div>
                             </div>
                             {/* Overlay Content Card */}
-                            <div className="bg-[#0A0A0A]/10 backdrop-blur-lg border border-white/25 p-4 rounded-xl space-y-1.5 shadow-xl">
+                            <div className="bg-[#101010]/10 backdrop-blur-lg border border-white/25 p-4 rounded-2xl space-y-1.5 shadow-xl">
                               <h4 className="font-bold text-white text-sm font-normal tracking-wide leading-tight">
                                 {viewingAsset.title}
                               </h4>
@@ -3608,7 +3608,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                               </p>
                               <div className="pt-2 flex justify-between items-center border-t border-white/10">
                                 <span className="text-[9px] text-[#C9A84C] font-bold tracking-wider uppercase font-mono">{viewingAsset.ctas?.[0] || "Learn More"}</span>
-                                <div className="px-3 py-1 bg-[#0A0A0A] text-black font-bold text-[9px] rounded-lg shadow-none hover:scale-105 transition-transform uppercase tracking-wider">
+                                <div className="px-3 py-1 bg-[#101010] text-black font-bold text-[9px] rounded-lg shadow-none hover:scale-105 transition-transform uppercase tracking-wider">
                                   {viewingAsset.ctas?.[0] || "Learn More"}
                                 </div>
                               </div>
@@ -3621,8 +3621,8 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                     {/* Format 2: Carousel Post Slider */}
                     {viewingAsset.post_type === "carousel" && viewingAsset.generated_assets.slides && (
                       <div className="space-y-1">
-                        <label className="text-[#E1E0CC]/50 font-bold uppercase tracking-wider text-[9px] block">Interactive Carousel Post Preview</label>
-                        <div className="relative aspect-square w-full rounded-2xl overflow-hidden border border-[#E1E0CC]/15 bg-black shadow-2xl flex flex-col justify-between p-5">
+                        <label className="text-gray-400 font-bold uppercase tracking-wider text-[9px] block">Interactive Carousel Post Preview</label>
+                        <div className="relative aspect-square w-full rounded-2xl overflow-hidden border border-[#E1E0CC]/10 bg-black shadow-2xl flex flex-col justify-between p-5">
                           {/* Background image */}
                           <img
                             src={viewingAsset.generated_assets.coverUrl || viewingAsset.generated_assets.imageUrl || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=60"}
@@ -3636,12 +3636,12 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                           {/* Header */}
                           <div className="relative flex justify-between items-center">
                             <div className="flex items-center space-x-2">
-                              <div className="w-7 h-7 rounded-full bg-[#0A0A0A]/10 backdrop-blur-md border border-white/20 flex items-center justify-center font-bold text-white text-[10px]">
+                              <div className="w-7 h-7 rounded-full bg-[#101010]/10 backdrop-blur-md border border-white/20 flex items-center justify-center font-bold text-white text-[10px]">
                                 {dna?.brand_name?.[0] || "A"}
                               </div>
                               <span className="text-[10px] font-bold text-white tracking-wider">{dna?.brand_name || "Asenra"}</span>
                             </div>
-                            <span className="text-[9px] font-mono bg-[#0A0A0A]/10 backdrop-blur-md px-2 py-0.5 rounded-full text-white/90 border border-white/10">
+                            <span className="text-[9px] font-mono bg-[#101010]/10 backdrop-blur-md px-2 py-0.5 rounded-full text-white/90 border border-white/10">
                               {activeSlide + 1} / {viewingAsset.generated_assets.slides.length}
                             </span>
                           </div>
@@ -3666,7 +3666,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                               <button
                                 disabled={activeSlide === 0}
                                 onClick={() => setActiveSlide(prev => Math.max(0, prev - 1))}
-                                className="w-7 h-7 rounded-full bg-[#0A0A0A]/10 border border-white/10 hover:bg-[#0A0A0A]/20 text-white flex items-center justify-center font-bold text-xs cursor-pointer disabled:opacity-30 disabled:pointer-events-none transition-all"
+                                className="w-7 h-7 rounded-full bg-[#101010]/10 border border-white/10 hover:bg-[#101010]/20 text-white flex items-center justify-center font-bold text-xs cursor-pointer disabled:opacity-30 disabled:pointer-events-none transition-all"
                               >
                                 &larr;
                               </button>
@@ -3686,8 +3686,8 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                     {/* Format 3: Video Reels Preview */}
                     {viewingAsset.post_type === "video" && (
                       <div className="space-y-1">
-                        <label className="text-[#E1E0CC]/50 font-bold uppercase tracking-wider text-[9px] block">Video Reels Mock Player</label>
-                        <div className="relative aspect-[9/16] w-full max-w-[280px] mx-auto rounded-3xl overflow-hidden border-4 border-[#E1E0CC]/10 bg-black shadow-2xl flex flex-col justify-between p-4">
+                        <label className="text-gray-400 font-bold uppercase tracking-wider text-[9px] block">Video Reels Mock Player</label>
+                        <div className="relative aspect-[9/16] w-full max-w-[280px] mx-auto rounded-2xl overflow-hidden border-4 border-[#E1E0CC]/10 bg-black shadow-2xl flex flex-col justify-between p-4">
                           {/* Background B-roll thumbnail */}
                           <img
                             src={viewingAsset.generated_assets.thumbnailUrl || viewingAsset.generated_assets.imageUrl || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=60"}
@@ -3709,7 +3709,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                             {!isVideoPlaying ? (
                               <button
                                 onClick={() => setIsVideoPlaying(true)}
-                                className="w-12 h-12 rounded-full bg-[#0A0A0A]/20 backdrop-blur-md border border-white/40 flex items-center justify-center text-white text-lg hover:scale-110 active:scale-95 transition-all shadow-xl cursor-pointer"
+                                className="w-12 h-12 rounded-full bg-[#101010]/20 backdrop-blur-md border border-white/40 flex items-center justify-center text-white text-lg hover:scale-110 active:scale-95 transition-all shadow-xl cursor-pointer"
                               >
                                 &#9654;
                               </button>
@@ -3734,24 +3734,24 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                           <div className="relative space-y-2 text-white">
                             {/* Brand bar */}
                             <div className="flex items-center space-x-2">
-                              <div className="w-6 h-6 rounded-full bg-[#0A0A0A]/10 border border-white/20 flex items-center justify-center font-bold text-[9px]">
+                              <div className="w-6 h-6 rounded-full bg-[#101010]/10 border border-white/20 flex items-center justify-center font-bold text-[9px]">
                                 {dna?.brand_name?.[0] || "A"}
                               </div>
                               <span className="text-[9px] font-bold tracking-wide">{dna?.brand_name || "Asenra"}</span>
-                              <button className="px-2 py-0.5 bg-[#0A0A0A]/25 rounded-md text-[8px] font-bold uppercase tracking-wider">Follow</button>
+                              <button className="px-2 py-0.5 bg-[#101010]/25 rounded-md text-[8px] font-bold uppercase tracking-wider">Follow</button>
                             </div>
                             {/* Audio track label */}
                             <p className="text-[8px] text-[#E1E0CC] flex items-center space-x-1 truncate font-mono">
                               <span>&#9835;</span> <span>Original Audio - {dna?.brand_name || "Asenra"}</span>
                             </p>
                             {/* Interactive timeline bar */}
-                            <div className="h-1 bg-[#0A0A0A]/25 rounded-full overflow-hidden">
+                            <div className="h-1 bg-[#101010]/25 rounded-full overflow-hidden">
                               <div
                                 className="h-full bg-[#C9A84C] transition-all duration-1000 ease-linear"
                                 style={{ width: `${(videoTimer / 30) * 100}%` }}
                               />
                             </div>
-                            <div className="flex justify-between items-center text-[7px] text-[#E1E0CC]/50 font-mono">
+                            <div className="flex justify-between items-center text-[7px] text-gray-400 font-mono">
                               <span>0:{videoTimer < 10 ? `0${videoTimer}` : videoTimer}</span>
                               <span>0:30</span>
                             </div>
@@ -3764,8 +3764,8 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
 
                 {/* Visual Prompt (for Static/Images or Reels B-rolls) */}
                 <div className="space-y-1">
-                  <label className="text-[#E1E0CC]/50 font-bold uppercase tracking-wider text-[9px] block">AI Visual Prompt (Stable Diffusion / LongCat)</label>
-                  <div className="p-3 bg-black border border-[#E1E0CC]/10 rounded-xl font-mono text-[10px] text-[#E1E0CC]/70 leading-normal">
+                  <label className="text-gray-400 font-bold uppercase tracking-wider text-[9px] block">AI Visual Prompt (Stable Diffusion / LongCat)</label>
+                  <div className="p-3 bg-black border border-[#E1E0CC]/10 rounded-2xl font-mono text-[10px] text-gray-300 leading-normal">
                     {viewingAsset.visual_prompt}
                   </div>
                 </div>
@@ -3773,10 +3773,10 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                 {/* Format Specific Details (e.g. Slides JSON or Video Script timings) */}
                 {viewingAsset.post_type === "carousel" && viewingAsset.generated_assets?.slides && (
                   <div className="space-y-2">
-                    <label className="text-[#E1E0CC]/50 font-bold uppercase tracking-wider text-[9px] block">Slides Blueprint ({viewingAsset.generated_assets.slides.length})</label>
+                    <label className="text-gray-400 font-bold uppercase tracking-wider text-[9px] block">Slides Blueprint ({viewingAsset.generated_assets.slides.length})</label>
                     <div className="space-y-2">
                       {viewingAsset.generated_assets.slides.map((slide: any, idx: number) => (
-                        <div key={idx} className="p-3 bg-[#111] border border-white/10 rounded-xl space-y-1 text-white">
+                        <div key={idx} className="p-3 bg-[#111] border border-white/10 rounded-2xl space-y-1 text-white">
                           <span className="text-[8px] font-black text-[#C9A84C] uppercase tracking-wider font-mono">Slide {slide.slideNumber}</span>
                           <h4 className="font-bold text-xs text-white">{slide.headline}</h4>
                           <p className="text-[10px] text-[#E1E0CC] leading-normal">{slide.bodyText}</p>
@@ -3790,18 +3790,18 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                 {viewingAsset.post_type === "video" && viewingAsset.generated_assets?.script && (
                   <div className="space-y-3">
                     <div className="space-y-1">
-                      <label className="text-[#E1E0CC]/50 font-bold uppercase tracking-wider text-[9px] block">Voiceover Script</label>
-                      <div className="p-2.5 bg-black border border-[#E1E0CC]/10 rounded-xl text-[#E1E0CC]/80 italic">
+                      <label className="text-gray-400 font-bold uppercase tracking-wider text-[9px] block">Voiceover Script</label>
+                      <div className="p-2.5 bg-black border border-[#E1E0CC]/10 rounded-2xl text-[#E1E0CC]/80 italic">
                         &ldquo;{viewingAsset.generated_assets.script.voiceover}&rdquo;
                       </div>
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-[#E1E0CC]/50 font-bold uppercase tracking-wider text-[9px] block">Subtitle Timings</label>
+                      <label className="text-gray-400 font-bold uppercase tracking-wider text-[9px] block">Subtitle Timings</label>
                       <div className="grid grid-cols-1 gap-1">
                         {viewingAsset.generated_assets.script.timings?.map((t: any, idx: number) => (
                           <div key={idx} className="flex justify-between items-center p-2 bg-black border border-[#E1E0CC]/10 rounded-lg">
                             <span className="font-mono text-[9px] text-[#0A0A0A] font-bold shrink-0">{t.time}</span>
-                            <span className="text-[#E1E0CC]/70 font-medium text-right ml-4 truncate">{t.subtitles}</span>
+                            <span className="text-gray-300 font-medium text-right ml-4 truncate">{t.subtitles}</span>
                           </div>
                         ))}
                       </div>
@@ -3811,10 +3811,10 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
 
                 {/* Hashtags */}
                 <div className="space-y-1">
-                  <label className="text-[#E1E0CC]/50 font-bold uppercase tracking-wider text-[9px] block">Hashtags</label>
+                  <label className="text-gray-400 font-bold uppercase tracking-wider text-[9px] block">Hashtags</label>
                   <div className="flex flex-wrap gap-1">
                     {viewingAsset.hashtags?.map((tag: string) => (
-                      <span key={tag} className="px-2 py-0.5 rounded bg-[#E1E0CC]/10 border border-[#E1E0CC]/15 text-[#E1E0CC]/60 font-mono text-[9px] font-semibold">
+                      <span key={tag} className="px-2 py-0.5 rounded bg-[#E1E0CC]/10 border border-[#E1E0CC]/10 text-[#E1E0CC]/60 font-mono text-[9px] font-semibold">
                         {tag}
                       </span>
                     ))}
@@ -3826,7 +3826,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
               <div className="border-t border-[#E1E0CC]/10 pt-3 flex">
                 <button
                   onClick={() => setViewingAsset(null)}
-                  className="flex-1 py-2.5 rounded-xl bg-[#101010] hover:bg-brand-darkHover text-white font-bold text-xs uppercase"
+                  className="flex-1 py-2.5 rounded-2xl bg-[#101010] hover:bg-brand-darkHover text-white font-bold text-xs uppercase"
                 >
                   Close Asset Preview
                 </button>
@@ -3838,7 +3838,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
         {/* Instagram Business Connection Modal */}
         {isInstagramModalOpen && (
           <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-            <div className="bg-[#0A0A0A] border border-[#E1E0CC]/15 rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-5">
+            <div className="bg-[#101010] border border-[#E1E0CC]/10 rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-5">
               <div className="flex justify-between items-center border-b border-[#E1E0CC]/10 pb-3">
                 <div>
                   <span className="text-[9px] font-mono font-bold text-[#E1E0CC] uppercase tracking-wider">Zero-Friction Social Integration</span>
@@ -3846,7 +3846,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                 </div>
                 <button
                   onClick={() => setIsInstagramModalOpen(false)}
-                  className="w-7 h-7 rounded-full bg-black border border-[#E1E0CC]/15 hover:bg-[#E1E0CC]/10 flex items-center justify-center font-bold text-[#E1E0CC]/50 hover:text-[#E1E0CC]/80 cursor-pointer"
+                  className="w-7 h-7 rounded-full bg-black border border-[#E1E0CC]/10 hover:bg-[#E1E0CC]/10 flex items-center justify-center font-bold text-gray-400 hover:text-[#E1E0CC]/80 cursor-pointer"
                 >
                   &times;
                 </button>
@@ -3855,12 +3855,12 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
               <div className="space-y-4 text-xs">
                 
                 {/* Managed 1-Click Banner */}
-                <div className="p-3 bg-[#E1E0CC]/10 border border-[#E1E0CC]/20 rounded-xl space-y-1">
+                <div className="p-3 bg-[#E1E0CC]/10 border border-[#E1E0CC]/20 rounded-2xl space-y-1">
                   <span className="font-bold text-[#E1E0CC] text-[10px] uppercase block flex items-center gap-1">
                     <Sparkles className="w-3 h-3 text-[#E1E0CC]" />
                     Managed SaaS Meta API (1-Click Connect)
                   </span>
-                  <p className="text-[10px] text-[#E1E0CC]/70 leading-relaxed">
+                  <p className="text-[10px] text-gray-300 leading-relaxed">
                     Simply enter your Instagram username below. Our platform automatically manages all Meta Graph API tokens, OAuth handshakes, and container publishing on your behalf!
                   </p>
                 </div>
@@ -3874,9 +3874,9 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                     value={instagramHandle}
                     onChange={(e) => setInstagramHandle(e.target.value)}
                     placeholder="e.g. @yourbrand_official"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#E1E0CC]/20 focus:border-[#E1306C] text-xs outline-none bg-[#0A0A0A] text-[#E1E0CC] font-semibold"
+                    className="w-full px-3.5 py-2.5 rounded-2xl border border-[#E1E0CC]/20 focus:border-[#E1306C] text-xs outline-none bg-[#101010] text-[#E1E0CC] font-semibold"
                   />
-                  <p className="text-[9px] font-mono text-[#E1E0CC]/50">
+                  <p className="text-[9px] font-mono text-gray-400">
                     No technical Developer Tokens or Facebook App setup required by you.
                   </p>
                 </div>
@@ -3888,7 +3888,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                   </summary>
                   <div className="space-y-3 pt-3">
                     <div className="space-y-1">
-                      <label className="text-[#E1E0CC]/70 font-bold uppercase tracking-wider text-[9px] block">
+                      <label className="text-gray-300 font-bold uppercase tracking-wider text-[9px] block">
                         Custom Instagram Business Account ID
                       </label>
                       <input
@@ -3896,11 +3896,11 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                         value={instagramAccountId}
                         onChange={(e) => setInstagramAccountId(e.target.value)}
                         placeholder="e.g. 17841400000000000"
-                        className="w-full px-3 py-2 rounded-lg border border-[#E1E0CC]/15 text-xs font-mono bg-[#0A0A0A] text-[#E1E0CC]"
+                        className="w-full px-3 py-2 rounded-lg border border-[#E1E0CC]/10 text-xs font-mono bg-[#101010] text-[#E1E0CC]"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[#E1E0CC]/70 font-bold uppercase tracking-wider text-[9px] block">
+                      <label className="text-gray-300 font-bold uppercase tracking-wider text-[9px] block">
                         Custom Page Access Token
                       </label>
                       <input
@@ -3908,7 +3908,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                         value={instagramAccessToken}
                         onChange={(e) => setInstagramAccessToken(e.target.value)}
                         placeholder="EAAB..."
-                        className="w-full px-3 py-2 rounded-lg border border-[#E1E0CC]/15 text-xs font-mono bg-[#0A0A0A] text-[#E1E0CC]"
+                        className="w-full px-3 py-2 rounded-lg border border-[#E1E0CC]/10 text-xs font-mono bg-[#101010] text-[#E1E0CC]"
                       />
                     </div>
                   </div>
@@ -3918,14 +3918,14 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
               <div className="flex gap-2 pt-2 border-t border-[#E1E0CC]/10">
                 <button
                   onClick={() => setIsInstagramModalOpen(false)}
-                  className="flex-1 py-2.5 rounded-xl border border-[#E1E0CC]/15 text-[#E1E0CC]/70 font-bold text-xs uppercase hover:bg-black"
+                  className="flex-1 py-2.5 rounded-2xl border border-[#E1E0CC]/10 text-gray-300 font-bold text-xs uppercase hover:bg-black"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleSaveInstagram}
                   disabled={isSavingInstagram || !instagramHandle.trim()}
-                  className="flex-1 py-2.5 rounded-xl bg-[#E1E0CC] hover:bg-[#101010] hover:text-white text-[#101010] border border-transparent hover:border-[#E1E0CC]/50 font-bold text-xs uppercase tracking-wider shadow-none flex items-center justify-center gap-1.5 disabled:opacity-50 cursor-pointer"
+                  className="flex-1 py-2 rounded-full bg-primary text-black font-medium text-sm transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 cursor-pointer hover:bg-[#E1E0CC] hover:scale-[1.02]"
                 >
                   {isSavingInstagram ? "Connecting Account..." : "Connect Instagram (1-Click)"}
                 </button>
@@ -3937,8 +3937,8 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
       </div>
 
       {/* GDPR Footer */}
-      <footer className="px-6 py-4 text-center border-t border-[#E1E0CC]/10 bg-[#0A0A0A]">
-        <p className="text-[10px] text-[#E1E0CC]/50 flex items-center justify-center gap-1 font-semibold uppercase tracking-wider">
+      <footer className="px-6 py-4 text-center border-t border-[#E1E0CC]/10 bg-[#101010]">
+        <p className="text-[10px] text-gray-400 flex items-center justify-center gap-1 font-semibold uppercase tracking-wider">
           Secure 256-bit encryption · GDPR & DPDP compliant
         </p>
       </footer>
