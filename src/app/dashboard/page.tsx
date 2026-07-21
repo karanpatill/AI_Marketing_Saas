@@ -13,7 +13,7 @@ import {
   Shield, CreditCard, Mail, User, AlertCircle,
   X, Check, Lock, ChevronDown, RefreshCw, Globe, Clock
 } from "lucide-react";
-import Navbar from "@/components/Navbar";
+import DashboardTopBar from "@/components/DashboardTopBar";
 import WordsPullUp from "@/components/ui/WordsPullUp";
 
 // --- Types ---
@@ -1149,23 +1149,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
         {/* Right Dashboard Area */}
         <main className="flex-1 space-y-6">
 
-          {/* SaaS Utility Top Bar: Global Search & Notifications */}
-          <div className="flex items-center justify-between gap-4 bg-[#0A0A0A] border border-[#E1E0CC]/15/80 rounded-2xl px-5 py-3 shadow-[0_4px_20px_rgb(0,0,0,0.01)] relative">
-            {/* Search Input */}
-            <div className="flex-1 flex items-center gap-2 max-w-sm bg-black border border-[#E1E0CC]/10 rounded-xl px-3 py-1.5 text-xs text-[#E1E0CC]/50">
-              <Search className="w-3.5 h-3.5 text-[#E1E0CC]/50 shrink-0" />
-              <input
-                type="text"
-                placeholder="Search campaigns, assets, strategies..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="bg-transparent border-none outline-none text-[#E1E0CC] placeholder-gray-400 w-full font-medium"
-              />
-            </div>
-
-            {/* Notification Bell + Profile Info */}
-            <div className="flex items-center gap-4 relative">
-              {/* Toast notifier absolute helper */}
+          {/* Toast notifier absolute helper */}
               {toast && (
                 <div 
                   className={`fixed bottom-6 right-6 z-50 flex items-center gap-2.5 px-4 py-3 rounded-2xl shadow-xl border animate-fade-left text-xs font-semibold
@@ -1183,56 +1167,14 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                   </button>
                 </div>
               )}
-
-              {/* Notification bell */}
-              <div className="relative">
-                <button
-                  onClick={() => setShowNotifications(!showNotifications)}
-                  className="p-2 bg-black hover:bg-[#E1E0CC]/10 rounded-xl border border-[#E1E0CC]/10 transition-all text-[#E1E0CC]/60 hover:text-[#E1E0CC] relative cursor-pointer"
-                >
-                  <Bell className="w-4 h-4" />
-                  {notifications.filter(n => !n.is_read).length > 0 && (
-                    <span className="absolute top-1 right-1 w-2 h-2 bg-black rounded-full" />
-                  )}
-                </button>
-
-                {/* Notifications Dropdown */}
-                {showNotifications && (
-                  <div className="absolute right-0 mt-2 w-80 bg-[#0A0A0A] border border-[#E1E0CC]/10 rounded-2xl shadow-2xl p-4 z-50 space-y-3">
-                    <div className="flex justify-between items-center pb-2 border-b border-[#E1E0CC]/10">
-                      <h4 className="text-xs font-black text-[#E1E0CC] uppercase tracking-wider">Notifications</h4>
-                      <button onClick={() => setShowNotifications(false)} className="text-[#E1E0CC]/50 hover:text-[#E1E0CC]/80 text-xs">Close</button>
-                    </div>
-                    <div className="max-h-60 overflow-y-auto space-y-2 divide-y divide-gray-100">
-                      {notifications.length === 0 ? (
-                        <p className="text-[10px] text-[#E1E0CC]/50 text-center py-4 font-mono">No new notifications.</p>
-                      ) : (
-                        notifications.map(n => (
-                          <div key={n.id} className="pt-2 text-xs text-[#E1E0CC]/70">
-                            <h5 className="font-bold text-[#E1E0CC]">{n.title}</h5>
-                            <p className="text-[10px] text-[#E1E0CC]/60 mt-0.5">{n.message}</p>
-                            <span className="text-[8px] text-[#E1E0CC]/50 block mt-1">{new Date(n.created_at).toLocaleDateString()}</span>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* User Avatar Card */}
-              <div className="flex items-center gap-2 pl-3 border-l border-[#E1E0CC]/10">
-                {userAvatar ? (
-                  <img src={userAvatar} alt="Avatar" className="w-7 h-7 rounded-full object-cover border border-[#E1E0CC]/15" />
-                ) : (
-                  <div className="w-7 h-7 rounded-full bg-[#101010] flex items-center justify-center text-white font-bold text-xs uppercase">
-                    {userName?.charAt(0) || "U"}
-                  </div>
-                )}
-                <span className="hidden sm:inline text-xs font-bold text-[#E1E0CC]/80 max-w-[80px] truncate">{userName}</span>
-              </div>
-            </div>
-          </div>
+          
+          <DashboardTopBar 
+            userName={userName}
+            userAvatar={userAvatar}
+            notifications={notifications}
+            showNotifications={showNotifications}
+            setShowNotifications={setShowNotifications}
+          />
 
           {/* Empty State / Onboarding requirement checker */}
           {!dna && activeTab !== "settings" ? (
@@ -2072,7 +2014,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                       onClick={() => setIsAutopilotActive(!isAutopilotActive)}
                       className={`px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 shrink-0 ${
                         isAutopilotActive 
-                          ? "bg-red-500/10 text-red-500 hover:bg-red-500/20" 
+                          ? "bg-[#E1E0CC] text-[#101010] hover:bg-[#101010] hover:text-white border border-transparent hover:border-[#E1E0CC]/50" 
                           : "bg-[#E1E0CC] text-[#101010] hover:bg-white"
                       }`}
                     >
@@ -2510,7 +2452,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                     type="button"
                     onClick={handleGeneratePost}
                     disabled={isGeneratingPost || !postPrompt.trim()}
-                    className="w-full py-3 bg-[#0A0A0A] hover:bg-[#0A0A0A]/90 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-[#0A0A0A]/15 flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="w-full py-3 bg-[#E1E0CC] text-[#101010] hover:bg-[#101010] hover:text-white border border-transparent hover:border-[#E1E0CC]/50 font-bold text-xs uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                   >
                     {isGeneratingPost ? (
                       <>
@@ -3899,7 +3841,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
             <div className="bg-[#0A0A0A] border border-[#E1E0CC]/15 rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-5">
               <div className="flex justify-between items-center border-b border-[#E1E0CC]/10 pb-3">
                 <div>
-                  <span className="text-[9px] font-mono font-bold text-[#E1306C] uppercase tracking-wider">Zero-Friction Social Integration</span>
+                  <span className="text-[9px] font-mono font-bold text-[#E1E0CC] uppercase tracking-wider">Zero-Friction Social Integration</span>
                   <h3 className="text-base font-bold text-[#E1E0CC]">Connect Instagram Account</h3>
                 </div>
                 <button
@@ -3913,9 +3855,9 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
               <div className="space-y-4 text-xs">
                 
                 {/* Managed 1-Click Banner */}
-                <div className="p-3 bg-[#E1306C]/10 border border-[#E1306C]/20 rounded-xl space-y-1">
-                  <span className="font-bold text-[#E1306C] text-[10px] uppercase block flex items-center gap-1">
-                    <Sparkles className="w-3 h-3 text-[#E1306C]" />
+                <div className="p-3 bg-[#E1E0CC]/10 border border-[#E1E0CC]/20 rounded-xl space-y-1">
+                  <span className="font-bold text-[#E1E0CC] text-[10px] uppercase block flex items-center gap-1">
+                    <Sparkles className="w-3 h-3 text-[#E1E0CC]" />
                     Managed SaaS Meta API (1-Click Connect)
                   </span>
                   <p className="text-[10px] text-[#E1E0CC]/70 leading-relaxed">
@@ -3983,7 +3925,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                 <button
                   onClick={handleSaveInstagram}
                   disabled={isSavingInstagram || !instagramHandle.trim()}
-                  className="flex-1 py-2.5 rounded-xl bg-[#E1306C] hover:bg-[#E1306C]/90 text-white font-bold text-xs uppercase tracking-wider shadow-none flex items-center justify-center gap-1.5 disabled:opacity-50 cursor-pointer"
+                  className="flex-1 py-2.5 rounded-xl bg-[#E1E0CC] hover:bg-[#101010] hover:text-white text-[#101010] border border-transparent hover:border-[#E1E0CC]/50 font-bold text-xs uppercase tracking-wider shadow-none flex items-center justify-center gap-1.5 disabled:opacity-50 cursor-pointer"
                 >
                   {isSavingInstagram ? "Connecting Account..." : "Connect Instagram (1-Click)"}
                 </button>
