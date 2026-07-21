@@ -2120,7 +2120,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                         </div>
                         <button
                           onClick={() => setIsInstagramModalOpen(true)}
-                          className="px-3.5 py-2 bg-[#E1E0CC]/90 hover:bg-gray-750 text-white font-mono text-[10px] font-bold uppercase rounded-lg border border-[#E1E0CC]/40 transition-all cursor-pointer"
+                          className="px-3.5 py-2 bg-[#E1E0CC] hover:bg-white text-[#101010] font-mono text-[10px] font-bold uppercase rounded-lg border border-[#E1E0CC]/40 transition-all cursor-pointer"
                         >
                           Settings
                         </button>
@@ -2228,7 +2228,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                             {/* Card Top Header */}
                             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#E1E0CC]/10 pb-3">
                               <div className="flex items-center gap-2">
-                                <span className="px-2.5 py-1 bg-[#E1E0CC] text-white font-mono text-[10px] font-bold rounded-md">
+                                <span className="px-2.5 py-1 bg-[#E1E0CC] text-[#101010] font-mono text-[10px] font-bold rounded-md">
                                   {item.date || `DAY ${idx + 1}`}
                                 </span>
                                 <span className="text-[10px] font-mono text-[#E1E0CC]/50 font-semibold flex items-center gap-1">
@@ -2299,7 +2299,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                               <div className="flex items-center gap-2 text-[10px] text-[#E1E0CC]/50 font-semibold">
                                 <span>Publishing Target:</span>
                                 <div className="flex items-center gap-1.5">
-                                  <span className="bg-[#E1E0CC] text-white px-2.5 py-0.5 rounded text-[9px] font-mono font-bold uppercase border border-[#E1E0CC]/50">
+                                  <span className="bg-[#E1E0CC] text-[#101010] px-2.5 py-0.5 rounded text-[9px] font-mono font-bold uppercase border border-[#E1E0CC]/50">
                                     Instagram ({instagramHandle})
                                   </span>
                                 </div>
@@ -2843,7 +2843,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                             <button
                               disabled={activeSlide === 0}
                               onClick={() => setActiveSlide(prev => Math.max(0, prev - 1))}
-                              className="px-2 py-0.5 bg-[#E1E0CC]/90 text-white rounded text-[10px] font-bold disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-700 transition-all cursor-pointer"
+                              className="px-2 py-0.5 bg-[#E1E0CC] text-[#101010] rounded text-[10px] font-bold disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-700 transition-all cursor-pointer"
                             >
                               ←
                             </button>
