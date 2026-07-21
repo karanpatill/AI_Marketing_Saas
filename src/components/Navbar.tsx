@@ -58,8 +58,8 @@ export default function Navbar() {
       <header className="fixed top-0 left-0 right-0 z-50 flex justify-center pt-0 px-0">
         <div className="w-full max-w-5xl bg-black rounded-b-2xl md:rounded-b-3xl px-4 py-2.5 md:px-8 border-b border-[#E1E0CC]/10 flex items-center justify-between shadow-2xl">
           {/* Left: Logo */}
-          <a href="/" className="text-[#E1E0CC] font-bold tracking-tight text-sm sm:text-base">
-            AUTOMARC
+          <a href="/" className="flex items-center gap-2">
+            <img src="/logo.png" alt="Automarc" className="h-6 md:h-7 w-auto object-contain" />
           </a>
 
           {/* Center: Desktop Links */}

@@ -1023,6 +1023,12 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
         <aside className="hidden md:flex flex-col justify-between w-[220px] bg-[#101010]/80 backdrop-blur-xl border-r border-[#E1E0CC]/10 p-5 shrink-0 z-20">
           <div className="space-y-4">
             
+            <div className="pb-4 pt-1 mb-2">
+              <a href="/">
+                <img src="/logo.png" alt="Automarc" className="h-6 w-auto object-contain" />
+              </a>
+            </div>
+
             {/* SaaS Workspace & Organization Switcher */}
             <div className="space-y-2 pb-3 border-b border-[#E1E0CC]/10">
               <div className="relative">

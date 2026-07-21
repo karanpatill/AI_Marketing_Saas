@@ -5,10 +5,8 @@ export default function Footer() {
     <footer className="relative z-10 w-full bg-black border-t border-[#E1E0CC]/10 py-12 px-6">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
         {/* Brand & Tagline */}
-        <div className="flex flex-col items-center md:items-start gap-1">
-          <span className="text-[#E1E0CC] font-bold text-lg tracking-tight">
-            AUTOMARC
-          </span>
+        <div className="flex flex-col items-center md:items-start gap-3">
+          <img src="/logo.png" alt="Automarc" className="h-8 md:h-10 w-auto object-contain" />
           <span className="text-[#E1E0CC]/40 text-xs font-normal">
             Your Brand, Automated
           </span>
