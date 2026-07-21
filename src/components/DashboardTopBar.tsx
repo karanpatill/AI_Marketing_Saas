@@ -1,6 +1,7 @@
 "use client";
 
-import { Bell } from "lucide-react";
+import { Bell, ArrowLeft } from "lucide-react";
+import Link from "next/link";
 
 interface Notification {
   id: string | number;
@@ -27,7 +28,15 @@ export default function DashboardTopBar({
   setShowNotifications
 }: DashboardTopBarProps) {
   return (
-    <div className="flex items-center justify-end gap-4 bg-[#0A0A0A] border border-[#E1E0CC]/15/80 rounded-2xl px-5 py-3 shadow-[0_4px_20px_rgb(0,0,0,0.01)] relative">
+    <div className="flex items-center justify-between gap-4 bg-[#0A0A0A] border border-[#E1E0CC]/15/80 rounded-2xl px-5 py-3 shadow-[0_4px_20px_rgb(0,0,0,0.01)] relative">
+      {/* Back Button */}
+      <Link 
+        href="/"
+        className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#E1E0CC]/60 hover:text-[#E1E0CC] transition-colors"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        <span className="hidden sm:inline">Back</span>
+      </Link>
       {/* Notification Bell + Profile Info */}
       <div className="flex items-center gap-4 relative">
         {/* Notification bell */}
