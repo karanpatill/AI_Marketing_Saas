@@ -2053,10 +2053,10 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                       </div>
                       <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white flex items-center gap-3">
                         Automate Your Brand
-                        <span className={`text-[10px] font-mono font-bold px-2.5 py-1 rounded-md border flex items-center gap-1.5 ${
+                        <span className={`text-[11px] font-bold tracking-wide px-3 py-1 rounded-full flex items-center gap-1.5 ${
                           isAutopilotActive 
-                            ? "bg-[#E1E0CC]/10/10 text-[#E1E0CC]/70 border-[#E1E0CC]/20/20" 
-                            : "bg-black/50 text-[#E1E0CC]/50 border-[#E1E0CC]/15"
+                            ? "bg-[#E1E0CC]/15 text-[#E1E0CC]" 
+                            : "bg-black/50 text-[#E1E0CC]/50"
                         }`}>
                           <span className={`w-1.5 h-1.5 rounded-full ${isAutopilotActive ? "bg-[#E1E0CC]/10 animate-pulse" : "bg-gray-400"}`} />
                           {isAutopilotActive ? "AUTO-PILOT ACTIVE" : "AUTO-PILOT PAUSED"}
@@ -2375,16 +2375,16 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                                 <button
                                   disabled={publishingInstagramId === item.id}
                                   onClick={() => handlePublishToInstagram(item)}
-                                  className="px-3.5 py-2 bg-[#E1E0CC] hover:bg-black text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-none flex items-center gap-1.5 cursor-pointer disabled:opacity-50 border border-[#E1E0CC]/50"
+                                  className="px-3.5 py-2 bg-[#E1E0CC] hover:bg-white text-[#101010] font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-none flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                                 >
                                   {publishingInstagramId === item.id ? (
                                     <>
-                                      <Loader2 className="w-3 h-3 animate-spin text-white" />
+                                      <Loader2 className="w-3 h-3 animate-spin" />
                                       <span>Posting to IG...</span>
                                     </>
                                   ) : (
                                     <>
-                                      <Share2 className="w-3.5 h-3.5 text-white" />
+                                      <Share2 className="w-3.5 h-3.5" />
                                       <span>Auto-Post to IG</span>
                                     </>
                                   )}
