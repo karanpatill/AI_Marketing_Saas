@@ -36,7 +36,7 @@ export default function Home() {
       <Hero />
 
       {/* ── ABOUT SECTION ── */}
-      <section className="bg-black py-24 px-4 sm:px-6 md:px-8">
+      <section className="bg-black py-12 md:py-16 px-4 sm:px-6 md:px-8">
         <div className="max-w-6xl mx-auto bg-[#101010] rounded-2xl p-8 md:p-16 flex flex-col items-center text-center space-y-12">
           
           <span className="text-primary text-[10px] sm:text-xs tracking-widest uppercase">

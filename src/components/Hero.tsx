@@ -6,7 +6,7 @@ import WordsPullUp from "./ui/WordsPullUp";
 
 export default function Hero() {
   return (
-    <section className="h-screen p-4 md:p-6 pt-20 md:pt-24 bg-black select-none">
+    <section className="h-[90vh] md:h-screen p-2 md:p-3 pt-14 md:pt-16 pb-2 md:pb-3 bg-black select-none">
       <div className="w-full h-full rounded-2xl md:rounded-[2rem] overflow-hidden relative bg-black border border-[#E1E0CC]/10">
         
         {/* ── Background Video ── */}

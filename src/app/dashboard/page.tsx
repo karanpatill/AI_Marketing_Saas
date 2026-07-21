@@ -2042,12 +2042,12 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
             <div className="space-y-8 animate-fade-up">
               
               {/* MAIN USP HERO: AUTOMATE YOUR BRAND */}
-              <div className="relative overflow-hidden rounded-2xl bg-[#E1E0CC] border border-[#E1E0CC]/50 p-6 sm:p-8 shadow-none text-white">
+              <div className="relative overflow-hidden rounded-2xl bg-[#101010] border border-[#E1E0CC]/15 p-6 sm:p-8 shadow-none text-white">
                 <div className="relative z-10 space-y-6">
                   {/* Top USP Banner Title */}
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#E1E0CC]/50 pb-6">
                     <div className="space-y-2 max-w-2xl">
-                      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#E1E0CC]/90 border border-[#E1E0CC]/40 text-[#E1E0CC] text-[10px] font-mono font-bold uppercase tracking-wider">
+                      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#E1E0CC]/10 border border-[#E1E0CC]/20 text-[#E1E0CC] text-[10px] font-mono font-bold uppercase tracking-wider">
                         <Sparkles className="w-3 h-3 text-brand-secondary" />
                         CORE USP • BRAND AUTOMATION ENGINE
                       </div>
@@ -2056,7 +2056,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                         <span className={`text-[10px] font-mono font-bold px-2.5 py-1 rounded-md border flex items-center gap-1.5 ${
                           isAutopilotActive 
                             ? "bg-[#E1E0CC]/10/10 text-[#E1E0CC]/70 border-[#E1E0CC]/20/20" 
-                            : "bg-[#E1E0CC]/90 text-[#E1E0CC]/50 border-[#E1E0CC]/40"
+                            : "bg-black/50 text-[#E1E0CC]/50 border-[#E1E0CC]/15"
                         }`}>
                           <span className={`w-1.5 h-1.5 rounded-full ${isAutopilotActive ? "bg-[#E1E0CC]/10 animate-pulse" : "bg-gray-400"}`} />
                           {isAutopilotActive ? "AUTO-PILOT ACTIVE" : "AUTO-PILOT PAUSED"}
@@ -2072,8 +2072,8 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                       onClick={() => setIsAutopilotActive(!isAutopilotActive)}
                       className={`px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 shrink-0 ${
                         isAutopilotActive 
-                          ? "bg-[#E1E0CC]/10 text-gray-950 hover:bg-[#E1E0CC]/10" 
-                          : "bg-[#E1E0CC]/90 text-white border border-[#E1E0CC]/40 hover:bg-gray-750"
+                          ? "bg-red-500/10 text-red-500 hover:bg-red-500/20" 
+                          : "bg-[#E1E0CC] text-[#101010] hover:bg-white"
                       }`}
                     >
                       <Zap className="w-3.5 h-3.5" />
@@ -2089,13 +2089,13 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                       </span>
                       <button
                         onClick={() => setIsInstagramModalOpen(true)}
-                        className="text-[10px] font-mono font-bold text-white hover:underline cursor-pointer"
+                        className="text-[10px] font-mono font-bold text-[#E1E0CC] hover:underline cursor-pointer"
                       >
                         + Configure Instagram Connection
                       </button>
                     </div>
                     
-                    <div className="bg-gray-850 border border-[#E1E0CC]/50 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="bg-black/50 border border-[#E1E0CC]/15 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
                           <span className="text-xs font-bold uppercase text-white tracking-wider">Instagram Business</span>
