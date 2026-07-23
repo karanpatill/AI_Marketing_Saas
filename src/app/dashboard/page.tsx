@@ -14,6 +14,7 @@ import {
   X, Check, Lock, ChevronDown, RefreshCw, Globe, Clock
 } from "lucide-react";
 import DashboardTopBar from "@/components/DashboardTopBar";
+import ExportZipButton from "@/components/ExportZipButton";
 import WordsPullUp from "@/components/ui/WordsPullUp";
 import { toJpeg } from "html-to-image";
 import { saveAs } from "file-saver";
@@ -1131,8 +1132,14 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
             </nav>
           </div>
 
-          {/* Settings & Sign Out */}
-          <div className="space-y-1 pt-3 border-t border-[#E1E0CC]/10">
+          {/* Export Content Package & Settings */}
+          <div className="space-y-2 pt-3 border-t border-[#E1E0CC]/10">
+            <ExportZipButton 
+              brandName={dna?.brand_name} 
+              posts={historyPosts} 
+              className="w-full justify-center text-[11px] py-2" 
+            />
+
             <button
               onClick={() => setActiveTab("settings")}
               className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-2xl text-xs font-semibold transition-all text-left
