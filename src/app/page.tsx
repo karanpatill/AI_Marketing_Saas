@@ -12,19 +12,19 @@ const BENTO_FEATURES = [
     number: "01",
     title: "Brand Memory Engine.",
     desc: "Scrapes your website, extracts your logos, typography, visual direction, target audience, and customer personas into an immutable digital DNA.",
-    icon: "https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20260405_171918_4a5edc79-d78f-4637-ac8b-53c43c220606.png&w=1280&q=85"
+    icon: "/bento/brand_memory.jpg"
   },
   {
     number: "02",
     title: "Auto-Posting Pipeline.",
     desc: "Connect your Instagram handle in 1-click. Our background workers format, render, and auto-publish 30 days of strategy directly to your feed.",
-    icon: "https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20260405_171741_ed9845ab-f5b2-4018-8ce7-07cc01823522.png&w=1280&q=85"
+    icon: "/bento/social_pipeline.jpg"
   },
   {
     number: "03",
     title: "Carousel Studio.",
     desc: "Generates 5-slide, high-converting carousel decks styled with Google Fonts typography pairs matching your exact brand personality.",
-    icon: "https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20260405_171809_f56666dc-c099-4778-ad82-9ad4f209567b.png&w=1280&q=85"
+    icon: "/bento/carousel_studio.jpg"
   }
 ];
 
