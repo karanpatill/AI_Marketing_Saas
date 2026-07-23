@@ -1132,14 +1132,8 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
             </nav>
           </div>
 
-          {/* Export Content Package & Settings */}
-          <div className="space-y-2 pt-3 border-t border-[#E1E0CC]/10">
-            <ExportZipButton 
-              brandName={dna?.brand_name} 
-              posts={[]} 
-              className="w-full justify-center text-[11px] py-2" 
-            />
-
+          {/* Settings & Sign Out */}
+          <div className="space-y-1 pt-3 border-t border-[#E1E0CC]/10">
             <button
               onClick={() => setActiveTab("settings")}
               className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-2xl text-xs font-semibold transition-all text-left
@@ -3554,12 +3548,24 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                   <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest font-sans tracking-normal">Assets Preview</span>
                   <h3 className="text-base font-bold text-[#E1E0CC] capitalize">{viewingAsset.post_type} Asset Details</h3>
                 </div>
-                <button
-                  onClick={() => setViewingAsset(null)}
-                  className="w-7 h-7 rounded-full bg-black border-none hover:bg-[#E1E0CC]/10 flex items-center justify-center font-bold text-gray-400 hover:text-[#E1E0CC]/80 cursor-pointer"
-                >
-                  &times;
-                </button>
+                <div className="flex items-center gap-2">
+                  <ExportZipButton 
+                    brandName={dna?.brand_name}
+                    posts={viewingAsset ? [{
+                      title: viewingAsset.headline || viewingAsset.visual_prompt,
+                      caption: viewingAsset.caption,
+                      image_url: viewingAsset.generated_assets?.imageUrl || viewingAsset.generated_assets?.thumbnailUrl
+                    }] : []}
+                    carouselSlides={viewingAsset?.generated_assets?.slides ? viewingAsset.generated_assets.slides.map((s: any) => s.headline) : []}
+                    className="py-1 px-3 text-[10px]"
+                  />
+                  <button
+                    onClick={() => setViewingAsset(null)}
+                    className="w-7 h-7 rounded-full bg-black border-none hover:bg-[#E1E0CC]/10 flex items-center justify-center font-bold text-gray-400 hover:text-[#E1E0CC]/80 cursor-pointer"
+                  >
+                    &times;
+                  </button>
+                </div>
               </div>
 
               <div className="space-y-4 text-xs">
