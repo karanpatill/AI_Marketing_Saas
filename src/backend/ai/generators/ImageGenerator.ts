@@ -124,32 +124,40 @@ Do not include markdown code block formatting.
     const headlineFontStyle = primaryFontName ? `font-family: '${primaryFontName}', serif, sans-serif;` : '';
     const bodyFontStyle = bodyFontName ? `font-family: '${bodyFontName}', sans-serif;` : '';
 
-    // Enforce Cream & Black Aesthetic
-    const bgBlack = "#0A0A0A";
-    const accentCream = "#E1E0CC";
-    const textCream = "#E1E0CC";
-    const textMuted = "rgba(225,224,204,0.6)";
+    const textPrimaryClass = isLightBg ? "text-black" : "text-white";
+    const textSecondaryClass = isLightBg ? "text-black/80" : "text-white/80";
+    const textMutedClass = isLightBg ? "text-black/60" : "text-white/60";
     
+    const replaceColorPlaceholders = (cls: string, isLight: boolean) => {
+      let result = cls
+        .replace(/black/g, isLight ? "black" : "white")
+        .replace(/white/g, isLight ? "white" : "black");
+      if (!isLight) {
+        result = result.replace(/rgba\\(0,0,0,1\\)/g, "rgba(255,255,255,1)");
+      }
+      return result;
+    };
+    
+    const borderClass = replaceColorPlaceholders(profile.borderClass, isLightBg);
+    const backgroundCssStyle = `background-color: ${secondaryColor};`;
+
     const html = `
    ${fontImportCss ? `<style>${fontImportCss}</style>` : ''}
-   <div class="relative w-full h-full p-10 flex flex-col justify-between overflow-hidden" style="background-color: ${bgBlack}; color: ${textCream}; aspect-ratio: ${aspectRatio.replace(':', '/')}; border: 1px solid rgba(225,224,204,0.15);">
-     
-     <div class="w-full flex justify-between items-center shrink-0 border-b border-[rgba(225,224,204,0.15)] pb-3 z-10 gap-3">
-       <div class="flex items-center gap-3">
-         ${logoUrl ? `<img src="${logoUrl}" alt="${brandName}" class="h-8 w-auto max-h-8 object-contain max-w-[120px] brightness-0 invert opacity-90" style="filter: brightness(0) saturate(100%) invert(98%) sepia(8%) saturate(735%) hue-rotate(334deg) brightness(96%) contrast(89%);" />` : ''}
-         <span class="text-xs uppercase font-black tracking-widest px-3 py-1.5 rounded-full bg-[rgba(225,224,204,0.1)] border border-[rgba(225,224,204,0.2)] text-[${accentCream}]">${parsed.category || 'INSIGHT'}</span>
+   <div class="relative w-full h-full p-8 flex flex-col justify-between overflow-hidden" style="${backgroundCssStyle} color: ${textColor}; aspect-ratio: ${aspectRatio.replace(':', '/')};">
+     <div class="w-full flex justify-between items-center shrink-0 border-b ${borderClass} pb-2 z-10 gap-3">
+       <div class="flex items-center gap-2.5">
+         ${logoUrl ? `<img src="${logoUrl}" alt="${brandName}" class="h-6 w-auto max-h-7 object-contain max-w-[110px]" />` : ''}
+         <span class="text-[10px] uppercase font-black tracking-widest ${textPrimaryClass}">${parsed.category || 'INSIGHT'}</span>
        </div>
      </div>
-
-     <div class="flex-1 flex flex-col justify-center min-h-0 overflow-hidden py-6 gap-5 z-10">
-       <div class="w-10 h-1.5 rounded-full shrink-0" style="background-color: ${accentCream};"></div>
-       <h2 class="${profile.headingClass} text-3xl md:text-4xl font-black leading-tight tracking-tight" style="${headlineFontStyle}">${parsed.title || ''}</h2>
-       ${parsed.content ? `<p class="${profile.bodyClass} text-lg leading-relaxed font-light" style="${bodyFontStyle}; color: ${textMuted};">${parsed.content}</p>` : ''}
+     <div class="flex-1 flex flex-col justify-center min-h-0 overflow-hidden py-4 gap-3 z-10">
+       <div class="w-8 h-1 rounded-full shrink-0" style="background-color: ${primaryColor};"></div>
+       <h2 class="${profile.headingClass}" style="${headlineFontStyle}">${parsed.title || ''}</h2>
+       ${parsed.content ? `<p class="${profile.bodyClass} ${textSecondaryClass}" style="${bodyFontStyle}">${parsed.content}</p>` : ''}
      </div>
-
-     <div class="w-full flex justify-between items-center shrink-0 border-t border-[rgba(225,224,204,0.15)] pt-4 z-10">
-       <span class="text-xs uppercase font-bold tracking-[0.25em]" style="color: ${accentCream};">${brandName.toUpperCase()}</span>
-       <span class="text-xs uppercase font-bold tracking-[0.2em]" style="color: ${textMuted};">${website.toUpperCase() || "@" + brandName.toLowerCase()}</span>
+     <div class="w-full flex justify-between items-center shrink-0 border-t ${borderClass} pt-2 z-10">
+       <span class="text-[10px] uppercase font-bold tracking-[0.25em] ${textMutedClass}">${brandName.toUpperCase()}</span>
+       <span class="text-[10px] uppercase font-bold tracking-[0.2em] ${textMutedClass}">${website.toUpperCase() || "@" + brandName.toLowerCase()}</span>
      </div>
    </div>`;
 
