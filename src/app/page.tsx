@@ -119,7 +119,7 @@ export default function Home() {
                 playsInline 
                 className="absolute inset-0 w-full h-full object-cover"
               >
-                <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260406_133058_0504132a-0cf3-4450-a370-8ea3b05c95d4.mp4" type="video/mp4" />
+                <source src="https://assets.mixkit.co/videos/44818/44818-1080.mp4" type="video/mp4" />
               </video>
               <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors" />
               <div className="absolute bottom-6 left-6">
