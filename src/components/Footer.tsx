@@ -17,6 +17,7 @@ export default function Footer() {
           <a href="/about-us" className="text-[#E1E0CC]/50 text-sm hover:text-[#E1E0CC] transition-colors">About</a>
           <a href="/how-it-works" className="text-[#E1E0CC]/50 text-sm hover:text-[#E1E0CC] transition-colors">How It Works</a>
           <a href="/privacy-policy" className="text-[#E1E0CC]/50 text-sm hover:text-[#E1E0CC] transition-colors">Privacy Policy</a>
+          <a href="/terms-of-service" className="text-[#E1E0CC]/50 text-sm hover:text-[#E1E0CC] transition-colors">Terms of Service</a>
           <a href="/dashboard" className="text-[#E1E0CC]/50 text-sm hover:text-[#E1E0CC] transition-colors">Dashboard</a>
         </div>
 
