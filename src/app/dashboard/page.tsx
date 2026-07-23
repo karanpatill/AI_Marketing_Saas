@@ -1126,7 +1126,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                     : "text-gray-400 hover:text-[#E1E0CC]/90 hover:bg-[#E1E0CC]/5"
                   }`}
               >
-                <Plus className="w-3.5 h-3.5 text-[#0A0A0A]" />
+                <Layers className="w-3.5 h-3.5" />
                 <span>Carousel Studio</span>
               </button>
             </nav>
