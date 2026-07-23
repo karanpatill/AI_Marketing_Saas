@@ -29,8 +29,26 @@ const BENTO_FEATURES = [
 ];
 
 export default function Home() {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Automarc",
+    "applicationCategory": "BusinessApplication",
+    "operatingSystem": "All",
+    "description": "Tell us about your business. Automarc handles the rest. Brand Memory, Moodboard Studio, AI Content Factory, and Competitor Intelligence.",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    }
+  };
+
   return (
     <main className="relative bg-black text-[#E1E0CC] min-h-screen flex flex-col justify-between">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       
       {/* ── Main Hero Section ── */}
       <Hero />
