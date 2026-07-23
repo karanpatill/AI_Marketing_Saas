@@ -34,6 +34,11 @@ export const metadata: Metadata = {
       "Tell us about your business. We handle the rest.",
     type: "website",
   },
+  icons: {
+    icon: "/logo.png",
+    shortcut: "/logo.png",
+    apple: "/logo.png",
+  },
 };
 
 import SmoothScroll from "@/components/SmoothScroll";
