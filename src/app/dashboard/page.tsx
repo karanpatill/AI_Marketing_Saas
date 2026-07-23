@@ -1136,7 +1136,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
           <div className="space-y-2 pt-3 border-t border-[#E1E0CC]/10">
             <ExportZipButton 
               brandName={dna?.brand_name} 
-              posts={historyPosts} 
+              posts={[]} 
               className="w-full justify-center text-[11px] py-2" 
             />
 
