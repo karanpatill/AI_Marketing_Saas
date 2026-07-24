@@ -1,11 +1,9 @@
-"use client";
-
 import Hero from "@/components/Hero";
 import { Check, ArrowRight } from "lucide-react";
 import WordsPullUpMultiStyle from "@/components/ui/WordsPullUpMultiStyle";
 import AnimatedLetter from "@/components/ui/AnimatedLetter";
 import Footer from "@/components/Footer";
-import { motion } from "framer-motion";
+import BentoVideoCard from "@/components/BentoVideoCard";
 
 const BENTO_FEATURES = [
   {
@@ -81,7 +79,6 @@ export default function Home() {
       
       {/* ── FEATURES SECTION ── */}
       <section className="relative z-10 bg-black min-h-screen py-24 px-4 sm:px-6 md:px-8 overflow-hidden">
-        <div className="bg-noise absolute inset-0 opacity-[0.15] pointer-events-none" />
         
         <div className="max-w-7xl mx-auto space-y-16 relative z-10">
           
@@ -104,43 +101,19 @@ export default function Home() {
           {/* Feature Cards Grid (4 cols) */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-2 md:gap-1 lg:h-[480px]">
             
-            {/* Card 1 - Video Card */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true, margin: "-100px" }}
-              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1], delay: 0 }}
-              className="relative rounded-2xl overflow-hidden h-80 lg:h-full group border border-[#E1E0CC]/5"
-            >
-              <video 
-                autoPlay 
-                loop 
-                muted 
-                playsInline 
-                className="absolute inset-0 w-full h-full object-cover"
-              >
-                <source src="https://assets.mixkit.co/videos/44818/44818-1080.mp4" type="video/mp4" />
-              </video>
-              <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors" />
-              <div className="absolute bottom-6 left-6">
-                <span className="text-[#E1E0CC] font-medium text-lg">Your creative canvas.</span>
-              </div>
-            </motion.div>
+            {/* Card 1 - Video Card (lazy-loaded client component) */}
+            <BentoVideoCard />
 
             {/* Cards 2, 3, 4 */}
             {BENTO_FEATURES.map((item, i) => (
-              <motion.div 
+              <div 
                 key={item.number}
-                initial={{ opacity: 0, scale: 0.95 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true, margin: "-100px" }}
-                transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1], delay: (i + 1) * 0.15 }}
                 className="bg-[#212121] rounded-2xl p-6 border border-[#E1E0CC]/5 flex flex-col justify-between transition-all duration-300 hover:border-[#E1E0CC]/20 h-80 lg:h-full"
               >
                 <div className="space-y-6">
                   {/* Icon */}
                   <div className="w-10 h-10 sm:w-12 sm:h-12 rounded overflow-hidden">
-                    <img src={item.icon} alt={item.title} className="w-full h-full object-cover" />
+                    <img src={item.icon} alt={item.title} className="w-full h-full object-cover" loading="lazy" />
                   </div>
                   
                   {/* Title */}
@@ -167,7 +140,7 @@ export default function Home() {
                     <ArrowRight className="w-4 h-4 -rotate-45 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                   </a>
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>

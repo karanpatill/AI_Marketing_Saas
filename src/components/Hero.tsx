@@ -14,18 +14,16 @@ export default function Hero() {
           autoPlay 
           loop 
           muted 
-          playsInline 
+          playsInline
+          preload="metadata"
           className="absolute inset-0 w-full h-full object-cover"
+          style={{ willChange: "auto" }}
         >
-          {/* Defaulting to a high-quality free abstract tech stock video */}
           <source src="https://assets.mixkit.co/videos/31497/31497-720.mp4" type="video/mp4" />
         </video>
 
         {/* ── Gradient Overlay ── */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/90 pointer-events-none" />
-
-        {/* ── Noise Overlay ── */}
-        <div className="noise-overlay absolute inset-0 opacity-[0.7] mix-blend-overlay pointer-events-none" />
 
         {/* ── Hero Content Grid ── */}
         <div className="absolute bottom-0 left-0 right-0 p-6 md:p-10 grid grid-cols-12 gap-4 items-end z-10">
