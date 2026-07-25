@@ -136,35 +136,35 @@ type OnboardingData = {
 };
 
 const INITIAL_DATA: OnboardingData = {
-  brandName: "Aethera",
-  website: "aethera.design",
-  industry: "B2B SaaS & Tech",
-  category: "AI Design Studio",
-  subCategory: "Premium Branding Automations",
-  businessDescription: "Aethera is a high-end generative design suite creating production-grade visual assets and coordinated brand systems for boutique businesses.",
+  brandName: "",
+  website: "",
+  industry: "",
+  category: "",
+  subCategory: "",
+  businessDescription: "",
   
-  mission: "To bring editorial design quality and premium aesthetics to every digital interface.",
-  vision: "To be the defining standard of quality for automated visual communication.",
-  usp: "Pristine, human-grade design taste powered by state-of-the-art visual models.",
-  brandPersonality: "professional",
-  brandValues: ["Innovation", "Exclusivity", "Elegance", "Trust"],
+  mission: "",
+  vision: "",
+  usp: "",
+  brandPersonality: "",
+  brandValues: [],
 
   // Color Palette Defaults
   primaryColor: "#0D0D0D",
   accentColor: "#C9A84C",
   
-  products: ["Aethera Canvas", "Aesthetics Engine", "Coordinated Brand Kits"],
-  services: ["Visual Identity Consultations", "Premium Content Scaling"],
-  pricing: "Subscription / SaaS",
+  products: [],
+  services: [],
+  pricing: "",
   
-  targetAudience: "Boutique fashion labels, design agencies, and premium SaaS developers.",
-  customerPersonas: "Creative directors, VPs of Marketing, and design-conscious founders.",
-  country: "United States",
-  languages: ["English"],
+  targetAudience: "",
+  customerPersonas: "",
+  country: "",
+  languages: [],
   
-  platforms: ["instagram", "linkedin"],
-  competitors: ["Canva Enterprise", "Adobe Firefly Studio"],
-  mainGoal: "leads",
+  platforms: [],
+  competitors: [],
+  mainGoal: "",
 
   // Brand Identity Studio defaults
   kitType: "generate",
@@ -307,7 +307,7 @@ const MOODBOARD_PRESETS: Record<string, {
     essence: ["SIMPLICITY", "TRANSPARENCY", "QUALITY", "BALANCE"],
     summary: "Clean Minimal uses organic textures and generous whitespace. It communicates approachability, focus, and modern design, suitable for customer-first enterprises.",
     imageryTags: ["Natural", "Calm", "Organic", "Aspirational"],
-    themeClass: "bg-[#F3F4F6] text-gray-800 border-gray-300",
+    themeClass: "bg-[#F3F4F6] text-[#E1E0CC] border-[#E1E0CC]/20",
     themeTitleColor: "text-[#5C6B57]",
     themeBg: "#F3F4F6"
   },
@@ -793,17 +793,35 @@ export default function OnboardingPage() {
       // Get current user and default workspace
       const { data: { user } } = await supabase.auth.getUser();
       let workspaceId = null;
+      let orgIdForWs = null;
+
       if (user) {
         try {
           const wsRes = await fetch("/api/workspace");
           if (wsRes.ok) {
-            const data = await wsRes.json();
-            if (data.workspaces && data.workspaces.length > 0) {
-              workspaceId = data.workspaces[0].id;
+            const dataRes = await wsRes.json();
+            if (dataRes.organizations && dataRes.organizations.length > 0) {
+              orgIdForWs = dataRes.organizations[0].orgId;
             }
           }
         } catch (err) {
           console.error("Failed to fetch workspaces from API", err);
+        }
+
+        if (orgIdForWs) {
+          try {
+            const createWsRes = await fetch("/api/workspace", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ orgId: orgIdForWs, name: data.brandName })
+            });
+            if (createWsRes.ok) {
+              const newWs = await createWsRes.json();
+              workspaceId = newWs.data.id;
+            }
+          } catch (err) {
+            console.error("Failed to create workspace", err);
+          }
         }
       }
 
@@ -856,7 +874,14 @@ export default function OnboardingPage() {
         fonts: data.fonts,
         icons: data.icons,
         brand_guidelines: data.brandGuidelinesFile || "",
-        logo_studio_data: data.kitType === "generate" ? (data.selectedLogo || {}) : {},
+        logo_studio_data: {
+          ...(data.kitType === "generate" ? (data.selectedLogo || {}) : {}),
+          colors: {
+            ...(data.kitType === "generate" && data.selectedLogo?.colors ? data.selectedLogo.colors : {}),
+            primaryHex: data.primaryColor || "#0D0D0D",
+            secondaryHex: data.accentColor || "#DEDBC8",
+          }
+        },
       });
 
       if (assetsError) {
@@ -919,7 +944,7 @@ export default function OnboardingPage() {
       </div>
 
       {/* Progress Bar */}
-      <div className="w-full h-1 bg-[#212121] relative">
+      <div className="w-full h-1 bg-[#1c1e21] relative">
         <div
           className="h-full bg-[#DEDBC8] transition-all duration-300 ease-out"
           style={{ width: `${(step / 7) * 100}%` }}
@@ -933,40 +958,38 @@ export default function OnboardingPage() {
           {step === 1 && (
             <div className="space-y-6 animate-fade-up">
               <div>
-                <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <h2 className="text-lg font-bold text-white flex items-center gap-2">
                   <Zap className="w-5 h-5 text-[#0A0A0A] fill-[#0A0A0A]/10" />
                   Magic Autofill DNA
                 </h2>
-                <p className="text-xs text-gray-400 mt-1">
+                <p className="text-xs text-[#E1E0CC]/40 mt-1">
                   Enter your website URL. Our AI engine will auto-scan your product info, values, pricing models, and target audience setup instantly!
                 </p>
               </div>
 
               {/* Crawler Bar */}
-              <div className="p-4 bg-gray-50 border border-gray-100 rounded-xl space-y-3">
-                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+              <div className="p-5 bg-gradient-to-br from-[#1C1C1C] to-black border border-[#E1E0CC]/5 hover:border-[#E1E0CC]/15 transition-all shadow-[0_0_30px_rgba(225,224,204,0.02)]/80 rounded-2xl space-y-4">
+                <label className="block text-xs font-bold text-[#ffffff]/80 uppercase tracking-[0.2em]">
                   Company Website URL
                 </label>
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-3">
                   <div className="relative flex-1">
-                    <Search className="w-4 h-4 text-gray-400 absolute left-3 top-3.5" />
+                    <Search className="w-4 h-4 text-[#E1E0CC]/40 absolute left-3.5 top-3.5" />
                     <input
                       type="text"
                       placeholder="e.g. mybrand.com"
                       disabled={isScanning}
                       value={scanningUrl}
                       onChange={(e) => setScanningUrl(e.target.value)}
-                      className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 focus:border-[#0A0A0A] text-sm bg-white text-gray-900 outline-none transition-all disabled:opacity-50"
+                      className="w-full pl-10 pr-4 py-3 rounded-2xl border border-[#E1E0CC]/5 focus:border-[#E1E0CC]/20 focus:bg-black text-sm bg-[#1c1e21] text-[#ffffff] outline-none transition-all disabled:opacity-50"
                     />
                   </div>
                   <button
                     onClick={runAiScanner}
                     disabled={!scanningUrl.trim() || isScanning}
-                    className={`px-5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all
-                      ${scanningUrl.trim() && !isScanning
-                        ? "bg-[#0A0A0A] text-[#090D16] hover:bg-[#0A0A0A]/90"
-                        : "bg-gray-100 text-gray-300 cursor-not-allowed"
-                      }`}
+                    className="px-6 py-3 rounded-2xl text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 transition-all border border-[#E1E0CC]/5 shadow-none
+                      enabled:bg-[#1c1e21] enabled:text-[#ffffff] enabled:hover:bg-black enabled:hover:border-[#E1E0CC]/15
+                      disabled:bg-[#1c1e21]/50 disabled:text-[#ffffff]/30 disabled:cursor-not-allowed"
                   >
                     {isScanning ? (
                       <>
@@ -983,12 +1006,12 @@ export default function OnboardingPage() {
                 </div>
               </div>
 
-              <div className="border-t border-gray-100 pt-5 space-y-4">
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Verify / Edit Details</p>
+              <div className="border-t border-[#E1E0CC]/10 pt-5 space-y-4">
+                <p className="text-[10px] font-bold text-[#E1E0CC]/40 uppercase tracking-widest">Verify / Edit Details</p>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+                    <label className="block text-[10px] font-bold text-[#E1E0CC]/40 uppercase tracking-wider mb-2">
                       Brand Name *
                     </label>
                     <input
@@ -996,12 +1019,12 @@ export default function OnboardingPage() {
                       placeholder="e.g. Automarc"
                       value={data.brandName}
                       onChange={(e) => updateData({ brandName: e.target.value })}
-                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-[#0A0A0A] text-sm bg-white text-gray-900 outline-none"
+                      className="w-full px-4 py-3 rounded-2xl border border-[#E1E0CC]/5 focus:border-[#E1E0CC]/20 focus:bg-black text-sm bg-[#1c1e21] text-[#ffffff] outline-none transition-all"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+                    <label className="block text-[10px] font-bold text-[#E1E0CC]/40 uppercase tracking-wider mb-2">
                       Website URL
                     </label>
                     <input
@@ -1013,12 +1036,12 @@ export default function OnboardingPage() {
                         // sync scanningUrl too
                         setScanningUrl(e.target.value);
                       }}
-                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-[#0A0A0A] text-sm bg-white text-gray-900 outline-none"
+                      className="w-full px-4 py-3 rounded-2xl border border-[#E1E0CC]/5 focus:border-[#E1E0CC]/20 focus:bg-black text-sm bg-[#1c1e21] text-[#ffffff] outline-none transition-all"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+                    <label className="block text-[10px] font-bold text-[#E1E0CC]/40 uppercase tracking-wider mb-2">
                       Industry *
                     </label>
                     <input
@@ -1026,13 +1049,13 @@ export default function OnboardingPage() {
                       placeholder="e.g. SaaS, E-Commerce, Retail"
                       value={data.industry}
                       onChange={(e) => updateData({ industry: e.target.value })}
-                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-[#0A0A0A] text-sm bg-white text-gray-900 outline-none"
+                      className="w-full px-4 py-3 rounded-2xl border border-[#E1E0CC]/5 focus:border-[#E1E0CC]/20 focus:bg-black text-sm bg-[#1c1e21] text-[#ffffff] outline-none transition-all"
                     />
                   </div>
 
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+                      <label className="block text-[10px] font-bold text-[#E1E0CC]/40 uppercase tracking-wider mb-2">
                         Category
                       </label>
                       <input
@@ -1040,11 +1063,11 @@ export default function OnboardingPage() {
                         placeholder="e.g. AI Content"
                         value={data.category}
                         onChange={(e) => updateData({ category: e.target.value })}
-                        className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-[#0A0A0A] text-sm bg-white text-gray-900 outline-none"
+                        className="w-full px-4 py-3 rounded-2xl border border-[#E1E0CC]/5 focus:border-[#E1E0CC]/20 focus:bg-black text-sm bg-[#1c1e21] text-[#ffffff] outline-none transition-all"
                       />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+                      <label className="block text-[10px] font-bold text-[#E1E0CC]/40 uppercase tracking-wider mb-2">
                         Sub-Category
                       </label>
                       <input
@@ -1052,13 +1075,13 @@ export default function OnboardingPage() {
                         placeholder="e.g. Social Autopilot"
                         value={data.subCategory}
                         onChange={(e) => updateData({ subCategory: e.target.value })}
-                        className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-[#0A0A0A] text-sm bg-white text-gray-900 outline-none"
+                        className="w-full px-4 py-2.5 rounded-2xl border border-[#E1E0CC]/15 focus:border-[#E1E0CC] text-sm bg-[#101010] text-white outline-none"
                       />
                     </div>
                   </div>
 
                   <div className="md:col-span-2">
-                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+                    <label className="block text-[10px] font-bold text-[#E1E0CC]/40 uppercase tracking-wider mb-2">
                       Business Description *
                     </label>
                     <textarea
@@ -1066,7 +1089,7 @@ export default function OnboardingPage() {
                       placeholder="Briefly describe what your company does..."
                       value={data.businessDescription}
                       onChange={(e) => updateData({ businessDescription: e.target.value })}
-                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-[#0A0A0A] text-sm bg-white text-gray-900 resize-none outline-none"
+                      className="w-full px-4 py-2.5 rounded-2xl border border-[#E1E0CC]/15 focus:border-[#E1E0CC] text-sm bg-[#101010] text-white resize-none outline-none"
                     />
                   </div>
                 </div>
@@ -1078,11 +1101,11 @@ export default function OnboardingPage() {
           {step === 2 && (
             <div className="space-y-6 animate-fade-up">
               <div>
-                <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <h2 className="text-lg font-bold text-white flex items-center gap-2">
                   <Compass className="w-5 h-5 text-[#0A0A0A]" />
                   Brand Identity DNA
                 </h2>
-                <p className="text-xs text-gray-400 mt-1">
+                <p className="text-xs text-[#E1E0CC]/40 mt-1">
                   Define your mission, core values (simply tap presets), and brand personality.
                 </p>
               </div>
@@ -1090,35 +1113,35 @@ export default function OnboardingPage() {
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+                    <label className="block text-[10px] font-bold text-[#E1E0CC]/40 uppercase tracking-wider mb-2">
                       Mission Statement *
                     </label>
-                    <input
-                      type="text"
+                    <textarea
+                      rows={2}
                       placeholder="e.g. To simplify organic marketing"
                       value={data.mission}
                       onChange={(e) => updateData({ mission: e.target.value })}
-                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-[#0A0A0A] text-sm bg-white text-gray-900 outline-none"
+                      className="w-full px-4 py-2.5 rounded-2xl border border-[#E1E0CC]/15 focus:border-[#E1E0CC] text-sm bg-[#101010] text-white outline-none resize-none"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+                    <label className="block text-[10px] font-bold text-[#E1E0CC]/40 uppercase tracking-wider mb-2">
                       Vision Statement
                     </label>
-                    <input
-                      type="text"
+                    <textarea
+                      rows={2}
                       placeholder="e.g. To become the leading autopilot engine globally"
                       value={data.vision}
                       onChange={(e) => updateData({ vision: e.target.value })}
-                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-[#0A0A0A] text-sm bg-white text-gray-900 outline-none"
+                      className="w-full px-4 py-2.5 rounded-2xl border border-[#E1E0CC]/15 focus:border-[#E1E0CC] text-sm bg-[#101010] text-white outline-none resize-none"
                     />
                   </div>
 
                   {/* ── Brand Tagline / USP — Choice toggle ── */}
-                  <div className="md:col-span-2 space-y-4 border-t border-gray-100 pt-4">
+                  <div className="md:col-span-2 space-y-4 border-t border-[#E1E0CC]/10 pt-4">
                     <div className="space-y-2">
-                      <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                      <label className="block text-[10px] font-bold text-[#E1E0CC]/40 uppercase tracking-wider">
                         Do you already have a brand tagline or USP? *
                       </label>
                       <div className="flex gap-2">
@@ -1128,10 +1151,10 @@ export default function OnboardingPage() {
                             setHasTagline("yes");
                             setShowTaglinePicker(false);
                           }}
-                          className={`flex-1 py-2 px-4 rounded-xl text-xs font-bold border transition-all ${
+                          className={`flex-1 py-2 px-4 rounded-2xl text-xs font-bold border transition-all ${
                             hasTagline === "yes"
                               ? "bg-slate-900 text-white border-slate-900"
-                              : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+                              : "bg-[#101010] text-[#E1E0CC]/70 border-[#E1E0CC]/15 hover:bg-[#0a0a0a]"
                           }`}
                         >
                           Yes, I have one
@@ -1142,10 +1165,10 @@ export default function OnboardingPage() {
                             setHasTagline("no");
                             updateData({ usp: "" });
                           }}
-                          className={`flex-1 py-2 px-4 rounded-xl text-xs font-bold border transition-all ${
+                          className={`flex-1 py-2 px-4 rounded-2xl text-xs font-bold border transition-all ${
                             hasTagline === "no"
                               ? "bg-slate-900 text-white border-slate-900"
-                              : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+                              : "bg-[#101010] text-[#E1E0CC]/70 border-[#E1E0CC]/15 hover:bg-[#0a0a0a]"
                           }`}
                         >
                           No, generate one with AI
@@ -1155,7 +1178,7 @@ export default function OnboardingPage() {
 
                     {hasTagline === "yes" && (
                       <div className="space-y-1.5 animate-fade-down">
-                        <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                        <label className="block text-[10px] font-bold text-[#E1E0CC]/40 uppercase tracking-wider">
                           Enter your Tagline / USP *
                         </label>
                         <input
@@ -1163,7 +1186,7 @@ export default function OnboardingPage() {
                           placeholder="e.g. Schedule-free autopilot campaign flow"
                           value={data.usp}
                           onChange={(e) => updateData({ usp: e.target.value })}
-                          className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-[#0A0A0A] text-sm bg-white text-gray-900 outline-none"
+                          className="w-full px-4 py-3 rounded-2xl border border-[#E1E0CC]/5 focus:border-[#E1E0CC]/20 focus:bg-black text-sm bg-[#1c1e21] text-[#ffffff] outline-none transition-all"
                         />
                       </div>
                     )}
@@ -1171,7 +1194,7 @@ export default function OnboardingPage() {
                     {hasTagline === "no" && (
                       <div className="space-y-2.5 animate-fade-down">
                         <div className="flex items-center justify-between">
-                          <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                          <label className="block text-[10px] font-bold text-[#E1E0CC]/40 uppercase tracking-wider">
                             Generated AI Tagline *
                           </label>
                           <button
@@ -1200,25 +1223,25 @@ export default function OnboardingPage() {
                               handleGenerateTaglines();
                             }
                           }}
-                          className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-[#0A0A0A] text-sm bg-gray-50 text-gray-900 outline-none cursor-pointer"
+                          className="w-full px-4 py-2.5 rounded-2xl border border-[#E1E0CC]/15 focus:border-[#0A0A0A] text-sm bg-[#0a0a0a] text-white outline-none cursor-pointer"
                         />
 
                         {/* ── Tagline suggestions picker ── */}
                         {showTaglinePicker && (
-                          <div className="border border-gray-200 rounded-xl overflow-hidden bg-white shadow-lg">
-                            <div className="flex items-center justify-between px-3 py-2 border-b border-gray-100 bg-gray-50">
-                              <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">
+                          <div className="border border-[#E1E0CC]/15 rounded-2xl overflow-hidden bg-[#101010] shadow-lg">
+                            <div className="flex items-center justify-between px-3 py-2 border-b border-[#E1E0CC]/10 bg-[#0a0a0a]">
+                              <span className="text-[10px] font-bold text-[#E1E0CC]/60 uppercase tracking-wider">
                                 {isGeneratingTaglines ? "Generating AI taglines…" : "Select one of these 5 AI taglines"}
                               </span>
                               <button
                                 onClick={() => { setShowTaglinePicker(false); setTaglineSuggestions([]); }}
-                                className="text-gray-400 hover:text-gray-700"
+                                className="text-[#E1E0CC]/40 hover:text-[#E1E0CC]/80"
                               >
                                 <X className="w-3.5 h-3.5" />
                               </button>
                             </div>
                             {isGeneratingTaglines ? (
-                              <div className="p-4 flex items-center gap-2 text-xs text-gray-400">
+                              <div className="p-4 flex items-center gap-2 text-xs text-[#E1E0CC]/40">
                                 <Loader2 className="w-4 h-4 animate-spin text-[#0A0A0A]" />
                                 Crafting 5 unique taglines for {data.brandName}…
                               </div>
@@ -1235,7 +1258,7 @@ export default function OnboardingPage() {
                                       setShowTaglinePicker(false);
                                       setTaglineSuggestions([]);
                                     }}
-                                    className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-[#0A0A0A]/5 hover:text-[#0A0A0A] transition-colors flex items-center justify-between group"
+                                    className="w-full text-left px-4 py-3 text-sm text-[#E1E0CC]/80 hover:bg-[#0A0A0A]/5 hover:text-[#0A0A0A] transition-colors flex items-center justify-between group"
                                   >
                                     <span className="italic">"{t}"</span>
                                     <span className="text-[9px] font-bold text-gray-300 group-hover:text-[#0A0A0A] uppercase tracking-wider shrink-0 ml-2">Select</span>
@@ -1251,7 +1274,7 @@ export default function OnboardingPage() {
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+                  <label className="block text-[10px] font-bold text-[#E1E0CC]/40 uppercase tracking-wider mb-2">
                     Brand Values * (Tap to Select)
                   </label>
                   <div className="flex flex-wrap gap-1.5">
@@ -1264,7 +1287,7 @@ export default function OnboardingPage() {
                           className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all
                             ${selected
                               ? "bg-[#101010] text-white border-[#E1E0CC]/10"
-                              : "bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100"
+                              : "bg-[#0a0a0a] text-[#E1E0CC]/70 border-[#E1E0CC]/15 hover:bg-gray-100"
                             }`}
                         >
                           {val}
@@ -1278,7 +1301,7 @@ export default function OnboardingPage() {
                       placeholder="Or add custom value..."
                       value={customValueInput}
                       onChange={(e) => setCustomValueInput(e.target.value)}
-                      className="flex-1 px-4 py-1.5 rounded-lg border border-gray-200 focus:border-[#0A0A0A] text-xs bg-white outline-none"
+                      className="flex-1 px-4 py-1.5 rounded-lg border border-[#E1E0CC]/15 focus:border-[#0A0A0A] text-xs bg-[#101010] outline-none"
                     />
                     <button
                       onClick={() => {
@@ -1290,7 +1313,7 @@ export default function OnboardingPage() {
                           setCustomValueInput("");
                         }
                       }}
-                      className="px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-lg transition-colors"
+                      className="px-4 bg-[#E1E0CC] hover:bg-white text-[#101010] text-xs font-bold rounded-lg transition-colors"
                     >
                       Add
                     </button>
@@ -1298,7 +1321,7 @@ export default function OnboardingPage() {
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+                  <label className="block text-[10px] font-bold text-[#E1E0CC]/40 uppercase tracking-wider mb-2">
                     Brand Personality *
                   </label>
                   <div className="grid grid-cols-2 gap-2">
@@ -1308,14 +1331,14 @@ export default function OnboardingPage() {
                         <button
                           key={bp.id}
                           onClick={() => toggleBrandPersonality(bp.id)}
-                          className={`text-left p-3 rounded-xl border text-xs transition-all flex items-start gap-2.5
+                          className={`text-left p-3 rounded-2xl border text-xs transition-all flex items-start gap-2.5
                             ${isSelected
-                              ? "border-[#0A0A0A] bg-[#0A0A0A]/5 text-gray-900"
-                              : "border-gray-200 text-gray-500 hover:bg-gray-50"
+                              ? "border-[#E1E0CC] bg-[#E1E0CC]/5 text-white"
+                              : "border-[#E1E0CC]/15 text-[#E1E0CC]/60 hover:bg-[#0a0a0a]"
                             }`}
                         >
                           <div className={`w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 mt-0.5
-                            ${isSelected ? "border-[#0A0A0A] bg-[#0A0A0A] text-white" : "border-gray-300 bg-white"}`}>
+                            ${isSelected ? "border-[#E1E0CC] bg-[#E1E0CC] text-[#101010]" : "border-[#E1E0CC]/20 bg-[#101010]"}`}>
                             {isSelected && (
                               <svg className="w-2.5 h-2.5 fill-current" viewBox="0 0 20 20">
                                 <path d="M0 11l2-2 5 5L18 3l2 2L7 18z" />
@@ -1323,8 +1346,8 @@ export default function OnboardingPage() {
                             )}
                           </div>
                           <div>
-                            <p className="font-semibold text-gray-950">{bp.label}</p>
-                            <p className="text-[10px] text-gray-400 mt-0.5 leading-snug">{bp.desc}</p>
+                            <p className="font-semibold text-white">{bp.label}</p>
+                            <p className="text-[10px] text-[#E1E0CC]/40 mt-0.5 leading-snug">{bp.desc}</p>
                           </div>
                         </button>
                       );
@@ -1333,20 +1356,20 @@ export default function OnboardingPage() {
                 </div>
 
                 {/* ── COLOR PALETTE SELECTION (User Requested Feature) ── */}
-                <div className="border border-gray-200/80 rounded-2xl p-6 bg-white shadow-[0_4px_20px_rgba(0,0,0,0.015)] space-y-5">
+                <div className="border border-[#E1E0CC]/15/80 rounded-2xl p-6 bg-[#101010] shadow-[0_4px_20px_rgba(0,0,0,0.015)] space-y-5">
                   <div className="flex items-center justify-between">
                     <div>
-                      <span className="text-[10px] font-extrabold text-gray-400 uppercase tracking-[0.2em] block">
+                      <span className="text-[10px] font-extrabold text-[#E1E0CC]/40 uppercase tracking-[0.2em] block">
                         COLOR PALETTE
                       </span>
-                      <p className="text-xs text-gray-500 mt-0.5">
+                      <p className="text-xs text-[#E1E0CC]/60 mt-0.5">
                         Customize your brand&apos;s primary and accent colors or tap a curated theme below.
                       </p>
                     </div>
-                    <div className="flex items-center gap-1.5 bg-gray-50 border border-gray-200 px-3 py-1 rounded-full">
-                      <div className="w-2.5 h-2.5 rounded-full border border-black/10" style={{ backgroundColor: data.primaryColor || "#0D0D0D" }} />
-                      <div className="w-2.5 h-2.5 rounded-full border border-black/10" style={{ backgroundColor: data.accentColor || "#C9A84C" }} />
-                      <span className="text-[10px] font-bold text-gray-600 uppercase ml-1">Active Theme</span>
+                    <div className="flex items-center gap-1.5 bg-[#0a0a0a] border border-[#E1E0CC]/15 px-3 py-1 rounded-full">
+                      <div className="w-2.5 h-2.5 rounded-full border border-white/10" style={{ backgroundColor: data.primaryColor || "#0D0D0D" }} />
+                      <div className="w-2.5 h-2.5 rounded-full border border-white/10" style={{ backgroundColor: data.accentColor || "#C9A84C" }} />
+                      <span className="text-[10px] font-bold text-[#E1E0CC]/70 uppercase ml-1">Active Theme</span>
                     </div>
                   </div>
 
@@ -1355,7 +1378,7 @@ export default function OnboardingPage() {
                     {/* Primary Color Card */}
                     <div className="space-y-2">
                       <div 
-                        className="w-full h-28 rounded-2xl shadow-sm border border-black/10 transition-all duration-300 relative overflow-hidden group cursor-pointer"
+                        className="w-full h-28 rounded-2xl shadow-sm border border-white/10 transition-all duration-300 relative overflow-hidden group cursor-pointer"
                         style={{ backgroundColor: data.primaryColor || "#0D0D0D" }}
                       >
                         <input 
@@ -1364,19 +1387,19 @@ export default function OnboardingPage() {
                           onChange={(e) => updateData({ primaryColor: e.target.value })}
                           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                         />
-                        <div className="absolute top-2 right-2 bg-black/50 backdrop-blur-md text-white text-[9px] font-bold px-2 py-0.5 rounded-md opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="absolute top-2 right-2 bg-white/50 backdrop-blur-md text-white text-[9px] font-bold px-2 py-0.5 rounded-md opacity-0 group-hover:opacity-100 transition-opacity">
                           Pick Color
                         </div>
                       </div>
                       <div>
-                        <p className="text-xs font-black uppercase tracking-wider text-gray-900">PRIMARY</p>
+                        <p className="text-xs font-black uppercase tracking-wider text-white">PRIMARY</p>
                         <div className="flex items-center gap-1 mt-0.5">
-                          <span className="text-xs text-gray-400 font-mono">HEX:</span>
+                          <span className="text-xs text-[#E1E0CC]/40 font-mono">HEX:</span>
                           <input 
                             type="text"
                             value={data.primaryColor || "#0D0D0D"}
                             onChange={(e) => updateData({ primaryColor: e.target.value })}
-                            className="text-[11px] font-mono font-semibold text-gray-600 uppercase bg-transparent outline-none w-20 hover:text-gray-900 focus:text-gray-900"
+                            className="text-[11px] font-mono font-semibold text-[#E1E0CC]/70 uppercase bg-transparent outline-none w-20 hover:text-white focus:text-white"
                           />
                         </div>
                       </div>
@@ -1385,7 +1408,7 @@ export default function OnboardingPage() {
                     {/* Accent Color Card */}
                     <div className="space-y-2">
                       <div 
-                        className="w-full h-28 rounded-2xl shadow-sm border border-black/10 transition-all duration-300 relative overflow-hidden group cursor-pointer"
+                        className="w-full h-28 rounded-2xl shadow-sm border border-white/10 transition-all duration-300 relative overflow-hidden group cursor-pointer"
                         style={{ backgroundColor: data.accentColor || "#C9A84C" }}
                       >
                         <input 
@@ -1394,19 +1417,19 @@ export default function OnboardingPage() {
                           onChange={(e) => updateData({ accentColor: e.target.value })}
                           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                         />
-                        <div className="absolute top-2 right-2 bg-black/50 backdrop-blur-md text-white text-[9px] font-bold px-2 py-0.5 rounded-md opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="absolute top-2 right-2 bg-white/50 backdrop-blur-md text-white text-[9px] font-bold px-2 py-0.5 rounded-md opacity-0 group-hover:opacity-100 transition-opacity">
                           Pick Color
                         </div>
                       </div>
                       <div>
-                        <p className="text-xs font-black uppercase tracking-wider text-gray-900">ACCENT</p>
+                        <p className="text-xs font-black uppercase tracking-wider text-white">ACCENT</p>
                         <div className="flex items-center gap-1 mt-0.5">
-                          <span className="text-xs text-gray-400 font-mono">HEX:</span>
+                          <span className="text-xs text-[#E1E0CC]/40 font-mono">HEX:</span>
                           <input 
                             type="text"
                             value={data.accentColor || "#C9A84C"}
                             onChange={(e) => updateData({ accentColor: e.target.value })}
-                            className="text-[11px] font-mono font-semibold text-gray-600 uppercase bg-transparent outline-none w-20 hover:text-gray-900 focus:text-gray-900"
+                            className="text-[11px] font-mono font-semibold text-[#E1E0CC]/70 uppercase bg-transparent outline-none w-20 hover:text-white focus:text-white"
                           />
                         </div>
                       </div>
@@ -1415,7 +1438,7 @@ export default function OnboardingPage() {
 
                   {/* Preset Palettes Quick Pick */}
                   <div className="pt-2">
-                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+                    <label className="block text-[10px] font-bold text-[#E1E0CC]/40 uppercase tracking-wider mb-2">
                       Curated Preset Palettes (Tap to Apply)
                     </label>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -1426,16 +1449,16 @@ export default function OnboardingPage() {
                             key={p.name}
                             type="button"
                             onClick={() => updateData({ primaryColor: p.primary, accentColor: p.accent })}
-                            className={`p-2.5 rounded-xl border text-left transition-all flex flex-col justify-between gap-2 cursor-pointer
-                              ${isSelected ? "border-[#0A0A0A] bg-gray-900 text-white shadow-sm" : "border-gray-200 hover:border-gray-300 bg-gray-50 text-gray-900"}`}
+                            className={`p-2.5 rounded-2xl border text-left transition-all flex flex-col justify-between gap-2 cursor-pointer
+                              ${isSelected ? "border-[#0A0A0A] bg-gray-900 text-white shadow-sm" : "border-[#E1E0CC]/15 hover:border-[#E1E0CC]/20 bg-[#0a0a0a] text-white"}`}
                           >
                             <div className="flex items-center gap-1.5">
                               <div className="w-4 h-4 rounded-full border border-black/20 shadow-xs" style={{ backgroundColor: p.primary }} />
                               <div className="w-4 h-4 rounded-full border border-black/20 shadow-xs" style={{ backgroundColor: p.accent }} />
                             </div>
                             <div>
-                              <p className={`text-[11px] font-bold truncate ${isSelected ? "text-white" : "text-gray-900"}`}>{p.name}</p>
-                              <p className={`text-[9px] font-mono uppercase ${isSelected ? "text-gray-400" : "text-gray-400"}`}>{p.primary} / {p.accent}</p>
+                              <p className={`text-[11px] font-bold truncate ${isSelected ? "text-white" : "text-white"}`}>{p.name}</p>
+                              <p className={`text-[9px] font-mono uppercase ${isSelected ? "text-[#E1E0CC]/40" : "text-[#E1E0CC]/40"}`}>{p.primary} / {p.accent}</p>
                             </div>
                           </button>
                         );
@@ -1452,11 +1475,11 @@ export default function OnboardingPage() {
           {step === 3 && (
             <div className="space-y-6 animate-fade-up">
               <div>
-                <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <h2 className="text-lg font-bold text-white flex items-center gap-2">
                   <Target className="w-5 h-5 text-[#0A0A0A]" />
                   Audience & Pricing
                 </h2>
-                <p className="text-xs text-gray-400 mt-1">
+                <p className="text-xs text-[#E1E0CC]/40 mt-1">
                   Define your customer profile and select pricing structures using fast presets.
                 </p>
               </div>
@@ -1464,20 +1487,20 @@ export default function OnboardingPage() {
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="md:col-span-2">
-                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+                    <label className="block text-[10px] font-bold text-[#E1E0CC]/40 uppercase tracking-wider mb-2">
                       Target Audience *
                     </label>
-                    <input
-                      type="text"
+                    <textarea
+                      rows={2}
                       placeholder="e.g. Small business owners, marketing managers in startups"
                       value={data.targetAudience}
                       onChange={(e) => updateData({ targetAudience: e.target.value })}
-                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-[#0A0A0A] text-sm bg-white text-gray-900 outline-none"
+                      className="w-full px-4 py-2.5 rounded-2xl border border-[#E1E0CC]/15 focus:border-[#E1E0CC] text-sm bg-[#101010] text-white outline-none resize-none"
                     />
                   </div>
 
                   <div className="md:col-span-2">
-                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+                    <label className="block text-[10px] font-bold text-[#E1E0CC]/40 uppercase tracking-wider mb-2">
                       Customer Personas
                     </label>
                     <textarea
@@ -1485,12 +1508,12 @@ export default function OnboardingPage() {
                       placeholder="e.g. Persona 1: Tech founder, age 30-40. Persona 2: Solo marketer..."
                       value={data.customerPersonas}
                       onChange={(e) => updateData({ customerPersonas: e.target.value })}
-                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-[#0A0A0A] text-sm bg-white text-gray-900 resize-none outline-none"
+                      className="w-full px-4 py-2.5 rounded-2xl border border-[#E1E0CC]/15 focus:border-[#E1E0CC] text-sm bg-[#101010] text-white resize-none outline-none"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+                    <label className="block text-[10px] font-bold text-[#E1E0CC]/40 uppercase tracking-wider mb-2">
                       Competitors
                     </label>
                     <div className="flex gap-2">
@@ -1499,7 +1522,7 @@ export default function OnboardingPage() {
                         placeholder="Add competitor name..."
                         value={newCompetitorInput}
                         onChange={(e) => setNewCompetitorInput(e.target.value)}
-                        className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 focus:border-[#0A0A0A] text-xs bg-white text-gray-900 outline-none"
+                        className="flex-1 px-4 py-2.5 rounded-2xl border border-[#E1E0CC]/15 focus:border-[#E1E0CC] text-xs bg-[#101010] text-white outline-none"
                       />
                       <button
                         onClick={() => {
@@ -1511,21 +1534,21 @@ export default function OnboardingPage() {
                             setNewCompetitorInput("");
                           }
                         }}
-                        className="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-xl transition-colors shrink-0"
+                        className="px-4 py-2.5 bg-[#E1E0CC] hover:bg-white text-[#101010] text-xs font-bold rounded-2xl transition-colors shrink-0"
                       >
                         Add
                       </button>
                     </div>
                     <div className="flex flex-wrap gap-1.5 mt-2">
                       {(data.competitors || []).map((c) => (
-                        <span key={c} className="px-2.5 py-1 rounded-lg bg-gray-100 text-gray-700 text-[10px] font-semibold flex items-center gap-1">
+                        <span key={c} className="px-2.5 py-1 rounded-lg bg-[#101010] border border-[#E1E0CC]/15 text-white text-[10px] font-semibold flex items-center gap-1">
                           {c}
                           <button
                             type="button"
                             onClick={() => {
                               updateData({ competitors: (data.competitors || []).filter((item) => item !== c) });
                             }}
-                            className="text-gray-400 hover:text-[#E1E0CC] font-bold"
+                            className="text-[#E1E0CC]/40 hover:text-[#E1E0CC] font-bold"
                           >
                             Ã—
                           </button>
@@ -1535,7 +1558,7 @@ export default function OnboardingPage() {
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+                    <label className="block text-[10px] font-bold text-[#E1E0CC]/40 uppercase tracking-wider mb-2">
                       Products
                     </label>
                     <div className="flex gap-2">
@@ -1544,7 +1567,7 @@ export default function OnboardingPage() {
                         placeholder="Add product name..."
                         value={newProductInput}
                         onChange={(e) => setNewProductInput(e.target.value)}
-                        className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 focus:border-[#0A0A0A] text-xs bg-white text-gray-900 outline-none"
+                        className="flex-1 px-4 py-2.5 rounded-2xl border border-[#E1E0CC]/15 focus:border-[#E1E0CC] text-xs bg-[#101010] text-white outline-none"
                       />
                       <button
                         onClick={() => {
@@ -1556,21 +1579,21 @@ export default function OnboardingPage() {
                             setNewProductInput("");
                           }
                         }}
-                        className="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-xl transition-colors shrink-0"
+                        className="px-4 py-2.5 bg-[#E1E0CC] hover:bg-white text-[#101010] text-xs font-bold rounded-2xl transition-colors shrink-0"
                       >
                         Add
                       </button>
                     </div>
                     <div className="flex flex-wrap gap-1.5 mt-2">
                       {(data.products || []).map((p) => (
-                        <span key={p} className="px-2.5 py-1 rounded-lg bg-gray-100 text-gray-700 text-[10px] font-semibold flex items-center gap-1">
+                        <span key={p} className="px-2.5 py-1 rounded-lg bg-[#101010] border border-[#E1E0CC]/15 text-white text-[10px] font-semibold flex items-center gap-1">
                           {p}
                           <button
                             type="button"
                             onClick={() => {
                               updateData({ products: (data.products || []).filter((item) => item !== p) });
                             }}
-                            className="text-gray-400 hover:text-[#E1E0CC] font-bold"
+                            className="text-[#E1E0CC]/40 hover:text-[#E1E0CC] font-bold"
                           >
                             Ã—
                           </button>
@@ -1580,7 +1603,7 @@ export default function OnboardingPage() {
                   </div>
 
                   <div className="md:col-span-2">
-                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+                    <label className="block text-[10px] font-bold text-[#E1E0CC]/40 uppercase tracking-wider mb-2">
                       Services
                     </label>
                     <div className="flex gap-2">
@@ -1589,7 +1612,7 @@ export default function OnboardingPage() {
                         placeholder="Add service name..."
                         value={newServiceInput}
                         onChange={(e) => setNewServiceInput(e.target.value)}
-                        className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 focus:border-[#0A0A0A] text-xs bg-white text-gray-900 outline-none"
+                        className="flex-1 px-4 py-2.5 rounded-2xl border border-[#E1E0CC]/15 focus:border-[#E1E0CC] text-xs bg-[#101010] text-white outline-none"
                       />
                       <button
                         onClick={() => {
@@ -1601,21 +1624,21 @@ export default function OnboardingPage() {
                             setNewServiceInput("");
                           }
                         }}
-                        className="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-xl transition-colors shrink-0"
+                        className="px-4 py-2.5 bg-[#E1E0CC] hover:bg-white text-[#101010] text-xs font-bold rounded-2xl transition-colors shrink-0"
                       >
                         Add
                       </button>
                     </div>
                     <div className="flex flex-wrap gap-1.5 mt-2">
                       {(data.services || []).map((s) => (
-                        <span key={s} className="px-2.5 py-1 rounded-lg bg-gray-100 text-gray-700 text-[10px] font-semibold flex items-center gap-1">
+                        <span key={s} className="px-2.5 py-1 rounded-lg bg-[#101010] border border-[#E1E0CC]/15 text-white text-[10px] font-semibold flex items-center gap-1">
                           {s}
                           <button
                             type="button"
                             onClick={() => {
                               updateData({ services: (data.services || []).filter((item) => item !== s) });
                             }}
-                            className="text-gray-400 hover:text-[#E1E0CC] font-bold"
+                            className="text-[#E1E0CC]/40 hover:text-[#E1E0CC] font-bold"
                           >
                             Ã—
                           </button>
@@ -1626,7 +1649,7 @@ export default function OnboardingPage() {
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+                  <label className="block text-[10px] font-bold text-[#E1E0CC]/40 uppercase tracking-wider mb-2">
                     Country Focus *
                   </label>
                   <div className="flex flex-wrap gap-1.5">
@@ -1637,7 +1660,7 @@ export default function OnboardingPage() {
                         className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all
                           ${data.country === c
                             ? "bg-[#101010] text-white border-[#E1E0CC]/10"
-                            : "bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100"
+                            : "bg-[#0a0a0a] text-[#E1E0CC]/70 border-[#E1E0CC]/15 hover:bg-gray-100"
                           }`}
                       >
                         {c}
@@ -1647,7 +1670,7 @@ export default function OnboardingPage() {
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+                  <label className="block text-[10px] font-bold text-[#E1E0CC]/40 uppercase tracking-wider mb-2">
                     Languages *
                   </label>
                   <div className="flex flex-wrap gap-1.5">
@@ -1660,7 +1683,7 @@ export default function OnboardingPage() {
                           className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all
                             ${selected
                               ? "bg-[#101010] text-white border-[#E1E0CC]/10"
-                              : "bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100"
+                              : "bg-[#0a0a0a] text-[#E1E0CC]/70 border-[#E1E0CC]/15 hover:bg-gray-100"
                             }`}
                         >
                           {lang}
@@ -1671,7 +1694,7 @@ export default function OnboardingPage() {
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+                  <label className="block text-[10px] font-bold text-[#E1E0CC]/40 uppercase tracking-wider mb-2">
                     Pricing Model *
                   </label>
                   <div className="flex flex-wrap gap-1.5">
@@ -1682,7 +1705,7 @@ export default function OnboardingPage() {
                         className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all
                           ${data.pricing === priceModel
                             ? "bg-[#101010] text-white border-[#E1E0CC]/10"
-                            : "bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100"
+                            : "bg-[#0a0a0a] text-[#E1E0CC]/70 border-[#E1E0CC]/15 hover:bg-gray-100"
                           }`}
                       >
                         {priceModel}
@@ -1698,18 +1721,18 @@ export default function OnboardingPage() {
           {step === 4 && (
             <div className="space-y-6 animate-fade-up">
               <div>
-                <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <h2 className="text-lg font-bold text-white flex items-center gap-2">
                   <Globe className="w-5 h-5 text-[#0A0A0A]" />
                   Channels & Goal
                 </h2>
-                <p className="text-xs text-gray-400 mt-1">
+                <p className="text-xs text-[#E1E0CC]/40 mt-1">
                   Connect target channels and specify your marketing objective to compile the autopilot profile.
                 </p>
               </div>
 
               <div className="space-y-5">
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+                  <label className="block text-[10px] font-bold text-[#E1E0CC]/40 uppercase tracking-wider mb-2">
                     Target Publishing Channels *
                   </label>
                   <div className="grid grid-cols-2 gap-2">
@@ -1723,18 +1746,18 @@ export default function OnboardingPage() {
                             const next = selected ? current.filter((p) => p !== plat.id) : [...current, plat.id];
                             updateData({ platforms: next });
                           }}
-                          className={`text-left p-4 rounded-xl border transition-all flex items-center justify-between
+                          className={`text-left p-4 rounded-2xl border transition-all flex items-center justify-between
                             ${selected
-                              ? "border-[#0A0A0A] bg-[#0A0A0A]/5 text-gray-900"
-                              : "border-gray-200 text-gray-600 hover:bg-gray-50"
+                              ? "border-[#0A0A0A] bg-[#0A0A0A]/5 text-white"
+                              : "border-[#E1E0CC]/15 text-[#E1E0CC]/70 hover:bg-[#0a0a0a]"
                             }`}
                         >
                           <div>
                             <p className="text-xs font-bold text-gray-950">{plat.label}</p>
-                            <p className="text-[10px] text-gray-400 mt-0.5">{plat.desc}</p>
+                            <p className="text-[10px] text-[#E1E0CC]/40 mt-0.5">{plat.desc}</p>
                           </div>
                           <div className={`w-4 h-4 rounded-md border flex items-center justify-center transition-all
-                            ${selected ? "border-[#0A0A0A] bg-[#0A0A0A] text-white" : "border-gray-300"}`}>
+                            ${selected ? "border-[#0A0A0A] bg-[#0A0A0A] text-white" : "border-[#E1E0CC]/20"}`}>
                             {selected && <Check className="w-3 h-3" />}
                           </div>
                         </button>
@@ -1744,7 +1767,7 @@ export default function OnboardingPage() {
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+                  <label className="block text-[10px] font-bold text-[#E1E0CC]/40 uppercase tracking-wider mb-2">
                     Primary Goal *
                   </label>
                   <div className="space-y-2.5">
@@ -1752,21 +1775,21 @@ export default function OnboardingPage() {
                       <button
                         key={obj.id}
                         onClick={() => updateData({ mainGoal: obj.id })}
-                        className={`w-full text-left p-4 rounded-xl border transition-all flex items-start gap-3
+                        className={`w-full text-left p-4 rounded-2xl border transition-all flex items-start gap-3
                           ${data.mainGoal === obj.id
-                            ? "border-[#0A0A0A] bg-[#0A0A0A]/5 text-gray-900"
-                            : "border-gray-200 text-gray-600 hover:bg-gray-50"
+                            ? "border-[#0A0A0A] bg-[#0A0A0A]/5 text-white"
+                            : "border-[#E1E0CC]/15 text-[#E1E0CC]/70 hover:bg-[#0a0a0a]"
                           }`}
                       >
                         <div className="mt-0.5 shrink-0">
                           <div className={`w-4 h-4 rounded-full border flex items-center justify-center
-                            ${data.mainGoal === obj.id ? "border-[#0A0A0A]" : "border-gray-300"}`}>
+                            ${data.mainGoal === obj.id ? "border-[#0A0A0A]" : "border-[#E1E0CC]/20"}`}>
                             {data.mainGoal === obj.id && <div className="w-2 h-2 rounded-full bg-[#0A0A0A]" />}
                           </div>
                         </div>
                         <div>
-                          <p className="text-sm font-semibold text-gray-900">{obj.label}</p>
-                          <p className="text-xs text-gray-400 mt-0.5">{obj.desc}</p>
+                          <p className="text-sm font-semibold text-white">{obj.label}</p>
+                          <p className="text-xs text-[#E1E0CC]/40 mt-0.5">{obj.desc}</p>
                         </div>
                       </button>
                     ))}
@@ -1785,28 +1808,28 @@ export default function OnboardingPage() {
               })()}
               <div>
                 <span className="text-[9px] font-bold text-[#0A0A0A] uppercase tracking-widest bg-[#0A0A0A]/10 px-2.5 py-1 rounded-md">Phase 2</span>
-                <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2 mt-2">
+                <h2 className="text-lg font-bold text-white flex items-center gap-2 mt-2">
                   <Paintbrush className="w-5 h-5 text-[#0A0A0A]" />
                   Brand Identity Studio
                 </h2>
-                <p className="text-xs text-gray-400 mt-1">
+                <p className="text-xs text-[#E1E0CC]/40 mt-1">
                   Upload your pre-existing graphics or trigger the one-click AI generation engine to assemble your Brand Kit instantly.
                 </p>
               </div>
 
               {/* Toggle Controls */}
-              <div className="flex border border-gray-200/80 bg-white p-1 rounded-xl max-w-xs">
+              <div className="flex border border-[#E1E0CC]/15/80 bg-[#101010] p-1 rounded-2xl max-w-xs">
                 <button
                   onClick={() => updateData({ kitType: "generate" })}
                   className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all
-                    ${data.kitType === "generate" ? "bg-[#101010] text-white shadow-sm" : "text-gray-500 hover:text-gray-900"}`}
+                    ${data.kitType === "generate" ? "bg-[#101010] text-white shadow-sm" : "text-[#E1E0CC]/60 hover:text-white"}`}
                 >
                   AI Logo Studio
                 </button>
                 <button
                   onClick={() => updateData({ kitType: "upload" })}
                   className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all
-                    ${data.kitType === "upload" ? "bg-[#101010] text-white shadow-sm" : "text-gray-500 hover:text-gray-900"}`}
+                    ${data.kitType === "upload" ? "bg-[#101010] text-white shadow-sm" : "text-[#E1E0CC]/60 hover:text-white"}`}
                 >
                   Upload Assets
                 </button>
@@ -1825,7 +1848,7 @@ export default function OnboardingPage() {
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <CheckCircle2 className="w-5 h-5 text-[#E1E0CC]" />
-                              <h4 className="text-sm font-bold text-gray-900">
+                              <h4 className="text-sm font-bold text-white">
                                 Approved Brand Logo: {data.selectedLogo.name}
                               </h4>
                             </div>
@@ -1834,14 +1857,14 @@ export default function OnboardingPage() {
                                 updateData({ selectedLogo: null });
                                 setIsLogoApproved(false);
                               }}
-                              className="text-[10px] text-gray-400 hover:text-gray-700 font-bold flex items-center gap-1 border border-gray-200 px-3 py-1.5 rounded-lg transition-colors"
+                              className="text-[10px] text-[#E1E0CC]/40 hover:text-[#E1E0CC]/80 font-bold flex items-center gap-1 border border-[#E1E0CC]/15 px-3 py-1.5 rounded-lg transition-colors"
                             >
                               <Sparkles className="w-3 h-3" /> Change Logo
                             </button>
                           </div>
 
-                          <div className="max-w-md bg-white border border-gray-100 rounded-2xl p-5 shadow-sm space-y-4">
-                            <div className="bg-white border border-gray-100 rounded-xl aspect-square w-full flex flex-col items-center justify-center p-8 relative overflow-hidden shadow-inner bg-gradient-to-b from-white to-gray-50/30">
+                          <div className="max-w-md bg-[#101010] border border-[#E1E0CC]/10 rounded-2xl p-5 shadow-sm space-y-4">
+                            <div className="bg-[#101010] border border-[#E1E0CC]/10 rounded-2xl aspect-square w-full flex flex-col items-center justify-center p-8 relative overflow-hidden shadow-inner bg-gradient-to-b from-white to-gray-50/30">
                               {/* Logo Symbol Mark */}
                               <div className="flex-1 flex items-center justify-center w-full">
                                 <img
@@ -1853,7 +1876,7 @@ export default function OnboardingPage() {
                               {/* Styled Brand Typography */}
                               <div className="pt-2 pb-4 text-center">
                                 <span 
-                                  className={`text-gray-900 ${fontInfo.textStyle}`}
+                                  className={`text-white ${fontInfo.textStyle}`}
                                   style={{ fontFamily: fontInfo.family, fontSize: "1.25rem", lineHeight: "1.75rem" }}
                                 >
                                   {displayBrandName}
@@ -1862,8 +1885,8 @@ export default function OnboardingPage() {
                             </div>
                             <div className="flex justify-between items-center text-xs">
                               <div>
-                                <span className="text-gray-400 block text-[9px]">LOGO STYLE</span>
-                                <span className="font-bold text-gray-800">{data.selectedLogo.name}</span>
+                                <span className="text-[#E1E0CC]/40 block text-[9px]">LOGO STYLE</span>
+                                <span className="font-bold text-[#E1E0CC]">{data.selectedLogo.name}</span>
                               </div>
                               <span className="text-[10px] text-[#E1E0CC] font-bold flex items-center gap-1">
                                 <CheckCircle2 className="w-3.5 h-3.5 text-[#E1E0CC] fill-emerald-50" /> Approved & Selected
@@ -1874,103 +1897,103 @@ export default function OnboardingPage() {
                           {/* Logo Variations Suite (12+ Custom Layouts & Formats) */}
                           <div className="border-t border-gray-150 pt-6 mt-6 space-y-4">
                             <div>
-                              <h4 className="text-sm font-bold text-gray-900">Dynamic Logo Variations Suite</h4>
-                              <p className="text-xs text-gray-400 mt-0.5">Your brand identity package has been successfully compiled into 12 custom layout and color formats.</p>
+                              <h4 className="text-sm font-bold text-white">Dynamic Logo Variations Suite</h4>
+                              <p className="text-xs text-[#E1E0CC]/40 mt-0.5">Your brand identity package has been successfully compiled into 12 custom layout and color formats.</p>
                             </div>
                             <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
                               {/* 1. Primary Full Color */}
-                              <div className="bg-gray-50 border border-gray-150 rounded-xl p-3 flex flex-col justify-between items-center text-center shadow-sm">
-                                <div className="w-12 h-12 flex items-center justify-center p-1 bg-white rounded-lg border border-gray-100">
+                              <div className="bg-[#0a0a0a] border border-gray-150 rounded-2xl p-3 flex flex-col justify-between items-center text-center shadow-sm">
+                                <div className="w-12 h-12 flex items-center justify-center p-1 bg-[#101010] rounded-lg border border-[#E1E0CC]/10">
                                   <img src={data.selectedLogo.imageUrl} alt="Primary" className="max-w-full max-h-full object-contain" />
                                 </div>
-                                <span className="text-[8px] font-bold text-gray-500 mt-2 block">Primary Full Color</span>
+                                <span className="text-[8px] font-bold text-[#E1E0CC]/60 mt-2 block">Primary Full Color</span>
                               </div>
 
                               {/* 2. Solid Black */}
-                              <div className="bg-white border border-gray-150 rounded-xl p-3 flex flex-col justify-between items-center text-center shadow-sm">
-                                <div className="w-12 h-12 flex items-center justify-center p-1 bg-white rounded-lg">
+                              <div className="bg-[#101010] border border-gray-150 rounded-2xl p-3 flex flex-col justify-between items-center text-center shadow-sm">
+                                <div className="w-12 h-12 flex items-center justify-center p-1 bg-[#101010] rounded-lg">
                                   <img src={data.selectedLogo.imageUrl} alt="Solid Black" className="max-w-full max-h-full object-contain" style={{ filter: "grayscale(1) contrast(1000%)" }} />
                                 </div>
-                                <span className="text-[8px] font-bold text-gray-500 mt-2 block">Black Version</span>
+                                <span className="text-[8px] font-bold text-[#E1E0CC]/60 mt-2 block">Black Version</span>
                               </div>
 
                               {/* 3. Solid White Inverted */}
-                              <div className="bg-gray-950 border border-gray-800 rounded-xl p-3 flex flex-col justify-between items-center text-center shadow-sm">
+                              <div className="bg-gray-950 border border-gray-800 rounded-2xl p-3 flex flex-col justify-between items-center text-center shadow-sm">
                                 <div className="w-12 h-12 flex items-center justify-center p-1 bg-black rounded-lg">
                                   <img src={data.selectedLogo.imageUrl} alt="Solid White" className="max-w-full max-h-full object-contain" style={{ filter: "grayscale(1) contrast(1000%) invert(1)" }} />
                                 </div>
-                                <span className="text-[8px] font-bold text-gray-400 mt-2 block">White Inverted</span>
+                                <span className="text-[8px] font-bold text-[#E1E0CC]/40 mt-2 block">White Inverted</span>
                               </div>
 
                               {/* 4. Grayscale */}
-                              <div className="bg-gray-50 border border-gray-150 rounded-xl p-3 flex flex-col justify-between items-center text-center shadow-sm">
-                                <div className="w-12 h-12 flex items-center justify-center p-1 bg-white rounded-lg border border-gray-100">
+                              <div className="bg-[#0a0a0a] border border-gray-150 rounded-2xl p-3 flex flex-col justify-between items-center text-center shadow-sm">
+                                <div className="w-12 h-12 flex items-center justify-center p-1 bg-[#101010] rounded-lg border border-[#E1E0CC]/10">
                                   <img src={data.selectedLogo.imageUrl} alt="Grayscale" className="max-w-full max-h-full object-contain" style={{ filter: "grayscale(1)" }} />
                                 </div>
-                                <span className="text-[8px] font-bold text-gray-500 mt-2 block">Grayscale</span>
+                                <span className="text-[8px] font-bold text-[#E1E0CC]/60 mt-2 block">Grayscale</span>
                               </div>
 
                               {/* 5. Watermark */}
-                              <div className="bg-gray-50 border border-gray-150 rounded-xl p-3 flex flex-col justify-between items-center text-center shadow-sm">
-                                <div className="w-12 h-12 flex items-center justify-center p-1 bg-white rounded-lg border border-gray-100 relative">
+                              <div className="bg-[#0a0a0a] border border-gray-150 rounded-2xl p-3 flex flex-col justify-between items-center text-center shadow-sm">
+                                <div className="w-12 h-12 flex items-center justify-center p-1 bg-[#101010] rounded-lg border border-[#E1E0CC]/10 relative">
                                   <img src={data.selectedLogo.imageUrl} alt="Watermark" className="max-w-full max-h-full object-contain opacity-20" />
                                 </div>
-                                <span className="text-[8px] font-bold text-gray-500 mt-2 block">Watermark (20% Op)</span>
+                                <span className="text-[8px] font-bold text-[#E1E0CC]/60 mt-2 block">Watermark (20% Op)</span>
                               </div>
 
                               {/* 6. Favicon / Icon */}
-                              <div className="bg-gray-50 border border-gray-150 rounded-xl p-3 flex flex-col justify-between items-center text-center shadow-sm">
+                              <div className="bg-[#0a0a0a] border border-gray-150 rounded-2xl p-3 flex flex-col justify-between items-center text-center shadow-sm">
                                 <div className="w-12 h-12 flex items-center justify-center">
                                   <div className="w-7 h-7 rounded-lg bg-gray-900 border border-white/10 flex items-center justify-center p-0.5 overflow-hidden shadow-sm">
                                     <img src={data.selectedLogo.imageUrl} alt="Favicon" className="max-w-full max-h-full object-contain" />
                                   </div>
                                 </div>
-                                <span className="text-[8px] font-bold text-gray-500 mt-2 block">Favicon / App Icon</span>
+                                <span className="text-[8px] font-bold text-[#E1E0CC]/60 mt-2 block">Favicon / App Icon</span>
                               </div>
 
                               {/* 7. Wordmark / Text */}
-                              <div className="bg-gray-50 border border-gray-150 rounded-xl p-3 flex flex-col justify-between items-center text-center shadow-sm">
+                              <div className="bg-[#0a0a0a] border border-gray-150 rounded-2xl p-3 flex flex-col justify-between items-center text-center shadow-sm">
                                 <div className="w-12 h-12 flex items-center justify-center">
                                   <span 
-                                    className={`text-center font-extrabold text-gray-900 ${fontInfo.textStyle}`}
+                                    className={`text-center font-extrabold text-white ${fontInfo.textStyle}`}
                                     style={{ fontFamily: fontInfo.family }}
                                   >
                                     {displayBrandName}
                                   </span>
                                 </div>
-                                <span className="text-[8px] font-bold text-gray-500 mt-2 block">Wordmark / Text</span>
+                                <span className="text-[8px] font-bold text-[#E1E0CC]/60 mt-2 block">Wordmark / Text</span>
                               </div>
 
                               {/* 8. Horizontal Layout */}
-                              <div className="bg-gray-50 border border-gray-150 rounded-xl p-3 flex flex-col justify-between items-center text-center shadow-sm col-span-2 sm:col-span-1">
-                                <div className="w-full h-12 flex items-center justify-center gap-1.5 px-1 bg-white rounded-lg border border-gray-100">
+                              <div className="bg-[#0a0a0a] border border-gray-150 rounded-2xl p-3 flex flex-col justify-between items-center text-center shadow-sm col-span-2 sm:col-span-1">
+                                <div className="w-full h-12 flex items-center justify-center gap-1.5 px-1 bg-[#101010] rounded-lg border border-[#E1E0CC]/10">
                                   <img src={data.selectedLogo.imageUrl} alt="Icon" className="w-4 h-4 object-contain" style={{ filter: "grayscale(1) contrast(1000%)" }} />
                                   <span 
-                                    className="text-[9px] font-bold text-gray-900 truncate max-w-[50px] uppercase"
+                                    className="text-[9px] font-bold text-white truncate max-w-[50px] uppercase"
                                     style={{ fontFamily: fontInfo.family }}
                                   >
                                     {displayBrandName}
                                   </span>
                                 </div>
-                                <span className="text-[8px] font-bold text-gray-500 mt-2 block">Horizontal Layout</span>
+                                <span className="text-[8px] font-bold text-[#E1E0CC]/60 mt-2 block">Horizontal Layout</span>
                               </div>
 
                               {/* 9. Stacked / Vertical Layout */}
-                              <div className="bg-gray-50 border border-gray-150 rounded-xl p-3 flex flex-col justify-between items-center text-center shadow-sm">
-                                <div className="w-12 h-12 flex flex-col items-center justify-center gap-0.5 bg-white rounded-lg border border-gray-100">
+                              <div className="bg-[#0a0a0a] border border-gray-150 rounded-2xl p-3 flex flex-col justify-between items-center text-center shadow-sm">
+                                <div className="w-12 h-12 flex flex-col items-center justify-center gap-0.5 bg-[#101010] rounded-lg border border-[#E1E0CC]/10">
                                   <img src={data.selectedLogo.imageUrl} alt="Icon" className="w-4 h-4 object-contain" style={{ filter: "grayscale(1) contrast(1000%)" }} />
                                   <span 
-                                    className="text-[7px] font-bold text-gray-900 max-w-[45px] truncate text-center uppercase"
+                                    className="text-[7px] font-bold text-white max-w-[45px] truncate text-center uppercase"
                                     style={{ fontFamily: fontInfo.family }}
                                   >
                                     {displayBrandName}
                                   </span>
                                 </div>
-                                <span className="text-[8px] font-bold text-gray-500 mt-2 block">Vertical Stacked</span>
+                                <span className="text-[8px] font-bold text-[#E1E0CC]/60 mt-2 block">Vertical Stacked</span>
                               </div>
 
                               {/* 10. Vintage Style */}
-                              <div className="bg-[#FAF6EE] border border-[#EBE3D5] rounded-xl p-3 flex flex-col justify-between items-center text-center shadow-sm">
+                              <div className="bg-[#FAF6EE] border border-[#EBE3D5] rounded-2xl p-3 flex flex-col justify-between items-center text-center shadow-sm">
                                 <div className="w-12 h-12 flex items-center justify-center p-1 bg-[#FAF6EE] rounded-lg">
                                   <img src={data.selectedLogo.imageUrl} alt="Vintage" className="max-w-full max-h-full object-contain" style={{ filter: "sepia(0.8) contrast(1.2)" }} />
                                 </div>
@@ -1978,21 +2001,21 @@ export default function OnboardingPage() {
                               </div>
 
                               {/* 11. Minimalist Style */}
-                              <div className="bg-gray-50 border border-gray-150 rounded-xl p-3 flex flex-col justify-between items-center text-center shadow-sm">
-                                <div className="w-12 h-12 flex items-center justify-center p-1 bg-white rounded-lg border border-gray-100">
+                              <div className="bg-[#0a0a0a] border border-gray-150 rounded-2xl p-3 flex flex-col justify-between items-center text-center shadow-sm">
+                                <div className="w-12 h-12 flex items-center justify-center p-1 bg-[#101010] rounded-lg border border-[#E1E0CC]/10">
                                   <img src={data.selectedLogo.imageUrl} alt="Minimalist" className="max-w-full max-h-full object-contain" style={{ filter: "contrast(1.5) brightness(1.05)" }} />
                                 </div>
-                                <span className="text-[8px] font-bold text-gray-500 mt-2 block">Minimalist</span>
+                                <span className="text-[8px] font-bold text-[#E1E0CC]/60 mt-2 block">Minimalist</span>
                               </div>
 
                               {/* 12. Emblem / Badge Layout */}
-                              <div className="bg-gray-50 border border-gray-150 rounded-xl p-3 flex flex-col justify-between items-center text-center shadow-sm">
+                              <div className="bg-[#0a0a0a] border border-gray-150 rounded-2xl p-3 flex flex-col justify-between items-center text-center shadow-sm">
                                 <div className="w-12 h-12 flex items-center justify-center">
                                   <div className="w-9 h-9 rounded-full border-2 border-dashed border-gray-400 flex items-center justify-center p-1 overflow-hidden">
                                     <img src={data.selectedLogo.imageUrl} alt="Emblem" className="max-w-full max-h-full object-contain" />
                                   </div>
                                 </div>
-                                <span className="text-[8px] font-bold text-gray-500 mt-2 block">Emblem Badge</span>
+                                <span className="text-[8px] font-bold text-[#E1E0CC]/60 mt-2 block">Emblem Badge</span>
                               </div>
 
                             </div>
@@ -2001,7 +2024,7 @@ export default function OnboardingPage() {
                             <div className="pt-4 flex justify-end">
                               <button
                                 onClick={() => setStep(6)}
-                                className="px-6 py-2.5 bg-[#090D16] text-white hover:bg-gray-800 font-bold text-xs uppercase tracking-wider rounded-xl transition-all flex items-center gap-2 shadow-lg shadow-black/10"
+                                className="px-6 py-2.5 bg-[#090D16] text-white hover:bg-gray-800 font-bold text-xs uppercase tracking-wider rounded-2xl transition-all flex items-center gap-2 shadow-lg shadow-black/10"
                               >
                                 Continue to Social Media Visual Direction <ArrowRight className="w-4 h-4" />
                               </button>
@@ -2022,13 +2045,13 @@ export default function OnboardingPage() {
                           </div>
                           <div>
                             <h4 className="text-base font-bold text-white">Generate Bespoke Brand Logo with AI</h4>
-                            <p className="text-xs text-gray-400 max-w-sm mx-auto mt-1.5 leading-relaxed">
+                            <p className="text-xs text-[#E1E0CC]/40 max-w-sm mx-auto mt-1.5 leading-relaxed">
                               Our AI will generate a premium, high-quality bespoke logo tailored to your brand personality using fal.ai Flux Dev.
                             </p>
                           </div>
                           <button
                             onClick={handleGenerateLogos}
-                            className="px-6 py-2.5 bg-[#0A0A0A] hover:bg-[#0A0A0A]/90 text-[#090D16] font-bold text-xs uppercase tracking-wider rounded-xl transition-all flex items-center gap-2 mx-auto shadow-lg shadow-[#0A0A0A]/20"
+                            className="px-6 py-2.5 bg-[#0A0A0A] hover:bg-[#0A0A0A]/90 text-[#090D16] font-bold text-xs uppercase tracking-wider rounded-2xl transition-all flex items-center gap-2 mx-auto shadow-lg shadow-[#0A0A0A]/20"
                           >
                             <Sparkles className="w-4 h-4" />
                             Generate Custom Logo
@@ -2042,12 +2065,12 @@ export default function OnboardingPage() {
                           <div className="bg-gray-950 border border-gray-800 rounded-2xl p-6 text-center space-y-2">
                             <Loader2 className="w-8 h-8 text-[#0A0A0A] animate-spin mx-auto" />
                             <h4 className="text-sm font-bold text-white">Generating 6 Brand Logos in Parallel...</h4>
-                            <p className="text-xs text-gray-500">Calling fal.ai Flux Dev API. Please wait up to 10 seconds.</p>
+                            <p className="text-xs text-[#E1E0CC]/60">Calling fal.ai Flux Dev API. Please wait up to 10 seconds.</p>
                           </div>
                           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                             {Array.from({ length: 6 }).map((_, i) => (
-                              <div key={i} className="aspect-square bg-gray-900/50 border border-gray-800 rounded-xl animate-pulse flex items-center justify-center">
-                                <Loader2 className="w-5 h-5 text-gray-700 animate-spin" />
+                              <div key={i} className="aspect-square bg-gray-900/50 border border-gray-800 rounded-2xl animate-pulse flex items-center justify-center">
+                                <Loader2 className="w-5 h-5 text-[#E1E0CC]/80 animate-spin" />
                               </div>
                             ))}
                           </div>
@@ -2056,7 +2079,7 @@ export default function OnboardingPage() {
 
                       {/* Error state */}
                       {logoError && (
-                        <div className="bg-[#E1E0CC]/10 border border-[#E1E0CC]/20 rounded-xl p-4 text-xs text-[#E1E0CC] flex items-start gap-2">
+                        <div className="bg-[#E1E0CC]/10 border border-[#E1E0CC]/20 rounded-2xl p-4 text-xs text-[#E1E0CC] flex items-start gap-2">
                           <AlertTriangle className="w-4 h-4 text-[#E1E0CC] shrink-0 mt-0.5" />
                           <div>
                             <p className="font-bold">Failed to generate logos</p>
@@ -2076,12 +2099,12 @@ export default function OnboardingPage() {
                         <div className="space-y-4">
                           <div className="flex items-center justify-between">
                             <div>
-                              <h4 className="text-sm font-bold text-gray-900">Review Generated Logo</h4>
-                              <p className="text-xs text-gray-400 mt-0.5">Approve this custom logo to instantly compile your 12 brand assets.</p>
+                              <h4 className="text-sm font-bold text-white">Review Generated Logo</h4>
+                              <p className="text-xs text-[#E1E0CC]/40 mt-0.5">Approve this custom logo to instantly compile your 12 brand assets.</p>
                             </div>
                             <button
                               onClick={handleGenerateLogos}
-                              className="text-[10px] text-gray-500 hover:text-gray-800 font-bold flex items-center gap-1 border border-gray-200 px-3 py-1.5 rounded-lg transition-all"
+                              className="text-[10px] text-[#E1E0CC]/60 hover:text-[#E1E0CC] font-bold flex items-center gap-1 border border-[#E1E0CC]/15 px-3 py-1.5 rounded-lg transition-all"
                             >
                               <Sparkles className="w-3 h-3" /> Regenerate
                             </button>
@@ -2091,10 +2114,10 @@ export default function OnboardingPage() {
                             {logoOptions.map((opt) => (
                               <div
                                 key={opt.id}
-                                className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm space-y-4"
+                                className="bg-[#101010] border border-[#E1E0CC]/10 rounded-2xl p-5 shadow-sm space-y-4"
                               >
                                 {/* Logo Symbol Mark — inline SVG, no text */}
-                                <div className="bg-gray-50 border border-gray-100 rounded-xl aspect-square w-full flex items-center justify-center p-6 overflow-hidden shadow-inner">
+                                <div className="bg-gradient-to-br from-[#1C1C1C] to-black border border-[#E1E0CC]/5 shadow-[0_0_30px_rgba(225,224,204,0.02)]/80 rounded-2xl aspect-square w-full flex items-center justify-center p-6 overflow-hidden shadow-inner">
                                   {opt.svgContent ? (
                                     <div
                                       className="w-full h-full flex items-center justify-center [&>svg]:max-w-full [&>svg]:max-h-full [&>svg]:w-full [&>svg]:h-full"
@@ -2111,13 +2134,13 @@ export default function OnboardingPage() {
                                       {formatFetchError(opt.error)}
                                     </div>
                                   ) : (
-                                    <div className="text-center text-[10px] text-gray-400">No preview</div>
+                                    <div className="text-center text-[10px] text-[#E1E0CC]/40">No preview</div>
                                   )}
                                 </div>
                                 <div className="flex justify-between items-center text-xs">
                                   <div>
-                                    <span className="text-gray-400 block text-[9px]">LOGO STYLE</span>
-                                    <span className="font-bold text-gray-800">{opt.name}</span>
+                                    <span className="text-[#E1E0CC]/40 block text-[9px]">LOGO STYLE</span>
+                                    <span className="font-bold text-[#E1E0CC]">{opt.name}</span>
                                   </div>
                                   <button
                                     onClick={() => {
@@ -2136,7 +2159,7 @@ export default function OnboardingPage() {
                                       }
                                     }}
                                     disabled={!opt.svgContent && !opt.imageUrl}
-                                    className="px-5 py-2.5 bg-[#0A0A0A] hover:bg-[#0A0A0A]/90 text-[#090D16] font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-sm shadow-[#0A0A0A]/10 flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
+                                    className="px-5 py-2.5 bg-[#0A0A0A] hover:bg-[#0A0A0A]/90 text-[#090D16] font-bold text-xs uppercase tracking-wider rounded-2xl transition-all shadow-sm shadow-[#0A0A0A]/10 flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
                                   >
                                     <CheckCircle2 className="w-3.5 h-3.5" /> Approve Logo
                                   </button>
@@ -2157,20 +2180,20 @@ export default function OnboardingPage() {
                 <div className="space-y-6">
                   {/* Category 1: Core Branding Assets */}
                   <div className="space-y-3">
-                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest">1. Core Branding Assets</h3>
+                    <h3 className="text-xs font-bold text-[#E1E0CC]/40 uppercase tracking-widest">1. Core Branding Assets</h3>
                     <div className="grid grid-cols-1 gap-4">
                       {/* Primary Logo */}
-                      <div className="border border-gray-200/80 rounded-xl p-4 flex flex-col justify-between bg-white min-h-[140px]">
+                      <div className="border border-[#E1E0CC]/15/80 rounded-2xl p-4 flex flex-col justify-between bg-[#101010] min-h-[140px]">
                         <div>
-                          <h4 className="font-bold text-gray-900 flex items-center gap-1.5 text-xs">
+                          <h4 className="font-bold text-white flex items-center gap-1.5 text-xs">
                             <ImageIcon className="w-4 h-4 text-[#0A0A0A]" />
                             Logo Graphic *
                           </h4>
-                          <p className="text-[10px] text-gray-400 mt-0.5">Upload brand logo (SVG/PNG).</p>
+                          <p className="text-[10px] text-[#E1E0CC]/40 mt-0.5">Upload brand logo (SVG/PNG).</p>
                         </div>
                         <div className="mt-3 flex items-center gap-4">
                           {data.logoUrl ? (
-                            <div className="relative w-14 h-14 rounded-xl border border-gray-200 bg-gray-50 flex items-center justify-center p-1 group overflow-hidden shadow-sm shrink-0">
+                            <div className="relative w-14 h-14 rounded-2xl border border-[#E1E0CC]/15 bg-[#0a0a0a] flex items-center justify-center p-1 group overflow-hidden shadow-sm shrink-0">
                               <img src={data.logoUrl} alt="Logo" className="max-w-full max-h-full object-contain" />
                               <button
                                 onClick={() => removeUploadedFile("logo")}
@@ -2180,9 +2203,9 @@ export default function OnboardingPage() {
                               </button>
                             </div>
                           ) : (
-                            <label className={`px-3 py-1.5 bg-gray-50 border border-gray-200 hover:bg-gray-100 text-gray-700 text-xs font-bold rounded-lg transition-colors flex items-center gap-1 cursor-pointer shrink-0
+                            <label className={`px-3 py-1.5 bg-[#0a0a0a] border border-[#E1E0CC]/15 hover:bg-gray-100 text-[#E1E0CC]/80 text-xs font-bold rounded-lg transition-colors flex items-center gap-1 cursor-pointer shrink-0
                               ${uploadingField === "logo" ? "opacity-50 cursor-not-allowed" : ""}`}>
-                              {uploadingField === "logo" ? <Loader2 className="w-3.5 h-3.5 animate-spin text-[#0A0A0A]" /> : <UploadCloud className="w-3.5 h-3.5 text-gray-400" />}
+                              {uploadingField === "logo" ? <Loader2 className="w-3.5 h-3.5 animate-spin text-[#0A0A0A]" /> : <UploadCloud className="w-3.5 h-3.5 text-[#E1E0CC]/40" />}
                               Upload Logo
                               <input
                                 type="file"
@@ -2205,20 +2228,20 @@ export default function OnboardingPage() {
 
                   {/* Category 2: Visual Media Assets */}
                   <div className="space-y-3">
-                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest">2. Visual Media Assets</h3>
+                    <h3 className="text-xs font-bold text-[#E1E0CC]/40 uppercase tracking-widest">2. Visual Media Assets</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {/* Product Images */}
-                      <div className="border border-gray-200/80 rounded-xl p-4 bg-white space-y-3">
+                      <div className="border border-[#E1E0CC]/15/80 rounded-2xl p-4 bg-[#101010] space-y-3">
                         <div>
-                          <h4 className="font-bold text-gray-900 flex items-center gap-1.5 text-xs">
+                          <h4 className="font-bold text-white flex items-center gap-1.5 text-xs">
                             <ImageIcon className="w-4 h-4 text-[#0A0A0A]" />
                             Product Images
                           </h4>
-                          <p className="text-[10px] text-gray-400 mt-0.5">Upload product captures or catalogs.</p>
+                          <p className="text-[10px] text-[#E1E0CC]/40 mt-0.5">Upload product captures or catalogs.</p>
                         </div>
                         <div className="flex flex-wrap gap-2 pt-1">
                           {data.productImages.map((img, i) => (
-                            <div key={i} className="relative w-12 h-12 rounded-lg border border-gray-200 overflow-hidden group shrink-0">
+                            <div key={i} className="relative w-12 h-12 rounded-lg border border-[#E1E0CC]/15 overflow-hidden group shrink-0">
                               <img src={img} alt="Product" className="w-full h-full object-cover" />
                               <button
                                 onClick={() => removeUploadedFile("productImages", i)}
@@ -2228,7 +2251,7 @@ export default function OnboardingPage() {
                               </button>
                             </div>
                           ))}
-                          <label className={`w-12 h-12 border border-dashed border-gray-300 hover:border-brand-secondary rounded-lg flex flex-col items-center justify-center text-gray-400 hover:text-[#0A0A0A] transition-colors cursor-pointer shrink-0
+                          <label className={`w-12 h-12 border border-dashed border-[#E1E0CC]/20 hover:border-brand-secondary rounded-lg flex flex-col items-center justify-center text-[#E1E0CC]/40 hover:text-[#0A0A0A] transition-colors cursor-pointer shrink-0
                             ${uploadingField === "productImages" ? "opacity-50 cursor-not-allowed" : ""}`}>
                             {uploadingField === "productImages" ? <Loader2 className="w-4 h-4 animate-spin text-brand-secondary" /> : <Plus className="w-4 h-4" />}
                             <input
@@ -2243,17 +2266,17 @@ export default function OnboardingPage() {
                       </div>
 
                       {/* Team Photos */}
-                      <div className="border border-gray-200/80 rounded-xl p-4 bg-white space-y-3">
+                      <div className="border border-[#E1E0CC]/15/80 rounded-2xl p-4 bg-[#101010] space-y-3">
                         <div>
-                          <h4 className="font-bold text-gray-900 flex items-center gap-1.5 text-xs">
+                          <h4 className="font-bold text-white flex items-center gap-1.5 text-xs">
                             <Users className="w-4 h-4 text-[#0A0A0A]" />
                             Team Photos
                           </h4>
-                          <p className="text-[10px] text-gray-400 mt-0.5">Upload headshots or group captures.</p>
+                          <p className="text-[10px] text-[#E1E0CC]/40 mt-0.5">Upload headshots or group captures.</p>
                         </div>
                         <div className="flex flex-wrap gap-2 pt-1">
                           {data.teamPhotos.map((img, i) => (
-                            <div key={i} className="relative w-12 h-12 rounded-lg border border-gray-200 overflow-hidden group shrink-0">
+                            <div key={i} className="relative w-12 h-12 rounded-lg border border-[#E1E0CC]/15 overflow-hidden group shrink-0">
                               <img src={img} alt="Team" className="w-full h-full object-cover" />
                               <button
                                 onClick={() => removeUploadedFile("teamPhotos", i)}
@@ -2263,7 +2286,7 @@ export default function OnboardingPage() {
                               </button>
                             </div>
                           ))}
-                          <label className={`w-12 h-12 border border-dashed border-gray-300 hover:border-brand-secondary rounded-lg flex flex-col items-center justify-center text-gray-400 hover:text-[#0A0A0A] transition-colors cursor-pointer shrink-0
+                          <label className={`w-12 h-12 border border-dashed border-[#E1E0CC]/20 hover:border-brand-secondary rounded-lg flex flex-col items-center justify-center text-[#E1E0CC]/40 hover:text-[#0A0A0A] transition-colors cursor-pointer shrink-0
                             ${uploadingField === "teamPhotos" ? "opacity-50 cursor-not-allowed" : ""}`}>
                             {uploadingField === "teamPhotos" ? <Loader2 className="w-4 h-4 animate-spin text-brand-secondary" /> : <Plus className="w-4 h-4" />}
                             <input
@@ -2278,17 +2301,17 @@ export default function OnboardingPage() {
                       </div>
 
                       {/* Office Images */}
-                      <div className="border border-gray-200/80 rounded-xl p-4 bg-white space-y-3">
+                      <div className="border border-[#E1E0CC]/15/80 rounded-2xl p-4 bg-[#101010] space-y-3">
                         <div>
-                          <h4 className="font-bold text-gray-900 flex items-center gap-1.5 text-xs">
+                          <h4 className="font-bold text-white flex items-center gap-1.5 text-xs">
                             <Building className="w-4 h-4 text-[#0A0A0A]" />
                             Office & Workspace Images
                           </h4>
-                          <p className="text-[10px] text-gray-400 mt-0.5">Upload building, workplace, or setup photos.</p>
+                          <p className="text-[10px] text-[#E1E0CC]/40 mt-0.5">Upload building, workplace, or setup photos.</p>
                         </div>
                         <div className="flex flex-wrap gap-2 pt-1">
                           {data.officeImages.map((img, i) => (
-                            <div key={i} className="relative w-12 h-12 rounded-lg border border-gray-200 overflow-hidden group shrink-0">
+                            <div key={i} className="relative w-12 h-12 rounded-lg border border-[#E1E0CC]/15 overflow-hidden group shrink-0">
                               <img src={img} alt="Office" className="w-full h-full object-cover" />
                               <button
                                 onClick={() => removeUploadedFile("officeImages", i)}
@@ -2298,7 +2321,7 @@ export default function OnboardingPage() {
                               </button>
                             </div>
                           ))}
-                          <label className={`w-12 h-12 border border-dashed border-gray-300 hover:border-brand-secondary rounded-lg flex flex-col items-center justify-center text-gray-400 hover:text-[#0A0A0A] transition-colors cursor-pointer shrink-0
+                          <label className={`w-12 h-12 border border-dashed border-[#E1E0CC]/20 hover:border-brand-secondary rounded-lg flex flex-col items-center justify-center text-[#E1E0CC]/40 hover:text-[#0A0A0A] transition-colors cursor-pointer shrink-0
                             ${uploadingField === "officeImages" ? "opacity-50 cursor-not-allowed" : ""}`}>
                             {uploadingField === "officeImages" ? <Loader2 className="w-4 h-4 animate-spin text-brand-secondary" /> : <Plus className="w-4 h-4" />}
                             <input
@@ -2313,17 +2336,17 @@ export default function OnboardingPage() {
                       </div>
 
                       {/* Brand Videos */}
-                      <div className="border border-gray-200/80 rounded-xl p-4 bg-white space-y-3">
+                      <div className="border border-[#E1E0CC]/15/80 rounded-2xl p-4 bg-[#101010] space-y-3">
                         <div>
-                          <h4 className="font-bold text-gray-900 flex items-center gap-1.5 text-xs">
+                          <h4 className="font-bold text-white flex items-center gap-1.5 text-xs">
                             <Video className="w-4 h-4 text-[#0A0A0A]" />
                             Brand Videos
                           </h4>
-                          <p className="text-[10px] text-gray-400 mt-0.5">Upload promotional videos or teasers.</p>
+                          <p className="text-[10px] text-[#E1E0CC]/40 mt-0.5">Upload promotional videos or teasers.</p>
                         </div>
                         <div className="flex flex-wrap gap-2 pt-1">
                           {data.brandVideos.map((vid, i) => (
-                            <div key={i} className="relative w-12 h-12 rounded-lg border border-gray-200 overflow-hidden bg-gray-900 flex items-center justify-center group shrink-0">
+                            <div key={i} className="relative w-12 h-12 rounded-lg border border-[#E1E0CC]/15 overflow-hidden bg-gray-900 flex items-center justify-center group shrink-0">
                               <Video className="w-5 h-5 text-white/50" />
                               <button
                                 onClick={() => removeUploadedFile("brandVideos", i)}
@@ -2333,7 +2356,7 @@ export default function OnboardingPage() {
                               </button>
                             </div>
                           ))}
-                          <label className={`w-12 h-12 border border-dashed border-gray-300 hover:border-brand-secondary rounded-lg flex flex-col items-center justify-center text-gray-400 hover:text-[#0A0A0A] transition-colors cursor-pointer shrink-0
+                          <label className={`w-12 h-12 border border-dashed border-[#E1E0CC]/20 hover:border-brand-secondary rounded-lg flex flex-col items-center justify-center text-[#E1E0CC]/40 hover:text-[#0A0A0A] transition-colors cursor-pointer shrink-0
                             ${uploadingField === "brandVideos" ? "opacity-50 cursor-not-allowed" : ""}`}>
                             {uploadingField === "brandVideos" ? <Loader2 className="w-4 h-4 animate-spin text-brand-secondary" /> : <Plus className="w-4 h-4" />}
                             <input
@@ -2351,21 +2374,21 @@ export default function OnboardingPage() {
 
                   {/* Category 3: Design System Resources */}
                   <div className="space-y-3">
-                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest">3. Design System Resources</h3>
+                    <h3 className="text-xs font-bold text-[#E1E0CC]/40 uppercase tracking-widest">3. Design System Resources</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {/* Fonts */}
-                      <div className="border border-gray-200/80 rounded-xl p-4 bg-white space-y-3">
+                      <div className="border border-[#E1E0CC]/15/80 rounded-2xl p-4 bg-[#101010] space-y-3">
                         <div>
-                          <h4 className="font-bold text-gray-900 flex items-center gap-1.5 text-xs">
+                          <h4 className="font-bold text-white flex items-center gap-1.5 text-xs">
                             <Type className="w-4 h-4 text-[#0A0A0A]" />
                             Brand Fonts
                           </h4>
-                          <p className="text-[10px] text-gray-400 mt-0.5">Upload custom typography font files.</p>
+                          <p className="text-[10px] text-[#E1E0CC]/40 mt-0.5">Upload custom typography font files.</p>
                         </div>
                         <div className="flex flex-wrap gap-2 pt-1">
                           {data.fonts.map((f, i) => (
-                            <div key={i} className="relative w-12 h-12 rounded-lg border border-gray-200 bg-gray-50 flex items-center justify-center group shrink-0">
-                              <Type className="w-5 h-5 text-gray-400" />
+                            <div key={i} className="relative w-12 h-12 rounded-lg border border-[#E1E0CC]/15 bg-[#0a0a0a] flex items-center justify-center group shrink-0">
+                              <Type className="w-5 h-5 text-[#E1E0CC]/40" />
                               <button
                                 onClick={() => removeUploadedFile("fonts", i)}
                                 className="absolute inset-0 bg-[#E1E0CC]/10/90 text-white text-[8px] font-bold opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
@@ -2374,7 +2397,7 @@ export default function OnboardingPage() {
                               </button>
                             </div>
                           ))}
-                          <label className={`w-12 h-12 border border-dashed border-gray-300 hover:border-brand-secondary rounded-lg flex flex-col items-center justify-center text-gray-400 hover:text-[#0A0A0A] transition-colors cursor-pointer shrink-0
+                          <label className={`w-12 h-12 border border-dashed border-[#E1E0CC]/20 hover:border-brand-secondary rounded-lg flex flex-col items-center justify-center text-[#E1E0CC]/40 hover:text-[#0A0A0A] transition-colors cursor-pointer shrink-0
                             ${uploadingField === "fonts" ? "opacity-50 cursor-not-allowed" : ""}`}>
                             {uploadingField === "fonts" ? <Loader2 className="w-4 h-4 animate-spin text-brand-secondary" /> : <Plus className="w-4 h-4" />}
                             <input
@@ -2389,17 +2412,17 @@ export default function OnboardingPage() {
                       </div>
 
                       {/* Icons */}
-                      <div className="border border-gray-200/80 rounded-xl p-4 bg-white space-y-3">
+                      <div className="border border-[#E1E0CC]/15/80 rounded-2xl p-4 bg-[#101010] space-y-3">
                         <div>
-                          <h4 className="font-bold text-gray-900 flex items-center gap-1.5 text-xs">
+                          <h4 className="font-bold text-white flex items-center gap-1.5 text-xs">
                             <Sparkles className="w-4 h-4 text-[#0A0A0A]" />
                             Brand Icons
                           </h4>
-                          <p className="text-[10px] text-gray-400 mt-0.5">Upload custom SVG/PNG icon sets.</p>
+                          <p className="text-[10px] text-[#E1E0CC]/40 mt-0.5">Upload custom SVG/PNG icon sets.</p>
                         </div>
                         <div className="flex flex-wrap gap-2 pt-1">
                           {data.icons.map((img, i) => (
-                            <div key={i} className="relative w-12 h-12 rounded-lg border border-gray-200 overflow-hidden group shrink-0">
+                            <div key={i} className="relative w-12 h-12 rounded-lg border border-[#E1E0CC]/15 overflow-hidden group shrink-0">
                               <img src={img} alt="Icon" className="w-full h-full object-cover" />
                               <button
                                 onClick={() => removeUploadedFile("icons", i)}
@@ -2409,7 +2432,7 @@ export default function OnboardingPage() {
                               </button>
                             </div>
                           ))}
-                          <label className={`w-12 h-12 border border-dashed border-gray-300 hover:border-brand-secondary rounded-lg flex flex-col items-center justify-center text-gray-400 hover:text-[#0A0A0A] transition-colors cursor-pointer shrink-0
+                          <label className={`w-12 h-12 border border-dashed border-[#E1E0CC]/20 hover:border-brand-secondary rounded-lg flex flex-col items-center justify-center text-[#E1E0CC]/40 hover:text-[#0A0A0A] transition-colors cursor-pointer shrink-0
                             ${uploadingField === "icons" ? "opacity-50 cursor-not-allowed" : ""}`}>
                             {uploadingField === "icons" ? <Loader2 className="w-4 h-4 animate-spin text-brand-secondary" /> : <Plus className="w-4 h-4" />}
                             <input
@@ -2433,12 +2456,12 @@ export default function OnboardingPage() {
           {step === 6 && (
             <div className="space-y-6 animate-fade-up">
               <div>
-                <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <h2 className="text-lg font-bold text-white flex items-center gap-2">
                   <Paintbrush className="w-5 h-5 text-[#0A0A0A]" />
                   Social Media Visual Direction
                   <span className="ml-1 text-[9px] font-black text-[#0A0A0A] bg-[#0A0A0A]/10 px-2 py-0.5 rounded-full uppercase tracking-widest">Signature Feature</span>
                 </h2>
-                <p className="text-xs text-gray-400 mt-1">
+                <p className="text-xs text-[#E1E0CC]/40 mt-1">
                   Choose your brand&apos;s visual style. The approved direction defines the aesthetic direction for all your marketing material.
                 </p>
               </div>
@@ -2449,11 +2472,11 @@ export default function OnboardingPage() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <CheckCircle2 className="w-5 h-5 text-[#E1E0CC]" />
-                      <span className="text-xs font-bold text-gray-900">Approved Moodboard: {data.approvedMoodboard.name}</span>
+                      <span className="text-xs font-bold text-white">Approved Moodboard: {data.approvedMoodboard.name}</span>
                     </div>
                     <button
                       onClick={() => updateData({ approvedMoodboard: null })}
-                      className="text-[10px] text-gray-400 hover:text-gray-700 font-bold flex items-center gap-1 border border-gray-200 px-3 py-1.5 rounded-lg transition-colors"
+                      className="text-[10px] text-[#E1E0CC]/40 hover:text-[#E1E0CC]/80 font-bold flex items-center gap-1 border border-[#E1E0CC]/15 px-3 py-1.5 rounded-lg transition-colors"
                     >
                       Change Moodboard
                     </button>
@@ -2493,15 +2516,15 @@ export default function OnboardingPage() {
                         </div>
                       </>
                     ) : (
-                      <div className="p-8 text-center text-gray-500 text-xs">
+                      <div className="p-8 text-center text-[#E1E0CC]/60 text-xs">
                         No image generated — click &quot;Change Moodboard&quot; and regenerate.
                       </div>
                     )}
                   </div>
 
                   {/* Bottom nudge */}
-                  <div className="flex items-center justify-between text-[10px] text-gray-400 px-0.5">
-                    <span>Visual direction locked for <strong className="text-gray-700">{data.brandName}</strong></span>
+                  <div className="flex items-center justify-between text-[10px] text-[#E1E0CC]/40 px-0.5">
+                    <span>Visual direction locked for <strong className="text-[#E1E0CC]/80">{data.brandName}</strong></span>
                     <span className="text-[#0A0A0A] font-bold">Continue to finalize →</span>
                   </div>
                 </div>
@@ -2516,13 +2539,13 @@ export default function OnboardingPage() {
                       </div>
                       <div>
                         <h4 className="text-base font-bold text-white">Generate Custom Brand Moodboard with AI</h4>
-                        <p className="text-xs text-gray-400 max-w-sm mx-auto mt-1.5 leading-relaxed">
+                        <p className="text-xs text-[#E1E0CC]/40 max-w-sm mx-auto mt-1.5 leading-relaxed">
                           Our AI will generate a highly detailed visual moodboard matching your brand values, personality, and industry using fal.ai Flux.
                         </p>
                       </div>
                       <button
                         onClick={handleGenerateMoodboards}
-                        className="px-6 py-2.5 bg-[#0A0A0A] hover:bg-[#0A0A0A]/90 text-[#090D16] font-bold text-xs uppercase tracking-wider rounded-xl transition-all flex items-center gap-2 mx-auto shadow-lg shadow-[#0A0A0A]/20"
+                        className="px-6 py-2.5 bg-[#E1E0CC] hover:bg-white text-[#101010] font-bold text-xs uppercase tracking-wider rounded-2xl transition-all flex items-center gap-2 mx-auto shadow-lg shadow-[#0A0A0A]/20"
                       >
                         <Sparkles className="w-4 h-4" />
                         Generate Custom Moodboard
@@ -2536,12 +2559,12 @@ export default function OnboardingPage() {
                       <div className="bg-gray-950 border border-gray-800 rounded-2xl p-6 text-center space-y-2">
                         <Loader2 className="w-8 h-8 text-[#0A0A0A] animate-spin mx-auto" />
                         <h4 className="text-sm font-bold text-white">Generating 3 Moodboard Concepts in Parallel...</h4>
-                        <p className="text-xs text-gray-500">Processing with fal.ai Flux. This may take up to 10 seconds.</p>
+                        <p className="text-xs text-[#E1E0CC]/60">Processing with fal.ai Flux. This may take up to 10 seconds.</p>
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {Array.from({ length: 3 }).map((_, i) => (
-                          <div key={i} className="aspect-video bg-gray-900/50 border border-gray-800 rounded-xl animate-pulse flex items-center justify-center">
-                            <Loader2 className="w-5 h-5 text-gray-700 animate-spin" />
+                          <div key={i} className="aspect-video bg-gray-900/50 border border-gray-800 rounded-2xl animate-pulse flex items-center justify-center">
+                            <Loader2 className="w-5 h-5 text-[#E1E0CC]/80 animate-spin" />
                           </div>
                         ))}
                       </div>
@@ -2550,7 +2573,7 @@ export default function OnboardingPage() {
 
                   {/* Error State */}
                   {moodError && (
-                    <div className="bg-[#E1E0CC]/10 border border-[#E1E0CC]/20 rounded-xl p-4 text-xs text-[#E1E0CC] flex items-start gap-2">
+                    <div className="bg-[#E1E0CC]/10 border border-[#E1E0CC]/20 rounded-2xl p-4 text-xs text-[#E1E0CC] flex items-start gap-2">
                       <AlertTriangle className="w-4 h-4 text-[#E1E0CC] shrink-0 mt-0.5" />
                       <div>
                         <p className="font-bold">Failed to generate moodboards</p>
@@ -2570,12 +2593,12 @@ export default function OnboardingPage() {
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <div>
-                          <h4 className="text-sm font-bold text-gray-900">Select Visual Concept</h4>
-                          <p className="text-xs text-gray-400 mt-0.5">Select the concept that represents your brand values best. Click "Inspect Brand Board" to view the full design system dashboard.</p>
+                          <h4 className="text-sm font-bold text-white">Select Visual Concept</h4>
+                          <p className="text-xs text-[#E1E0CC]/40 mt-0.5">Select the concept that represents your brand values best. Click "Inspect Brand Board" to view the full design system dashboard.</p>
                         </div>
                         <button
                           onClick={handleGenerateMoodboards}
-                          className="text-[10px] text-gray-500 hover:text-gray-800 font-bold flex items-center gap-1 border border-gray-200 px-3 py-1.5 rounded-lg transition-all"
+                          className="text-[10px] text-[#E1E0CC]/60 hover:text-[#E1E0CC] font-bold flex items-center gap-1 border border-[#E1E0CC]/15 px-3 py-1.5 rounded-lg transition-all"
                         >
                           <Sparkles className="w-3 h-3" /> Regenerate
                         </button>
@@ -2588,11 +2611,11 @@ export default function OnboardingPage() {
                           return (
                             <div
                               key={opt.id}
-                              className={`bg-white border rounded-2xl p-4 flex flex-col justify-between transition-all hover:shadow-lg group relative
-                                ${isApproved ? "border-[#0A0A0A] ring-2 ring-[#0A0A0A]/20" : "border-gray-200/80"}`}
+                              className={`bg-[#101010] border rounded-2xl p-4 flex flex-col justify-between transition-all hover:shadow-lg group relative
+                                ${isApproved ? "border-[#0A0A0A] ring-2 ring-[#0A0A0A]/20" : "border-[#E1E0CC]/15/80"}`}
                             >
                               <div>
-                                <div className="aspect-video bg-gray-50 border border-gray-100 rounded-xl flex items-center justify-center overflow-hidden mb-3 relative group-hover:scale-[1.01] transition-transform duration-300">
+                                <div className="aspect-video bg-gradient-to-br from-[#1C1C1C] to-black border border-[#E1E0CC]/5 shadow-[0_0_30px_rgba(225,224,204,0.02)]/80 rounded-2xl flex items-center justify-center overflow-hidden mb-3 relative group-hover:scale-[1.01] transition-transform duration-300">
                                   {opt.imageUrl ? (
                                     <>
                                       <img
@@ -2606,7 +2629,7 @@ export default function OnboardingPage() {
                                             e.stopPropagation();
                                             setInspectingMoodboard(opt);
                                           }}
-                                          className="px-3 py-1.5 bg-white text-gray-900 rounded-lg text-[10px] font-bold shadow-md hover:bg-gray-100 transition-colors"
+                                          className="px-3 py-1.5 bg-[#101010] text-white rounded-lg text-[10px] font-bold shadow-md hover:bg-gray-100 transition-colors"
                                         >
                                           Inspect Brand Board
                                         </button>
@@ -2620,14 +2643,14 @@ export default function OnboardingPage() {
                                 </div>
                                 <div className="space-y-1">
                                   <div className="flex items-center justify-between">
-                                    <span className="text-xs font-bold text-gray-900">{opt.name}</span>
+                                    <span className="text-xs font-bold text-white">{opt.name}</span>
                                     {isApproved && <span className="text-[8px] font-black bg-[#E1E0CC]/10 text-[#E1E0CC] px-1.5 py-0.5 rounded-full uppercase tracking-wider">Active</span>}
                                   </div>
-                                  <p className="text-[9px] text-gray-400 leading-tight">{opt.tagline}</p>
+                                  <p className="text-[9px] text-[#E1E0CC]/40 leading-tight">{opt.tagline}</p>
                                 </div>
 
                                 {/* Micro Color & Font swatches */}
-                                <div className="flex items-center gap-3 mt-4 pt-3 border-t border-gray-100">
+                                <div className="flex items-center gap-3 mt-4 pt-3 border-t border-[#E1E0CC]/10">
                                   <div className="flex gap-1">
                                     {preset.colors.slice(0, 4).map((c, idx) => (
                                       <div
@@ -2638,7 +2661,7 @@ export default function OnboardingPage() {
                                       />
                                     ))}
                                   </div>
-                                  <span className="text-[9px] text-gray-400 font-mono">
+                                  <span className="text-[9px] text-[#E1E0CC]/40 font-mono">
                                     {preset.typography.headline} / {preset.typography.body}
                                   </span>
                                 </div>
@@ -2647,7 +2670,7 @@ export default function OnboardingPage() {
                               <div className="mt-4 flex gap-2 w-full">
                                 <button
                                   onClick={() => setInspectingMoodboard(opt)}
-                                  className="flex-1 py-2 bg-gray-50 hover:bg-gray-100 text-gray-700 text-[10px] font-bold rounded-lg border border-gray-200 transition-colors"
+                                  className="flex-1 py-2 bg-[#0a0a0a] hover:bg-gray-100 text-[#E1E0CC]/80 text-[10px] font-bold rounded-lg border border-[#E1E0CC]/15 transition-colors"
                                 >
                                   Inspect Board
                                 </button>
@@ -2688,12 +2711,12 @@ export default function OnboardingPage() {
                     return (
                       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md">
                         <div 
-                          className="w-full max-w-6xl rounded-3xl overflow-hidden border border-slate-200/80 shadow-2xl transition-all relative bg-white/95 backdrop-blur-lg text-slate-800"
+                          className="w-full max-w-6xl rounded-3xl overflow-hidden border border-slate-200/80 shadow-2xl transition-all relative bg-[#101010]/95 backdrop-blur-lg text-slate-800"
                         >
                           {/* Close button top right */}
                           <button
                             onClick={() => setInspectingMoodboard(null)}
-                            className="absolute top-4 right-4 z-10 p-2 text-gray-400 hover:text-gray-800 rounded-full hover:bg-gray-100 transition-colors"
+                            className="absolute top-4 right-4 z-10 p-2 text-[#E1E0CC]/40 hover:text-[#E1E0CC] rounded-full hover:bg-gray-100 transition-colors"
                           >
                             <X className="w-5 h-5" />
                           </button>
@@ -2713,7 +2736,7 @@ export default function OnboardingPage() {
                             <div className="flex items-center gap-3">
                               <button
                                 onClick={() => setInspectingMoodboard(null)}
-                                className="px-4 py-2 border border-slate-200 hover:border-slate-300 rounded-xl text-xs text-slate-700 hover:bg-slate-50 font-bold transition-all"
+                                className="px-4 py-2 border border-slate-200 hover:border-slate-300 rounded-2xl text-xs text-slate-700 hover:bg-slate-50 font-bold transition-all"
                               >
                                 Close Board
                               </button>
@@ -2731,7 +2754,7 @@ export default function OnboardingPage() {
                                     setInspectingMoodboard(null);
                                   }
                                 }}
-                                className="px-5 py-2 bg-[#0A0A0A] hover:bg-[#0A0A0A]/90 text-gray-950 rounded-xl text-xs font-black transition-all flex items-center gap-1.5"
+                                className="px-5 py-2 bg-[#0A0A0A] hover:bg-[#0A0A0A]/90 text-gray-950 rounded-2xl text-xs font-black transition-all flex items-center gap-1.5"
                               >
                                 {isApproved ? <Check className="w-4 h-4" /> : <Sparkles className="w-4 h-4" />}
                                 {isApproved ? "Approved Direction" : "Approve & Apply Direction"}
@@ -2751,7 +2774,7 @@ export default function OnboardingPage() {
                               {/* Logo circle — large and filled */}
                               <div className="flex flex-col items-center gap-3">
                                 <div
-                                  className="w-24 h-24 rounded-full flex items-center justify-center overflow-hidden border-2 border-slate-200 shadow-md bg-white"
+                                  className="w-24 h-24 rounded-full flex items-center justify-center overflow-hidden border-2 border-slate-200 shadow-md bg-[#101010]"
                                   style={{ backgroundColor: userPrimaryColor || "#111" }}
                                 >
                                   {(() => {
@@ -2804,7 +2827,7 @@ export default function OnboardingPage() {
                                 {/* Primary color from user selection */}
                                 <div className="space-y-2">
                                   <div
-                                    className="h-20 w-full rounded-xl border border-slate-200 shadow-inner"
+                                    className="h-20 w-full rounded-2xl border border-slate-200 shadow-inner"
                                     style={{ backgroundColor: userPrimaryColor || "#1A0A00" }}
                                   />
                                   <div>
@@ -2815,7 +2838,7 @@ export default function OnboardingPage() {
                                 {/* Secondary / accent */}
                                 <div className="space-y-2">
                                   <div
-                                    className="h-20 w-full rounded-xl border border-slate-200 shadow-inner"
+                                    className="h-20 w-full rounded-2xl border border-slate-200 shadow-inner"
                                     style={{ backgroundColor: userSecondaryColor || "#C9A84C" }}
                                   />
                                   <div>
@@ -2825,7 +2848,7 @@ export default function OnboardingPage() {
                                 </div>
                                 {/* Dark neutral */}
                                 <div className="space-y-2">
-                                  <div className="h-14 w-full rounded-xl border border-slate-200 bg-slate-900" />
+                                  <div className="h-14 w-full rounded-2xl border border-slate-200 bg-slate-900" />
                                   <div>
                                     <p className="text-[9px] font-bold text-slate-800 uppercase tracking-wider">Background</p>
                                     <p className="text-[8px] text-slate-400 font-mono mt-0.5">#0F172A</p>
@@ -2833,7 +2856,7 @@ export default function OnboardingPage() {
                                 </div>
                                 {/* White/light */}
                                 <div className="space-y-2">
-                                  <div className="h-14 w-full rounded-xl border border-slate-200 bg-slate-50" />
+                                  <div className="h-14 w-full rounded-2xl border border-slate-200 bg-slate-50" />
                                   <div>
                                     <p className="text-[9px] font-bold text-slate-800 uppercase tracking-wider">Highlight</p>
                                     <p className="text-[8px] text-slate-400 font-mono mt-0.5">#F8FAFC</p>
@@ -2877,7 +2900,7 @@ export default function OnboardingPage() {
                                 {(Array.isArray(data.brandValues) ? data.brandValues : []).map((v: string) => (
                                   <span
                                     key={v}
-                                    className="text-[10px] font-black uppercase tracking-wider px-3 py-1.5 rounded-lg border bg-gray-50 text-[#0A0A0A] border-gray-200"
+                                    className="text-[10px] font-black uppercase tracking-wider px-3 py-1.5 rounded-lg border bg-[#0a0a0a] text-[#0A0A0A] border-[#E1E0CC]/15"
                                   >
                                     {v}
                                   </span>
@@ -2974,49 +2997,49 @@ export default function OnboardingPage() {
           {step === 7 && (
             <div className="space-y-6 animate-fade-up">
               <div>
-                <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <h2 className="text-lg font-bold text-white flex items-center gap-2">
                   <ShieldCheck className="w-5 h-5 text-[#E1E0CC]" />
                   Review & Finalize Setup
                 </h2>
-                <p className="text-xs text-gray-400 mt-1">
+                <p className="text-xs text-[#E1E0CC]/40 mt-1">
                   Double check your profile details. Clicking complete will compile your dynamic marketing database.
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs border border-gray-100 bg-gray-50/50 p-6 rounded-2xl">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs border border-[#E1E0CC]/10 bg-[#0a0a0a]/50 p-6 rounded-2xl">
                 {/* DNA Summary */}
                 <div className="space-y-3">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Brand DNA Profile</p>
+                  <p className="text-[10px] font-bold text-[#E1E0CC]/40 uppercase tracking-widest">Brand DNA Profile</p>
                   <div className="space-y-2">
                     <div>
-                      <span className="text-gray-400 block text-[9px]">BRAND NAME</span>
-                      <span className="font-semibold text-gray-800 text-sm">{data.brandName}</span>
+                      <span className="text-[#E1E0CC]/40 block text-[9px]">BRAND NAME</span>
+                      <span className="font-semibold text-[#E1E0CC] text-sm">{data.brandName}</span>
                     </div>
                     <div>
-                      <span className="text-gray-400 block text-[9px]">INDUSTRY / CATEGORY</span>
-                      <span className="font-semibold text-gray-800">{data.industry} {data.category ? `(${data.category})` : ""}</span>
+                      <span className="text-[#E1E0CC]/40 block text-[9px]">INDUSTRY / CATEGORY</span>
+                      <span className="font-semibold text-[#E1E0CC]">{data.industry} {data.category ? `(${data.category})` : ""}</span>
                     </div>
                     <div>
-                      <span className="text-gray-400 block text-[9px]">USP</span>
-                      <p className="text-gray-600 font-medium leading-relaxed">{data.usp}</p>
+                      <span className="text-[#E1E0CC]/40 block text-[9px]">USP</span>
+                      <p className="text-[#E1E0CC]/70 font-medium leading-relaxed">{data.usp}</p>
                     </div>
                   </div>
                 </div>
 
                 {/* Identity Studio Summary */}
-                <div className="space-y-3 border-t md:border-t-0 md:border-l border-gray-200/80 md:pl-6 pt-4 md:pt-0">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Brand Kit Specifications</p>
+                <div className="space-y-3 border-t md:border-t-0 md:border-l border-[#E1E0CC]/15/80 md:pl-6 pt-4 md:pt-0">
+                  <p className="text-[10px] font-bold text-[#E1E0CC]/40 uppercase tracking-widest">Brand Kit Specifications</p>
                   <div className="space-y-2">
                     <div>
-                      <span className="text-gray-400 block text-[9px]">KIT TYPE CONFIGURATION</span>
-                      <span className="font-semibold text-gray-800 capitalize">{data.kitType} Kit Mode</span>
+                      <span className="text-[#E1E0CC]/40 block text-[9px]">KIT TYPE CONFIGURATION</span>
+                      <span className="font-semibold text-[#E1E0CC] capitalize">{data.kitType} Kit Mode</span>
                     </div>
                     
                     {data.kitType === "generate" && data.selectedLogo ? (
                       <div className="space-y-2">
                         <div>
-                          <span className="text-gray-400 block text-[9px]">PRIMARY LOGO MARK</span>
-                          <div className="h-14 w-32 bg-gray-50 border border-gray-100 rounded p-1 flex items-center justify-center mt-1">
+                          <span className="text-[#E1E0CC]/40 block text-[9px]">PRIMARY LOGO MARK</span>
+                          <div className="h-14 w-32 bg-[#0a0a0a] border border-[#E1E0CC]/10 rounded p-1 flex items-center justify-center mt-1">
                             <img
                               src={data.selectedLogo.imageUrl}
                               alt={data.selectedLogo.name}
@@ -3025,14 +3048,14 @@ export default function OnboardingPage() {
                           </div>
                         </div>
                         <div>
-                          <span className="text-gray-400 block text-[9px]">LOGO STYLE</span>
-                          <span className="font-bold text-gray-800">{data.selectedLogo.name}</span>
+                          <span className="text-[#E1E0CC]/40 block text-[9px]">LOGO STYLE</span>
+                          <span className="font-bold text-[#E1E0CC]">{data.selectedLogo.name}</span>
                         </div>
                       </div>
                     ) : (
                       <div className="space-y-1">
-                        <span className="text-gray-400 block text-[9px]">LOGO SOURCE</span>
-                        <span className="font-semibold text-gray-800 flex items-center gap-1">
+                        <span className="text-[#E1E0CC]/40 block text-[9px]">LOGO SOURCE</span>
+                        <span className="font-semibold text-[#E1E0CC] flex items-center gap-1">
                           <CheckCircle2 className="w-3.5 h-3.5 text-[#E1E0CC] fill-emerald-50" />
                           {data.logoUrl ? "Uploaded Custom Logo" : "Not Provided"}
                         </span>
@@ -3044,15 +3067,15 @@ export default function OnboardingPage() {
 
               {/* Approved Moodboard Summary */}
               {data.approvedMoodboard && (
-                <div className="relative overflow-hidden rounded-2xl border border-gray-200/80 bg-white p-5">
+                <div className="relative overflow-hidden rounded-2xl border border-[#E1E0CC]/15/80 bg-[#101010] p-5">
                   <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
                       <p className="text-[9px] font-black uppercase tracking-widest text-[#0A0A0A] mb-1">Approved Moodboard Concept</p>
-                      <p className="text-gray-900 font-bold text-base">{data.approvedMoodboard.name}</p>
-                      <p className="text-gray-500 text-xs mt-0.5">{data.approvedMoodboard.tagline}</p>
+                      <p className="text-white font-bold text-base">{data.approvedMoodboard.name}</p>
+                      <p className="text-[#E1E0CC]/60 text-xs mt-0.5">{data.approvedMoodboard.tagline}</p>
                     </div>
                     {data.approvedMoodboard.imageUrl && (
-                      <div className="w-40 h-24 rounded-lg overflow-hidden border border-gray-100 shrink-0">
+                      <div className="w-40 h-24 rounded-lg overflow-hidden border border-[#E1E0CC]/10 shrink-0">
                         <img
                           src={data.approvedMoodboard.imageUrl}
                           alt={data.approvedMoodboard.name}
@@ -3067,12 +3090,12 @@ export default function OnboardingPage() {
           )}
 
           {/* Navigation Controls */}
-          <div className="flex items-center justify-between border-t border-gray-100 pt-6 mt-8">
+          <div className="flex items-center justify-between border-t border-[#E1E0CC]/10 pt-6 mt-8">
             <button
               onClick={handleBack}
               disabled={step === 1 || isSubmitting}
               className={`flex items-center gap-1 text-xs font-bold transition-all uppercase tracking-wider
-                ${step === 1 || isSubmitting ? "text-gray-300 cursor-not-allowed" : "text-gray-400 hover:text-gray-800"}`}
+                ${step === 1 || isSubmitting ? "text-gray-300 cursor-not-allowed" : "text-[#E1E0CC]/40 hover:text-[#E1E0CC]"}`}
             >
               <ArrowLeft className="w-4 h-4" />
               Back
@@ -3082,10 +3105,10 @@ export default function OnboardingPage() {
               <button
                 onClick={handleNext}
                 disabled={!isStepValid()}
-                className={`flex items-center gap-1 px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all
+                className={`flex items-center gap-1 px-5 py-2.5 rounded-2xl text-xs font-bold uppercase tracking-wider transition-all
                   ${isStepValid()
-                    ? "bg-[#101010] text-white hover:bg-brand-darkHover shadow-sm"
-                    : "bg-gray-100 text-gray-300 cursor-not-allowed"
+                    ? "bg-[#E1E0CC] text-[#101010] hover:bg-white shadow-sm"
+                    : "bg-[#1c1e21] text-[#E1E0CC]/30 cursor-not-allowed"
                   }`}
               >
                 Continue
@@ -3095,7 +3118,7 @@ export default function OnboardingPage() {
               <button
                 onClick={handleSubmitAll}
                 disabled={isSubmitting}
-                className="flex items-center gap-1 px-6 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all text-white bg-[#0A0A0A] hover:bg-[#0A0A0A]/95 shadow-sm disabled:opacity-50"
+                className="flex items-center gap-1 px-6 py-2.5 rounded-2xl text-xs font-bold uppercase tracking-wider transition-all bg-[#E1E0CC] text-[#101010] hover:bg-white shadow-sm disabled:opacity-50"
               >
                 {isSubmitting ? "Compiling Brand Workspace..." : "Complete Setup"}
                 {!isSubmitting && <Check className="w-4 h-4" />}
@@ -3106,8 +3129,8 @@ export default function OnboardingPage() {
         </div>
       </main>
 
-      <footer className="px-6 py-4 text-center border-t border-gray-100 bg-white">
-        <p className="text-[10px] text-gray-400 flex items-center justify-center gap-1 font-semibold uppercase tracking-wider">
+      <footer className="px-6 py-4 text-center border-t border-[#E1E0CC]/10 bg-[#101010]">
+        <p className="text-[10px] text-[#E1E0CC]/40 flex items-center justify-center gap-1 font-semibold uppercase tracking-wider">
           <Shield className="w-3.5 h-3.5 text-gray-300" />
           Secure 256-bit encryption Â· GDPR & DPDP compliant
         </p>

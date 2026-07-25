@@ -65,7 +65,7 @@ export default function Home() {
               { text: "an autonomous AI platform.", className: "font-serif-italic" },
               { text: "We have skills in brand memory, content generation, and strategy.", className: "font-normal" }
             ]}
-            className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl max-w-3xl mx-auto leading-[0.95] sm:leading-[0.9]"
+            className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl max-w-3xl mx-auto leading-[0.95] sm:leading-[0.9] justify-center"
           />
 
           <div className="max-w-2xl mx-auto">
@@ -88,18 +88,18 @@ export default function Home() {
               segments={[
                 { text: "Studio-grade workflows for visionary brands.", className: "text-[#E1E0CC]" }
               ]}
-              className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-normal"
+              className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-normal justify-start"
             />
             <WordsPullUpMultiStyle 
               segments={[
                 { text: "Built for pure vision. Powered by AI.", className: "text-gray-500" }
               ]}
-              className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-normal"
+              className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-normal justify-start"
             />
           </div>
 
           {/* Feature Cards Grid (4 cols) */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-2 md:gap-1 lg:h-[480px]">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-4 md:gap-3 lg:gap-2 lg:h-[480px]">
             
             {/* Card 1 - Video Card (lazy-loaded client component) */}
             <BentoVideoCard />

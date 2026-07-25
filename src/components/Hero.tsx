@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
-import WordsPullUp from "./ui/WordsPullUp";
+import WordsPullUpMultiStyle from "./ui/WordsPullUpMultiStyle";
 
 export default function Hero() {
   return (
@@ -29,15 +29,15 @@ export default function Hero() {
         <div className="absolute bottom-0 left-0 right-0 px-4 md:px-10 z-10 pb-6 md:pb-10">
           <div className="grid grid-cols-12 gap-6 md:gap-12 items-end w-full max-w-[1800px] mx-auto">
             
-            {/* Main Heading Column (8 cols) */}
+            {/* Main Heading Column (12 cols on mobile, 8 on desktop) */}
             <div className="col-span-12 md:col-span-8 flex items-end justify-start">
-              <motion.img
-                initial={{ opacity: 0, scale: 0.95, y: 30 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-                src="/text_logo_nobg.png"
-                alt="Automarc"
-                className="w-full max-w-[1200px] xl:max-w-[1600px] h-auto object-contain drop-shadow-2xl origin-bottom-left"
+              <WordsPullUpMultiStyle 
+                segments={[
+                  { text: "THE FUTURE OF", className: "font-normal text-[#E1E0CC]" },
+                  { text: "YOUR BUSINESS,", className: "font-serif-italic text-primary" },
+                  { text: "SIMPLIFIED.", className: "font-normal text-[#E1E0CC]" }
+                ]}
+                className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-[90px] leading-[0.9] font-bold tracking-tight uppercase justify-start text-left drop-shadow-2xl"
               />
             </div>
 

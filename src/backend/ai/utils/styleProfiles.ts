@@ -217,6 +217,47 @@ export function getBgStyleForSlide(index: number): string {
   return `background-image: var(--bg-image); opacity: var(--bg-opacity, 0.08); background-size: cover; background-position: ${t.position}; transform: scale(${t.scale}) rotate(${t.rotate}deg); transform-origin: ${t.origin}; -webkit-mask-image: radial-gradient(circle at center, black 30%, transparent 80%); mask-image: radial-gradient(circle at center, black 30%, transparent 80%); position: absolute; inset: 0px; pointer-events: none; z-index: 0;`;
 }
 
+export function determineDesignLanguage(vibe: string, description: string = ""): string {
+  const combined = (vibe + " " + description).toLowerCase();
+
+  if (combined.includes("luxury") || combined.includes("premium") || combined.includes("high-end") || combined.includes("elite") || combined.includes("exclusive")) {
+    return "luxury";
+  }
+  if (combined.includes("editorial") || combined.includes("magazine") || combined.includes("publication") || combined.includes("journalism")) {
+    return "editorial";
+  }
+  if (combined.includes("minimal") || combined.includes("clean") || combined.includes("simple") || combined.includes("elegant") || combined.includes("modern")) {
+    return "minimalism";
+  }
+  if (combined.includes("bold") || combined.includes("brutalism") || combined.includes("aggressive") || combined.includes("loud") || combined.includes("streetwear")) {
+    return "brutalism";
+  }
+  if (combined.includes("swiss") || combined.includes("corporate") || combined.includes("objective") || combined.includes("finance") || combined.includes("consulting") || combined.includes("b2b") || combined.includes("professional")) {
+    return "swiss style";
+  }
+  if (combined.includes("blueprint") || combined.includes("technical") || combined.includes("engineering") || combined.includes("architecture") || combined.includes("software") || combined.includes("developer")) {
+    return "blueprint";
+  }
+  if (combined.includes("surreal") || combined.includes("dream") || combined.includes("abstract") || combined.includes("artistic") || combined.includes("ethereal")) {
+    return "surrealism";
+  }
+  if (combined.includes("maximal") || combined.includes("colorful") || combined.includes("vibrant") || combined.includes("chaos") || combined.includes("pop")) {
+    return "maximalism";
+  }
+  if (combined.includes("hand drawn") || combined.includes("sketch") || combined.includes("organic") || combined.includes("handmade") || combined.includes("craft")) {
+    return "hand drawn";
+  }
+  if (combined.includes("retro") || combined.includes("vintage") || combined.includes("nostalgic") || combined.includes("classic") || combined.includes("70s") || combined.includes("80s")) {
+    return "retro";
+  }
+  if (combined.includes("playful") || combined.includes("fun") || combined.includes("friendly") || combined.includes("kids") || combined.includes("startup")) {
+    return "playful";
+  }
+  
+  // Default fallback
+  return "raw";
+}
+
 export function getStyleProfile(vibe: string) {
   const v = vibe.toLowerCase().trim();
   if (v === "luxury") {
@@ -243,7 +284,7 @@ export function getStyleProfile(vibe: string) {
       bgStyle: "linear-gradient-vertical",
       layoutStyle: "Magazine editorial. Use two-column text splits (left column for title, right column for cards), large blockquotes, and fine horizontal divider lines."
     };
-  } else if (v === "minimal") {
+  } else if (v === "minimal" || v === "minimalism") {
     return {
       fontName: "Tech Minimalist",
       headingClass: "font-space font-bold tracking-tight uppercase",
@@ -255,7 +296,7 @@ export function getStyleProfile(vibe: string) {
       bgStyle: "solid",
       layoutStyle: "Ultra-minimalist layout. No borders, no divider lines. Pure whitespace, tiny labels, and clean text blocks aligned in a single axis."
     };
-  } else if (v === "bold") {
+  } else if (v === "bold" || v === "brutalism" || v === "neo-brutalism") {
     return {
       fontName: "Bold Impact",
       headingClass: "font-syne font-extrabold uppercase tracking-tight leading-none",
@@ -266,6 +307,78 @@ export function getStyleProfile(vibe: string) {
       cardClass: "border-4 border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]",
       bgStyle: "linear-gradient-diagonal",
       layoutStyle: "Neobrutalist style. Solid thick black borders, heavy uppercase titles, cards with sharp black offset shadows, raw blocks."
+    };
+  } else if (v === "swiss style" || v === "swiss") {
+    return {
+      fontName: "Helvetica Neue",
+      headingClass: "font-sans font-black tracking-tighter",
+      bodyClass: "font-sans font-normal",
+      headingDesc: "Strict, ultra-clean neo-grotesque sans-serif. Headings should be large, tight, and highly legible.",
+      bodyDesc: "Neutral, legible sans-serif. Extremely crisp and objective.",
+      borderClass: "border border-black/15 rounded-none",
+      cardClass: "bg-transparent border border-black/10 rounded-none",
+      bgStyle: "solid",
+      layoutStyle: "Classic Swiss graphic design. Strict grid systems, asymmetrical layouts, flush-left/ragged-right text, and highly objective mathematical spacing."
+    };
+  } else if (v === "blueprint") {
+    return {
+      fontName: "Blueprint Mono",
+      headingClass: "font-mono font-bold uppercase tracking-widest",
+      bodyClass: "font-mono font-normal",
+      headingDesc: "Technical, monospaced font. Headings should look like architectural or engineering plans.",
+      bodyDesc: "Monospaced font. Very structural and precise.",
+      borderClass: "border border-blue-500/30 border-dashed rounded-none",
+      cardClass: "bg-blue-500/5 border border-blue-500/30 border-dashed rounded-none",
+      bgStyle: "grid",
+      layoutStyle: "Technical blueprint aesthetic. Use visible grid lines, dashed borders, monospaced text, and highly structured block layouts with coordinate-like labels."
+    };
+  } else if (v === "surrealism") {
+    return {
+      fontName: "Dreamy Serif",
+      headingClass: "font-serif font-light tracking-widest italic",
+      bodyClass: "font-sans font-light tracking-wide",
+      headingDesc: "Ethereal, high-contrast serif. Headings should feel fluid, dream-like, and slightly unusual.",
+      bodyDesc: "Airy, spaced out sans-serif for floating text.",
+      borderClass: "border border-white/20 rounded-[40%_60%_70%_30%]",
+      cardClass: "bg-white/5 backdrop-blur-md border border-white/10 rounded-[30%_70%_70%_30%] p-6",
+      bgStyle: "radial-gradient-soft",
+      layoutStyle: "Dreamy, abstract layout. Soft blurred backgrounds, floating elements with organic/blob-like border radius, and unconventional alignments."
+    };
+  } else if (v === "maximalism") {
+    return {
+      fontName: "Loud Display",
+      headingClass: "font-black uppercase tracking-tighter mix-blend-difference",
+      bodyClass: "font-bold",
+      headingDesc: "Extremely heavy, aggressive, or deeply ornamental display font. Massive scale.",
+      bodyDesc: "Bold, dense sans-serif or serif. No negative space.",
+      borderClass: "border-8 border-black border-double",
+      cardClass: "bg-black/10 border-4 border-black p-4 rotate-1",
+      bgStyle: "pattern-dense",
+      layoutStyle: "Sensory overload. Clashing elements, giant overlapping text, intense colors, very little whitespace, multiple nested borders."
+    };
+  } else if (v === "hand drawn" || v === "hand-drawn") {
+    return {
+      fontName: "Sketchy Sans",
+      headingClass: "font-marker font-bold tracking-tight",
+      bodyClass: "font-comic font-normal",
+      headingDesc: "Organic, marker or brush style font. Headings should look handwritten.",
+      bodyDesc: "Casual handwritten style. Imperfect and human.",
+      borderClass: "border-2 border-black rounded-[255px_15px_225px_15px/15px_225px_15px_255px]",
+      cardClass: "bg-white border-2 border-black rounded-[255px_15px_225px_15px/15px_225px_15px_255px] shadow-[4px_4px_0_0_rgba(0,0,0,0.2)]",
+      bgStyle: "paper-texture",
+      layoutStyle: "Playful, imperfect organic layout. Borders should look sketched, alignments slightly off-axis, and elements should feel casually placed on paper."
+    };
+  } else if (v === "retro design" || v === "retro") {
+    return {
+      fontName: "Vintage Display",
+      headingClass: "font-serif font-black tracking-tight drop-shadow-md",
+      bodyClass: "font-serif font-medium",
+      headingDesc: "Chunky 70s/80s vintage serif or groovy display font.",
+      bodyDesc: "Warm, nostalgic serif.",
+      borderClass: "border-y-4 border-black/40",
+      cardClass: "bg-[#F4EBD0] border-2 border-[#D97D54] rounded-lg shadow-[2px_2px_0_0_#D97D54]",
+      bgStyle: "grainy-gradient",
+      layoutStyle: "Vintage nostalgia. Warm muted palettes, grainy noise overlays, thick horizontal bands, and classic typographic lockups."
     };
   } else if (v === "playful") {
     return {

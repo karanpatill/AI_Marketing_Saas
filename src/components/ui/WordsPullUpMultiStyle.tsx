@@ -37,7 +37,7 @@ export default function WordsPullUpMultiStyle({ segments, className = "" }: Word
       variants={container}
       initial="hidden"
       animate={isInView ? "show" : "hidden"}
-      className={`inline-flex flex-wrap justify-center ${className}`}
+      className={`inline-flex flex-wrap ${className}`}
     >
       {segments.map((segment, segmentIndex) => {
         const words = segment.text.split(" ");

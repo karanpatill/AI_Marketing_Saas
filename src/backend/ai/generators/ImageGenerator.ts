@@ -1,6 +1,6 @@
 import { IGenerationModule, GenerationContext, GenerationResult } from '../interfaces/IGenerationModule';
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { getContrastColor, getStyleProfile, blendColors, getBgStyleForSlide, resolveInitialImage } from '../utils/styleProfiles';
+import { getContrastColor, getStyleProfile, blendColors, getBgStyleForSlide, resolveInitialImage, determineDesignLanguage } from '../utils/styleProfiles';
 
 export class ImageGenerator implements IGenerationModule {
   jobType = 'generate_post';
@@ -26,31 +26,45 @@ export class ImageGenerator implements IGenerationModule {
       aspectRatio = "4/5"
     } = inputParams;
 
-    return `
-You are an elite copywriter and content strategist specializing in ultra-premium, high-converting LinkedIn and Instagram posts.
-Your style matches the brand's visual identity, vibe, and tone of voice.
+    const assignedLanguage = determineDesignLanguage(brandPersonality, businessDescription);
 
-Brand DNA Context:
+    return `
+You are an elite, world-class copywriter, art director, and content strategist specializing in ultra-premium, high-converting LinkedIn and Instagram posts.
+Your style flawlessly matches the brand's visual identity, vibe, and tone of voice, acting as the ultimate manifestation of the brand's DNA.
+
+--- BRAND DNA & IDENTITY ---
 - Brand Name: ${brandName}
 - Visual Vibe & Tone: ${brandPersonality}
-- Context: ${businessDescription}
-${targetAudience ? `- Target Audience: ${targetAudience}` : ''}
-${usp ? `- Unique Selling Proposition (USP): ${usp}` : ''}
+- Core Business: ${businessDescription}
+- Target Audience: ${targetAudience ? targetAudience : 'General professional audience'}
+- Unique Selling Proposition (USP): ${usp ? usp : 'Premium quality and design'}
+- Assigned Design Language: ${assignedLanguage}
+
+DESIGN LANGUAGE DIRECTIVES for ${assignedLanguage}:
 
 Topic of the Post: "${topic}"
 
-CRITICAL RULES:
-1. Write punchy, insightful, high-value copy strictly aligned with the Brand's DNA.
-2. DO NOT write fluff or generic marketing jargon.
-3. This is for a single static post graphic.
+--- DESIGN LANGUAGE RULES FOR COPY ---
+When writing for specific design languages, adapt the pacing, punctuation, and length:
+- Blueprint: Technical, structured, heavily reliant on exact metrics or formulas. 
+- Brutalism / Neo-Brutalism: Punchy, aggressive, very short sentences. Use bold declarations.
+- Swiss Style: Objective, clear, perfectly structured, no fluff.
+- Surrealism: Ethereal, abstract, poetic hooks, slightly unusual phrasing.
+- Minimalism: Extremely concise. Let the negative space do the talking. 1-2 lines max.
+- Maximalism: Loud, energetic, dense information, highly persuasive and enthusiastic.
+- Retro/Hand Drawn: Nostalgic, casual, friendly, conversational.
 
-Return the result STRICTLY as a JSON object with the following structure:
+--- CRITICAL RULES ---
+1. WRITE WORLD-CLASS COPY: No generic marketing jargon. Use psychological hooks, counter-narratives, and undeniable value.
+2. This is for a single static post graphic. Keep the text punchy and readable.
+3. BRAND ALIGNMENT: The vocabulary and tone must sound exactly like the brand DNA provided above.
+
+Return the result STRICTLY as a JSON object with the following structure. DO NOT include markdown formatting (\`\`\`json):
 {
   "category": "MARKETING INSIGHT",
-  "title": "The Hook Title",
-  "content": "Short compelling subtitle or paragraph."
+  "title": "The specific hook title that stops the scroll.",
+  "content": "Short, compelling subtitle setting up the premise."
 }
-Do not include markdown code block formatting.
 `;
   }
 
@@ -102,7 +116,8 @@ Do not include markdown code block formatting.
       aspectRatio = "4/5"
     } = context.inputParams;
 
-    const profile = getStyleProfile(brandPersonality);
+    const assignedLanguage = determineDesignLanguage(brandPersonality, context.inputParams.businessDescription || "");
+    const profile = getStyleProfile(assignedLanguage);
     const textColor = getContrastColor(secondaryColor);
     const isLightBg = textColor === "#000000";
     

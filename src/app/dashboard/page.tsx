@@ -11,7 +11,7 @@ import {
   Building, Image, FileText, Video, Plus,
   Settings, Bell, Search, Activity, Trash2,
   Shield, CreditCard, Mail, User, AlertCircle,
-  X, Check, Lock, ChevronDown, RefreshCw, Globe, Clock, Paintbrush
+  X, Check, Lock, ChevronDown, RefreshCw, Globe, Clock, Paintbrush, Save
 } from "lucide-react";
 
 import Footer from "@/components/Footer";
@@ -110,6 +110,28 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"control" | "dna" | "campaigns" | "mix" | "studio" | "carousel" | "video" | "settings">("control");
   const [showBrandEditor, setShowBrandEditor] = useState(false);
+  const [isSavingColors, setIsSavingColors] = useState(false);
+
+  const handleSaveBrandColors = async () => {
+    if (!assets || !assets.id) return;
+    setIsSavingColors(true);
+    try {
+      const { supabase } = await import("@/lib/supabase");
+      const { error } = await supabase
+        .from('brand_assets')
+        .update({ logo_studio_data: assets.logo_studio_data })
+        .eq('id', assets.id);
+      
+      if (error) throw error;
+      setToast({ message: "Brand colors saved!", type: "success" });
+      setShowBrandEditor(false);
+    } catch (err: any) {
+      console.error(err);
+      setToast({ message: "Failed to save colors", type: "error" });
+    } finally {
+      setIsSavingColors(false);
+    }
+  };
 
   // --- SaaS Foundation State ---
   const [currentUser, setCurrentUser] = useState<any | null>(null);
@@ -139,14 +161,12 @@ export default function DashboardPage() {
   const [postAspectRatio, setPostAspectRatio] = useState("1:1");
   const [isGeneratingPost, setIsGeneratingPost] = useState(false);
   const [generatedPostImage, setGeneratedPostImage] = useState<string | null>(null);
-  const [generatedPostPrompt, setGeneratedPostPrompt] = useState<string | null>(null);
   const [postError, setPostError] = useState<string | null>(null);
 
   // Carousel Generator Studio States
   const [carouselPrompt, setCarouselPrompt] = useState("");
   const [isGeneratingCarousel, setIsGeneratingCarousel] = useState(false);
   const [generatedCarouselImage, setGeneratedCarouselImage] = useState<string | null>(null);
-  const [generatedCarouselPrompt, setGeneratedCarouselPrompt] = useState<string | null>(null);
   const [carouselSlides, setCarouselSlides] = useState<any[]>([]);
   const [carouselError, setCarouselError] = useState<string | null>(null);
 
@@ -329,7 +349,6 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
     setIsGeneratingPost(true);
     setPostError(null);
     setGeneratedPostImage(null);
-    setGeneratedPostPrompt(null);
 
     const activeColors = assets?.logo_studio_data?.colors || {
       primaryHex: "#0D0D0D",
@@ -380,7 +399,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
           const jobData = await jobRes.json();
           if (jobData.job.status === 'completed') {
             setGeneratedPostImage(jobData.job.output_reference?.html || jobData.job.output_reference?.imageUrl);
-            setGeneratedPostPrompt(jobData.job.output_reference?.prompt || "HTML generated.");
+
             isCompleted = true;
           } else if (jobData.job.status === 'failed') {
             throw new Error(jobData.job.error?.message || "Generation job failed");
@@ -400,7 +419,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
     setIsGeneratingCarousel(true);
     setCarouselError(null);
     setGeneratedCarouselImage(null);
-    setGeneratedCarouselPrompt(null);
+
     setCarouselSlides([]);
 
     const activeColors = assets?.logo_studio_data?.colors || {
@@ -452,7 +471,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
           const jobData = await jobRes.json();
           if (jobData.job.status === 'completed') {
             setGeneratedCarouselImage(jobData.job.output_reference?.html || jobData.job.output_reference?.imageUrl);
-            setGeneratedCarouselPrompt(jobData.job.output_reference?.prompt || "HTML generated.");
+
             setCarouselSlides(jobData.job.output_reference?.slides || []);
             isCompleted = true;
           } else if (jobData.job.status === 'failed') {
@@ -599,6 +618,11 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
               setActiveWorkspace(orgWorkspaces[0]);
             }
           }
+        } else if (res.status === 401) {
+          // If API returns 401, session might be invalid or unsynced, force login
+          await supabase.auth.signOut();
+          router.push("/auth");
+          return;
         }
 
         // 4. Fetch Notifications
@@ -612,6 +636,8 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
 
       } catch (err) {
         console.error("Failed to initialize SaaS data:", err);
+      } finally {
+        setLoading(false);
       }
     }
     loadSaaSData();
@@ -638,14 +664,14 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
         setPendingInvitations(inviteData);
       }
 
-      const { supabase } = await import("@/lib/supabase");
-      const { data: logs } = await supabase
-        .from("activity_logs")
-        .select("*")
-        .eq("org_id", orgId)
-        .order("created_at", { ascending: false })
-        .limit(10);
-      setActivityLogs(logs || []);
+      // Skip fetching activity_logs for now to prevent 500 errors if table is missing
+      // const { data: logs } = await supabase
+      //   .from("activity_logs")
+      //   .select("*")
+      //   .eq("org_id", orgId)
+      //   .order("created_at", { ascending: false })
+      //   .limit(10);
+      setActivityLogs([]);
     } catch (err) {
       console.error("Failed to load org details:", err);
     }
@@ -654,7 +680,10 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
   // --- Fetch Brand DNA & Assets scoped by activeWorkspace ───
   useEffect(() => {
     async function fetchWorkspaceData() {
-      if (!activeWorkspace) return;
+      if (!activeWorkspace) {
+        setLoading(false);
+        return;
+      }
       setLoading(true);
       try {
         const { supabase } = await import("@/lib/supabase");
@@ -798,7 +827,6 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
           setActiveWorkspace(remainingWorkspaces[0]);
         } else {
           setActiveWorkspace(null);
-          router.push("/onboarding");
         }
         
         setToast({ message: "Brand workspace deleted successfully!", type: "success" });
@@ -1310,6 +1338,16 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                     <Paintbrush className="w-4 h-4" />
                     {showBrandEditor ? 'Close Editor' : 'Edit Brand Colors'}
                   </button>
+                  {showBrandEditor && (
+                    <button
+                      onClick={handleSaveBrandColors}
+                      disabled={isSavingColors}
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-medium transition-all bg-[#DEDBC8] text-black hover:bg-white disabled:opacity-50"
+                    >
+                      {isSavingColors ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                      Save Colors
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -1475,7 +1513,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                     {/* Primary */}
                     <div className="space-y-2">
                       <div
-                        className="h-20 w-full rounded-xl shadow-sm border border-[#828282]/20"
+                        className="h-24 w-full rounded-xl shadow-sm border border-[#828282]/20"
                         style={{ backgroundColor: colors.primaryHex || "#1A0A00" }}
                       />
                       <div>
@@ -1486,28 +1524,12 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                     {/* Accent */}
                     <div className="space-y-2">
                       <div
-                        className="h-20 w-full rounded-xl shadow-sm border border-[#828282]/20"
+                        className="h-24 w-full rounded-xl shadow-sm border border-[#828282]/20"
                         style={{ backgroundColor: colors.secondaryHex || "#DEDBC8" }}
                       />
                       <div>
                         <p className="text-[11px] font-medium text-[#ffffff]">Accent</p>
                         <p className="text-[11px] text-[#828282] font-mono mt-0.5">{colors.secondaryHex || "#DEDBC8"}</p>
-                      </div>
-                    </div>
-                    {/* Dark neutral */}
-                    <div className="space-y-2">
-                      <div className="h-14 w-full rounded-xl bg-[#1c1e21] border border-[#828282]/20" />
-                      <div>
-                        <p className="text-[11px] font-medium text-[#ffffff]">Background</p>
-                        <p className="text-[11px] text-[#828282] font-mono mt-0.5">#0A0A0A</p>
-                      </div>
-                    </div>
-                    {/* White/light */}
-                    <div className="space-y-2">
-                      <div className="h-14 w-full rounded-xl bg-[#E1E0CC] border border-[#828282]/20" />
-                      <div>
-                        <p className="text-[11px] font-medium text-[#ffffff]">Highlight</p>
-                        <p className="text-[11px] text-[#828282] font-mono mt-0.5">#E1E0CC</p>
                       </div>
                     </div>
                   </div>
@@ -2555,14 +2577,6 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                             Export JPEG
                           </button>
                         </div>
-                        {generatedPostPrompt && (
-                          <div className="space-y-1">
-                            <span className="text-[8px] text-[#828282] uppercase tracking-[0.2em] font-bold text-[#ffffff]">Compiled AI Prompt</span>
-                            <p className="text-sm text-[#ffffff]/70 font-light leading-relaxed font-medium uppercase tracking-[0.2em] font-bold text-[#ffffff] leading-relaxed font-sans tracking-normal bg-black/60 p-2.5 rounded-lg border-none max-h-24 overflow-y-auto">
-                              {generatedPostPrompt}
-                            </p>
-                          </div>
-                        )}
                       </div>
                     </div>
                   ) : (
@@ -3019,12 +3033,6 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
               {/* Layout: Inner tabs */}
               <div className="flex flex-col lg:flex-row gap-6">
                 {/* Left Inner Sub-Nav */}
-                <button
-                  onClick={() => router.push("/onboarding")}
-                  className="w-full bg-[#1c1e21] border border-[#E1E0CC]/5 hover:border-[#E1E0CC]/15 transition-all hover:bg-black text-[#ffffff] rounded-full py-4 text-xs font-bold uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-[0.98] shadow-none shadow-black/5"
-                >
-                  Start Brand Onboarding
-                </button>
                 <div className="w-full lg:w-48 bg-[#1c1e21] border border-[#E1E0CC]/5 hover:border-[#E1E0CC]/15 transition-all/80 rounded-2xl p-3 shrink-0 h-fit space-y-1">
                   <button
                     onClick={() => setSettingsTab("profile")}
@@ -3036,18 +3044,6 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                   >
                     <User className="w-3.5 h-3.5" />
                     <span>My Profile</span>
-                  </button>
-
-                  <button
-                    onClick={() => setSettingsTab("workspace")}
-                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-2xl text-xs font-semibold transition-all text-left
-                      ${settingsTab === "workspace"
-                        ? "bg-black border-none text-[#ffffff] shadow-[0_0_15px_rgba(225,224,204,0.03)]"
-                        : "text-[#828282] hover:text-[#ffffff]/90 hover:bg-[#E1E0CC]/5"
-                      }`}
-                  >
-                    <Building className="w-3.5 h-3.5" />
-                    <span>Workspaces</span>
                   </button>
 
                   <button
@@ -3119,7 +3115,15 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                         </div>
                       </div>
 
-                      <div className="pt-4 border-t border-[#828282]/20 flex justify-end">
+                      <div className="pt-4 border-t border-[#828282]/20 flex justify-between items-center">
+                        <button
+                          type="button"
+                          onClick={() => activeWorkspace && handleDeleteWorkspace(activeWorkspace.id)}
+                          className="px-4 py-2 bg-[#ff4a4a]/10 text-[#ff4a4a] hover:bg-[#ff4a4a]/20 text-xs font-bold rounded-2xl flex items-center gap-1.5 transition-colors"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          Delete Brand
+                        </button>
                         <button
                           type="submit"
                           disabled={isSavingProfile}
@@ -3141,77 +3145,6 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                     </form>
                   )}
 
-                  {/* workspace tab */}
-                  {settingsTab === "workspace" && (
-                    <div className="space-y-6">
-                      <div>
-                        <h4 className="text-sm font-bold text-[#ffffff] mb-1">Brand Architecture</h4>
-                        <p className="text-[11px] text-[#828282]">View your active brands and create new marketing profiles.</p>
-                      </div>
-
-                      {/* Active Brands List */}
-                      <div className="space-y-3">
-                        <label className="text-xs font-bold text-[#ffffff]/80 uppercase tracking-[0.2em] font-bold text-[#ffffff]">Brands in {dna?.brand_name || activeOrg?.name || "My Organization"}</label>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          {workspaces
-                            .filter(w => w.org_id === activeOrg?.id)
-                            .map((w) => (
-                              <div
-                                key={w.id}
-                                className={`p-4 border rounded-2xl transition-all flex items-center justify-between
-                                  ${activeWorkspace?.id === w.id
-                                    ? "border-[#828282]/20 bg-black shadow-none"
-                                    : "border-[#828282]/20 hover:bg-black/50"
-                                  }`}
-                              >
-                                <div className="cursor-pointer flex-1" onClick={() => setActiveWorkspace(w)}>
-                                  <h5 className="text-xs font-bold text-[#ffffff]">{w.name}</h5>
-                                  <p className="text-sm text-[#ffffff]/70 font-light leading-relaxed font-medium uppercase tracking-[0.2em] font-bold text-[#ffffff] mt-0.5">Slug: /{w.slug}</p>
-                                </div>
-                                <div className="flex items-center gap-3">
-                                  {activeWorkspace?.id === w.id && (
-                                    <span className="px-2 py-0.5 bg-[#1c1e21] border border-[#E1E0CC]/5 hover:border-[#E1E0CC]/15 transition-all text-[#ffffff] rounded text-[8px] font-bold uppercase tracking-[0.2em] font-bold text-[#ffffff]">Active</span>
-                                  )}
-                                  <button
-                                    onClick={(e) => { e.stopPropagation(); handleDeleteWorkspace(w.id); }}
-                                    className="p-1.5 bg-[#ff4a4a]/10 text-[#ff4a4a] hover:bg-[#ff4a4a]/20 rounded-lg transition-colors"
-                                    title="Delete Brand"
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                  </button>
-                                </div>
-                              </div>
-                            ))}
-                        </div>
-                      </div>
-
-                      {/* Create Brand Form */}
-                      <form onSubmit={handleCreateWorkspace} className="pt-6 border-t border-[#828282]/20 space-y-4">
-                        <h5 className="text-xs font-bold text-[#ffffff]">Create New Brand</h5>
-                        <div className="flex gap-2">
-                          <input
-                            type="text"
-                            placeholder="Brand Name (e.g. Acme EMEA)"
-                            value={newWorkspaceName}
-                            onChange={(e) => setNewWorkspaceName(e.target.value)}
-                            className="flex-1 bg-[#1c1e21] border border-[#E1E0CC]/5 hover:border-[#E1E0CC]/15 transition-all focus:border-[#828282]/20 outline-none rounded-2xl px-3.5 py-2 text-xs text-[#ffffff] transition-colors"
-                          />
-                          <button
-                            type="submit"
-                            disabled={isCreatingWorkspace || !newWorkspaceName}
-                            className="bg-[#1c1e21] bg-gradient-to-br from-[#1C1C1C] to-black border border-[#E1E0CC]/5 hover:border-[#E1E0CC]/15 transition-all shadow-[0_0_30px_rgba(225,224,204,0.02)] hover:bg-brand-darkHover disabled:opacity-50 text-[#ffffff] font-bold text-xs rounded-2xl px-4 py-2 flex items-center gap-1 transition-all"
-                          >
-                            {isCreatingWorkspace ? (
-                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                            ) : (
-                              <Plus className="w-3.5 h-3.5" />
-                            )}
-                            Create
-                          </button>
-                        </div>
-                      </form>
-                    </div>
-                  )}
 
                   {/* team tab */}
                   {settingsTab === "team" && (
