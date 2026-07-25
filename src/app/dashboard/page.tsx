@@ -11,7 +11,7 @@ import {
   Building, Image, FileText, Video, Plus,
   Settings, Bell, Search, Activity, Trash2,
   Shield, CreditCard, Mail, User, AlertCircle,
-  X, Check, Lock, ChevronDown, RefreshCw, Globe, Clock
+  X, Check, Lock, ChevronDown, RefreshCw, Globe, Clock, Paintbrush
 } from "lucide-react";
 import DashboardTopBar from "@/components/DashboardTopBar";
 import ExportZipButton from "@/components/ExportZipButton";
@@ -108,6 +108,7 @@ export default function DashboardPage() {
   const [assets, setAssets] = useState<BrandAssets | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"control" | "dna" | "campaigns" | "mix" | "studio" | "carousel" | "video" | "settings">("control");
+  const [showBrandEditor, setShowBrandEditor] = useState(false);
 
   // --- SaaS Foundation State ---
   const [currentUser, setCurrentUser] = useState<any | null>(null);
@@ -1016,148 +1017,160 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
   ];
 
   return (
-    <div className="min-h-screen bg-black text-[#E1E0CC] flex flex-col justify-between relative">
+    <div className="h-screen w-full bg-black text-[#E1E0CC] flex relative overflow-hidden">
       {/* Noise Texture Background */}
       <div className="fixed inset-0 bg-noise opacity-[0.04] pointer-events-none z-0 mix-blend-overlay" />
       
-      {/* Main Workspace Grid */}
-      <div className="flex-1 flex max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 gap-6">
-        
-        {/* Left App Sidebar */}
-        <aside className="hidden md:flex flex-col justify-between w-[220px] bg-[#101010]/80 backdrop-blur-xl border-r border-[#E1E0CC]/10 p-5 shrink-0 z-20">
-          <div className="space-y-4">
-            
-            <div className="pb-4 pt-1 mb-2">
-              <a href="/">
-                <img src="/logo.png" alt="Automarc" className="h-6 w-auto object-contain" />
-              </a>
-            </div>
+      {/* Left App Sidebar */}
+      <aside className="hidden md:flex flex-col justify-between w-[240px] h-full bg-[#0A0A0A] border-r border-white/5 p-4 shrink-0 z-20">
+        <div className="space-y-4">
+          
+          <div className="pb-4 pt-2 pl-2">
+            <a href="/">
+              <img src="/logo.png" alt="Automarc" className="h-5 w-auto object-contain" />
+            </a>
+          </div>
 
-            {/* SaaS Workspace & Organization Switcher */}
-            <div className="space-y-2 pb-3 border-b border-[#E1E0CC]/10">
-              <div className="relative">
-                <label className="text-xs font-black text-gray-400 uppercase tracking-widest block mb-1">Organization</label>
-                <div className="flex items-center justify-between p-2.5 bg-black border-none rounded-2xl cursor-pointer hover:bg-[#E1E0CC]/10/60 transition-all text-[#E1E0CC] font-semibold text-xs">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <Building className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+          {/* SaaS Workspace & Organization Switcher */}
+          <div className="space-y-2 pb-4 border-b border-white/5">
+            <div className="relative px-2">
+              <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider block mb-1.5">Organization</label>
+              <div className="flex items-center justify-between p-2 bg-black border border-white/5 rounded-lg cursor-pointer hover:bg-white/5 transition-all text-[#E1E0CC] font-medium text-xs">
+                <div className="flex items-center gap-2 min-w-0">
+                  <Building className="w-3.5 h-3.5 text-gray-500 shrink-0" />
                     <span className="truncate">{dna?.brand_name || activeOrg?.name || "My Organization"}</span>
                   </div>
                 </div>
               </div>
 
-              <div>
-                <label className="text-xs font-black text-gray-400 uppercase tracking-widest block mb-1">Workspace</label>
-                <select
-                  value={activeWorkspace?.id || ""}
-                  onChange={(e) => {
-                    const ws = workspaces.find(w => w.id === e.target.value);
-                    if (ws) setActiveWorkspace(ws);
-                  }}
-                  className="w-full p-2.5 bg-black border-none rounded-2xl text-xs font-semibold text-[#E1E0CC] outline-none focus:border-[#E1E0CC]/10 cursor-pointer hover:bg-[#E1E0CC]/10/60 transition-all"
-                >
-                  {workspaces
-                    .filter(w => w.org_id === activeOrg?.id)
-                    .map(w => (
-                      <option key={w.id} value={w.id}>
-                        {w.name}
-                      </option>
-                    ))}
-                </select>
+              <div className="pt-2">
+                <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider block mb-1.5 px-2">Workspace</label>
+                <div className="px-2">
+                  <select
+                    value={activeWorkspace?.id || ""}
+                    onChange={(e) => {
+                      const ws = workspaces.find(w => w.id === e.target.value);
+                      if (ws) setActiveWorkspace(ws);
+                    }}
+                    className="w-full p-2 bg-black border border-white/5 rounded-lg text-xs font-medium text-[#E1E0CC] outline-none cursor-pointer hover:bg-white/5 transition-all appearance-none"
+                  >
+                    {workspaces
+                      .filter(w => w.org_id === activeOrg?.id)
+                      .map(w => (
+                        <option key={w.id} value={w.id}>
+                          {w.name}
+                        </option>
+                      ))}
+                  </select>
+                </div>
               </div>
             </div>
 
             {/* Nav Menu */}
-            <nav className="space-y-1">
-              <button
-                onClick={() => setActiveTab("control")}
-                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-2xl text-xs font-semibold transition-all text-left
-                  ${activeTab === "control"
-                    ? "bg-black border-none text-[#E1E0CC] shadow-[0_0_15px_rgba(225,224,204,0.03)]"
-                    : "text-gray-400 hover:text-[#E1E0CC]/90 hover:bg-[#E1E0CC]/5"
-                  }`}
-              >
-                <BarChart3 className="w-3.5 h-3.5" />
-                <span>Mission Control</span>
-              </button>
+            {/* Nav Menu */}
+            <nav className="space-y-4 mt-4 px-2">
+              {/* Studio Section */}
+              <div>
+                <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider block mb-2 px-1">Studio</span>
+                <div className="space-y-0.5">
+                  <button
+                    onClick={() => setActiveTab("studio")}
+                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all text-left ${
+                      activeTab === "studio"
+                        ? "bg-white/5 text-[#E1E0CC]"
+                        : "text-gray-400 hover:text-[#E1E0CC] hover:bg-white/5"
+                    }`}
+                  >
+                    <Image className="w-4 h-4 shrink-0" />
+                    <span>Post Generator</span>
+                    {activeTab !== "studio" && <span className="ml-auto text-[9px] bg-[#C9A84C]/10 text-[#C9A84C] px-1.5 py-0.5 rounded-full font-bold">AI</span>}
+                  </button>
 
-              <button
-                onClick={() => setActiveTab("dna")}
-                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-2xl text-xs font-semibold transition-all text-left
-                  ${activeTab === "dna"
-                    ? "bg-black border-none text-[#E1E0CC] shadow-[0_0_15px_rgba(225,224,204,0.03)]"
-                    : "text-gray-400 hover:text-[#E1E0CC]/90 hover:bg-[#E1E0CC]/5"
-                  }`}
-              >
-                <Layers className="w-3.5 h-3.5" />
-                <span>Brand DNA Details</span>
-              </button>
+                  <button
+                    onClick={() => setActiveTab("carousel")}
+                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all text-left ${
+                      activeTab === "carousel"
+                        ? "bg-white/5 text-[#E1E0CC]"
+                        : "text-gray-400 hover:text-[#E1E0CC] hover:bg-white/5"
+                    }`}
+                  >
+                    <Layers className="w-4 h-4 shrink-0" />
+                    <span>Carousel Studio</span>
+                    {activeTab !== "carousel" && <span className="ml-auto text-[9px] bg-[#C9A84C]/10 text-[#C9A84C] px-1.5 py-0.5 rounded-full font-bold">AI</span>}
+                  </button>
+                </div>
+              </div>
 
-              <button
-                onClick={() => setActiveTab("campaigns")}
-                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-2xl text-xs font-semibold transition-all text-left
-                  ${activeTab === "campaigns"
-                    ? "bg-black border-none text-[#E1E0CC] shadow-[0_0_15px_rgba(225,224,204,0.03)]"
-                    : "text-gray-400 hover:text-[#E1E0CC]/90 hover:bg-[#E1E0CC]/5"
-                  }`}
-              >
-                <Calendar className="w-3.5 h-3.5" />
-                <span>Campaigns & Calendar</span>
-              </button>
+              {/* Brand Profile Section */}
+              <div>
+                <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider block mb-2 px-1">Brand Profile</span>
+                <div className="space-y-0.5">
+                  <button
+                    onClick={() => setActiveTab("control")}
+                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all text-left ${
+                      activeTab === "control"
+                        ? "bg-white/5 text-[#E1E0CC]"
+                        : "text-gray-400 hover:text-[#E1E0CC] hover:bg-white/5"
+                    }`}
+                  >
+                    <BarChart3 className="w-4 h-4 shrink-0" />
+                    <span>Mission Control</span>
+                  </button>
 
+                  <button
+                    onClick={() => setActiveTab("dna")}
+                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all text-left ${
+                      activeTab === "dna"
+                        ? "bg-white/5 text-[#E1E0CC]"
+                        : "text-gray-400 hover:text-[#E1E0CC] hover:bg-white/5"
+                    }`}
+                  >
+                    <Brain className="w-4 h-4 shrink-0" />
+                    <span>Brand DNA</span>
+                  </button>
 
-
-              <button
-                onClick={() => setActiveTab("studio")}
-                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-2xl text-xs font-semibold transition-all text-left
-                  ${activeTab === "studio"
-                    ? "bg-black border-none text-[#E1E0CC] shadow-[0_0_15px_rgba(225,224,204,0.03)]"
-                    : "text-gray-400 hover:text-[#E1E0CC]/90 hover:bg-[#E1E0CC]/5"
-                  }`}
-              >
-                <Image className="w-3.5 h-3.5" />
-                <span>Post Generator Studio</span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab("carousel")}
-                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-2xl text-xs font-semibold transition-all text-left
-                  ${activeTab === "carousel"
-                    ? "bg-black border-none text-[#E1E0CC] shadow-[0_0_15px_rgba(225,224,204,0.03)]"
-                    : "text-gray-400 hover:text-[#E1E0CC]/90 hover:bg-[#E1E0CC]/5"
-                  }`}
-              >
-                <Layers className="w-3.5 h-3.5" />
-                <span>Carousel Studio</span>
-              </button>
+                  <button
+                    onClick={() => setActiveTab("campaigns")}
+                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all text-left ${
+                      activeTab === "campaigns"
+                        ? "bg-white/5 text-[#E1E0CC]"
+                        : "text-gray-400 hover:text-[#E1E0CC] hover:bg-white/5"
+                    }`}
+                  >
+                    <Calendar className="w-4 h-4 shrink-0" />
+                    <span>Campaigns & Calendar</span>
+                  </button>
+                </div>
+              </div>
             </nav>
           </div>
 
           {/* Settings & Sign Out */}
-          <div className="space-y-1 pt-3 border-t border-[#E1E0CC]/10">
+          <div className="space-y-0.5 pt-3 border-t border-white/5 px-2">
             <button
               onClick={() => setActiveTab("settings")}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-2xl text-xs font-semibold transition-all text-left
+              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all text-left
                 ${activeTab === "settings"
-                  ? "bg-black border-none text-[#E1E0CC] shadow-[0_0_15px_rgba(225,224,204,0.03)]"
-                  : "text-gray-400 hover:text-[#E1E0CC]/90 hover:bg-[#E1E0CC]/5"
+                  ? "bg-white/5 text-[#E1E0CC]"
+                  : "text-gray-400 hover:text-[#E1E0CC] hover:bg-white/5"
                 }`}
             >
-              <Settings className="w-3.5 h-3.5" />
+              <Settings className="w-4 h-4" />
               <span>Settings</span>
             </button>
 
             <button
               onClick={handleSignOut}
-              className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-[#E1E0CC]/60 hover:text-[#E1E0CC] hover:bg-[#E1E0CC]/10/50 rounded-2xl transition-all text-left"
+              className="w-full flex items-center gap-2.5 px-3 py-2 text-[13px] font-medium text-gray-500 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all text-left"
             >
-              <LogOut className="w-3.5 h-3.5" />
+              <LogOut className="w-4 h-4" />
               <span>Sign Out</span>
             </button>
           </div>
         </aside>
 
         {/* Right Dashboard Area */}
-        <main className="flex-1 space-y-6">
+        <main className="flex-1 flex flex-col h-full overflow-y-auto bg-[#000000]">
 
           {/* Toast notifier absolute helper */}
               {toast && (
@@ -1212,38 +1225,36 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
             <>
               {/* Top Info Banner - Only render if DNA is synced */}
               {dna && (
-                <div className="bg-[#1C1C1C] bg-gradient-to-br from-[#1C1C1C] to-black border border-[#E1E0CC]/5 hover:border-[#E1E0CC]/15 transition-all shadow-[0_0_30px_rgba(225,224,204,0.02)]/80 rounded-2xl p-6 shadow-[0_4px_20px_rgb(0,0,0,0.01)] flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-                  <div className="space-y-1">
-                    <WordsPullUp 
-                      text={`${dna?.brand_name || 'Brand'} Brand Dashboard`}
-                      className="text-3xl font-serif text-[#DEDBC8] tracking-tight"
+                <div className="bg-[#111] border border-white/5 rounded-2xl px-5 py-4 flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3 min-w-0">
+                    {/* Color dot indicator */}
+                    <div
+                      className="w-3 h-3 rounded-full shrink-0 ring-2 ring-white/10"
+                      style={{ backgroundColor: assets?.logo_studio_data?.colors?.primaryHex || '#C9A84C' }}
                     />
-                    <div className="flex flex-wrap gap-2 text-sm text-[#E1E0CC]/70 font-light leading-relaxed font-medium uppercase tracking-[0.2em] font-bold text-[#E1E0CC]">
-                      <span><strong>Category:</strong> {dna?.category}</span>
-                      {dna?.sub_category && (
-                        <>
-                          <span>•</span>
-                          <span><strong>Sub-category:</strong> {dna?.sub_category}</span>
-                        </>
-                      )}
+                    <div className="min-w-0">
+                      <h1 className="text-base font-bold text-[#E1E0CC] tracking-tight truncate">{dna?.brand_name}</h1>
+                      <p className="text-[11px] text-gray-500 truncate">{dna?.category}{dna?.industry ? ` · ${dna.industry}` : ''}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-[#E1E0CC]/10 border-none text-[#E1E0CC] text-xs font-semibold tracking-tight shrink-0 self-start sm:self-center">
-                    <ShieldCheck className="w-4 h-4" />
-                    Memory Synced
+                  <div className="flex items-center gap-2 shrink-0">
+                    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#C9A84C]/10 border border-[#C9A84C]/20 text-[#C9A84C] text-[10px] font-semibold">
+                      <ShieldCheck className="w-3 h-3" />
+                      Memory Synced
+                    </div>
                   </div>
                 </div>
               )}
 
           {/* Tab 1: Mission Control (Visual Style Tile Moodboard) */}
           {activeTab === "control" && (
-            <div className="bg-[#1C1C1C] bg-gradient-to-br from-[#1C1C1C] to-black border border-[#E1E0CC]/5 hover:border-[#E1E0CC]/15 transition-all shadow-[0_0_30px_rgba(225,224,204,0.02)] text-[#E1E0CC] rounded-2xl p-6 md:p-8 border-none shadow-xl relative overflow-hidden font-normal space-y-6">
+            <div className="bg-[#0A0A0A] border border-white/5 rounded-2xl p-6 md:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.12)] relative overflow-hidden space-y-6">
               
               {/* Top Header Section */}
-              <div className="border-b border-[#E1E0CC]/10 pb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="border-b border-white/5 pb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-black uppercase tracking-widest px-2 py-0.5 rounded bg-[#1C1C1C] border border-[#E1E0CC]/5 hover:border-[#E1E0CC]/15 transition-all text-[#E1E0CC]">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-md bg-white/5 border border-white/5 text-[#E1E0CC]">
                       Brand Board Direction
                     </span>
                     {moodboard?.id && (
@@ -1252,19 +1263,140 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                   </div>
                   <WordsPullUp 
                     text={dna?.brand_name || 'Brand'}
-                    className="text-xl font-extrabold mt-1 text-[#E1E0CC] uppercase tracking-tight"
+                    className="text-2xl font-bold mt-1 text-[#E1E0CC] tracking-tight"
                   />
-                  <p className="text-xs text-gray-300 font-medium">
+                  <p className="text-[13px] text-gray-400 mt-1">
                     {moodboard?.name || "Bespoke Brand Strategy Board"} {moodboard?.tagline ? `— ${moodboard.tagline}` : ""}
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2 text-sm text-gray-300 shrink-0">
-                  <span><strong>Industry:</strong> {dna?.industry}</span>
-                  <span>•</span>
-                  <span><strong>Category:</strong> {dna?.category}</span>
+                <div className="flex items-center gap-3 shrink-0">
+                  <span className="text-[13px] text-gray-500 font-medium">{dna?.industry} · {dna?.category}</span>
+                  <button
+                    onClick={() => setShowBrandEditor(prev => !prev)}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-medium transition-all border ${
+                      showBrandEditor
+                        ? 'bg-[#C9A84C]/10 border-[#C9A84C]/20 text-[#C9A84C]'
+                        : 'bg-white/5 border-white/5 text-gray-300 hover:text-[#E1E0CC] hover:bg-white/10'
+                    }`}
+                  >
+                    <Paintbrush className="w-4 h-4" />
+                    {showBrandEditor ? 'Close Editor' : 'Edit Brand Colors'}
+                  </button>
                 </div>
               </div>
+
+              {/* ── BRAND COLOR EDITOR PANEL ── */}
+              {showBrandEditor && (
+                <div className="bg-[#050505] border border-white/5 rounded-xl p-6 space-y-5 animate-fade-up">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <span className="text-[13px] font-semibold text-[#E1E0CC]">Brand Color Editor</span>
+                    <span className="text-[11px] text-gray-500">Changes reflect across all generated posts & carousels</span>
+                  </div>
+
+                  {/* Color pickers row */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* Primary */}
+                    <div className="bg-[#101010] rounded-lg p-4 border border-white/5 group hover:border-white/10 transition-all flex flex-col gap-3">
+                      <span className="text-[11px] text-gray-400 font-medium uppercase tracking-wider">Primary Accent Color</span>
+                      <div className="flex items-center gap-3">
+                        <label className="relative cursor-pointer shrink-0">
+                          <div
+                            className="w-10 h-10 rounded-lg border border-white/10 group-hover:border-white/20 transition-all shadow-sm"
+                            style={{ backgroundColor: assets?.logo_studio_data?.colors?.primaryHex || '#C9A84C' }}
+                          />
+                          <input
+                            type="color"
+                            value={assets?.logo_studio_data?.colors?.primaryHex || '#C9A84C'}
+                            className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
+                            onChange={(e) => {
+                              if (assets?.logo_studio_data?.colors) {
+                                setAssets({ ...assets, logo_studio_data: { ...assets.logo_studio_data, colors: { ...assets.logo_studio_data.colors, primaryHex: e.target.value } } } as any);
+                              }
+                            }}
+                          />
+                        </label>
+                        <div className="min-w-0">
+                          <div className="text-[13px] font-medium text-[#E1E0CC] font-mono">{assets?.logo_studio_data?.colors?.primaryHex || '#C9A84C'}</div>
+                          <div className="text-[11px] text-gray-500 mt-0.5">Click swatch to open picker</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Background / Secondary */}
+                    <div className="bg-[#101010] rounded-lg p-4 border border-white/5 group hover:border-white/10 transition-all flex flex-col gap-3">
+                      <span className="text-[11px] text-gray-400 font-medium uppercase tracking-wider">Background / Secondary</span>
+                      <div className="flex items-center gap-3">
+                        <label className="relative cursor-pointer shrink-0">
+                          <div
+                            className="w-10 h-10 rounded-lg border border-white/10 group-hover:border-white/20 transition-all shadow-sm"
+                            style={{ backgroundColor: assets?.logo_studio_data?.colors?.secondaryHex || '#0A0A0A' }}
+                          />
+                          <input
+                            type="color"
+                            value={assets?.logo_studio_data?.colors?.secondaryHex || '#0A0A0A'}
+                            className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
+                            onChange={(e) => {
+                              if (assets?.logo_studio_data?.colors) {
+                                setAssets({ ...assets, logo_studio_data: { ...assets.logo_studio_data, colors: { ...assets.logo_studio_data.colors, secondaryHex: e.target.value } } } as any);
+                              }
+                            }}
+                          />
+                        </label>
+                        <div className="min-w-0">
+                          <div className="text-[13px] font-medium text-[#E1E0CC] font-mono">{assets?.logo_studio_data?.colors?.secondaryHex || '#0A0A0A'}</div>
+                          <div className="text-[11px] text-gray-500 mt-0.5">Click swatch to open picker</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Quick preset palettes */}
+                  <div>
+                    <span className="text-[11px] text-gray-400 font-medium uppercase tracking-wider block mb-3">Quick Presets</span>
+                    <div className="flex gap-2 flex-wrap">
+                      {[
+                        { name: 'Gold',     primary: '#C9A84C', secondary: '#0A0A0A' },
+                        { name: 'Ivory',    primary: '#E1E0CC', secondary: '#101010' },
+                        { name: 'Emerald',  primary: '#10B981', secondary: '#000000' },
+                        { name: 'Sapphire', primary: '#3B82F6', secondary: '#0A0A0A' },
+                        { name: 'Rose',     primary: '#F43F5E', secondary: '#0A0A0A' },
+                        { name: 'Violet',   primary: '#8B5CF6', secondary: '#0A0A0A' },
+                        { name: 'Coral',    primary: '#FF6B6B', secondary: '#0A0A0A' },
+                        { name: 'Teal',     primary: '#14B8A6', secondary: '#000000' },
+                      ].map((preset) => (
+                        <button
+                          key={preset.name}
+                          onClick={() => {
+                            if (assets?.logo_studio_data?.colors) {
+                              setAssets({ ...assets, logo_studio_data: { ...assets.logo_studio_data, colors: { ...assets.logo_studio_data.colors, primaryHex: preset.primary, secondaryHex: preset.secondary } } } as any);
+                            }
+                          }}
+                          className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10 transition-all text-[11px] font-medium text-gray-400 hover:text-[#E1E0CC]"
+                        >
+                          <span className="w-3 h-3 rounded-full shrink-0 ring-1 ring-white/10" style={{ backgroundColor: preset.primary }} />
+                          {preset.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Live preview strip */}
+                  <div className="flex items-center gap-3 pt-1">
+                    <span className="text-[10px] text-gray-600 uppercase tracking-wider">Preview</span>
+                    <div
+                      className="flex-1 h-6 rounded-lg"
+                      style={{ background: `linear-gradient(90deg, ${assets?.logo_studio_data?.colors?.secondaryHex || '#0A0A0A'} 0%, ${assets?.logo_studio_data?.colors?.primaryHex || '#C9A84C'} 100%)` }}
+                    />
+                    <div
+                      className="px-3 py-1 rounded-md text-[10px] font-bold"
+                      style={{ backgroundColor: assets?.logo_studio_data?.colors?.primaryHex || '#C9A84C', color: assets?.logo_studio_data?.colors?.secondaryHex || '#000' }}
+                    >
+                      {dna?.brand_name || 'Brand'}
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* ── BRAND BOARD CANVAS GRID ── */}
               <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
@@ -1272,8 +1404,8 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                 {/* ── ROW 1 ── */}
 
                 {/* BLOCK A: Logo + Brand Identity (4 cols) */}
-                <div className="md:col-span-4 bg-[#1C1C1C] border border-[#E1E0CC]/5 hover:border-[#E1E0CC]/15 transition-all/50 border-none rounded-2xl p-5 flex flex-col gap-4 shadow-none">
-                  <p className="text-xs font-black text-gray-300 uppercase tracking-[0.2em]">Brand Identity</p>
+                <div className="md:col-span-4 bg-[#111] border border-white/5 rounded-2xl p-5 flex flex-col gap-4 shadow-sm">
+                  <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider">Brand Identity</p>
 
                   {/* Logo circle — large and filled */}
                   <div className="flex flex-col items-center gap-3">
@@ -1324,70 +1456,70 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                 </div>
 
                 {/* BLOCK B: Color Palette (5 cols) */}
-                <div className="md:col-span-5 bg-[#1C1C1C] border border-[#E1E0CC]/5 hover:border-[#E1E0CC]/15 transition-all/50 border-none rounded-2xl p-5 flex flex-col gap-3 shadow-none">
-                  <p className="text-xs font-black text-gray-300 uppercase tracking-[0.2em]">Color Palette</p>
-                  <div className="grid grid-cols-2 gap-3 flex-1">
+                <div className="md:col-span-5 bg-[#111] border border-white/5 rounded-2xl p-5 flex flex-col gap-4 shadow-sm">
+                  <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider">Color Palette</p>
+                  <div className="grid grid-cols-2 gap-4 flex-1">
                     {/* Primary */}
                     <div className="space-y-2">
                       <div
-                        className="h-20 w-full rounded-2xl border-none shadow-inner"
+                        className="h-20 w-full rounded-xl shadow-sm border border-white/5"
                         style={{ backgroundColor: colors.primaryHex || "#1A0A00" }}
                       />
                       <div>
-                        <p className="text-xs font-bold text-slate-885 uppercase tracking-[0.2em] font-bold text-[#E1E0CC]">Primary</p>
-                        <p className="text-[8px] text-gray-300 font-sans tracking-normal mt-0.5">{colors.primaryHex || "#1A0A00"}</p>
+                        <p className="text-[11px] font-medium text-[#E1E0CC]">Primary</p>
+                        <p className="text-[11px] text-gray-500 font-mono mt-0.5">{colors.primaryHex || "#1A0A00"}</p>
                       </div>
                     </div>
                     {/* Accent */}
                     <div className="space-y-2">
                       <div
-                        className="h-20 w-full rounded-2xl border-none shadow-inner"
+                        className="h-20 w-full rounded-xl shadow-sm border border-white/5"
                         style={{ backgroundColor: colors.secondaryHex || "#C9A84C" }}
                       />
                       <div>
-                        <p className="text-xs font-bold text-slate-885 uppercase tracking-[0.2em] font-bold text-[#E1E0CC]">Accent</p>
-                        <p className="text-[8px] text-gray-300 font-sans tracking-normal mt-0.5">{colors.secondaryHex || "#C9A84C"}</p>
+                        <p className="text-[11px] font-medium text-[#E1E0CC]">Accent</p>
+                        <p className="text-[11px] text-gray-500 font-mono mt-0.5">{colors.secondaryHex || "#C9A84C"}</p>
                       </div>
                     </div>
                     {/* Dark neutral */}
                     <div className="space-y-2">
-                      <div className="h-14 w-full rounded-2xl border-none bg-[#1C1C1C] border border-[#E1E0CC]/5 hover:border-[#E1E0CC]/15 transition-all" />
+                      <div className="h-14 w-full rounded-xl bg-[#0A0A0A] border border-white/5" />
                       <div>
-                        <p className="text-xs font-bold text-slate-885 uppercase tracking-[0.2em] font-bold text-[#E1E0CC]">Background</p>
-                        <p className="text-[8px] text-gray-300 font-sans tracking-normal mt-0.5">#0F172A</p>
+                        <p className="text-[11px] font-medium text-[#E1E0CC]">Background</p>
+                        <p className="text-[11px] text-gray-500 font-mono mt-0.5">#0A0A0A</p>
                       </div>
                     </div>
                     {/* White/light */}
                     <div className="space-y-2">
-                      <div className="h-14 w-full rounded-2xl border-none bg-[#1C1C1C] border border-[#E1E0CC]/5 hover:border-[#E1E0CC]/15 transition-all" />
+                      <div className="h-14 w-full rounded-xl bg-[#E1E0CC] border border-white/5" />
                       <div>
-                        <p className="text-xs font-bold text-slate-885 uppercase tracking-[0.2em] font-bold text-[#E1E0CC]">Highlight</p>
-                        <p className="text-[8px] text-gray-300 font-sans tracking-normal mt-0.5">#F8FAFC</p>
+                        <p className="text-[11px] font-medium text-[#E1E0CC]">Highlight</p>
+                        <p className="text-[11px] text-gray-500 font-mono mt-0.5">#E1E0CC</p>
                       </div>
                     </div>
                   </div>
                 </div>
 
                 {/* BLOCK C: Typography (3 cols) */}
-                <div className="md:col-span-3 bg-[#1C1C1C] border border-[#E1E0CC]/5 hover:border-[#E1E0CC]/15 transition-all/50 border-none rounded-2xl p-5 flex flex-col gap-3 shadow-none">
-                  <p className="text-xs font-black text-gray-300 uppercase tracking-[0.2em]">Typography System</p>
-                  <div className="space-y-4 flex-1">
+                <div className="md:col-span-3 bg-[#111] border border-white/5 rounded-2xl p-5 flex flex-col gap-4 shadow-sm">
+                  <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider">Typography System</p>
+                  <div className="space-y-5 flex-1">
                     <div>
-                      <span className="text-[8px] text-gray-300 block mb-1 uppercase tracking-[0.2em] font-bold text-[#E1E0CC]">Headline</span>
+                      <span className="text-[11px] text-gray-500 font-medium block mb-1">Headline</span>
                       <span className="text-lg font-bold text-[#E1E0CC] block tracking-tight" style={{ fontFamily: typography.primaryFont }}>
                         {typography.primaryFont}
                       </span>
-                      <span className="text-xs text-gray-300 font-sans tracking-normal block mt-1">AaBbCc 123</span>
+                      <span className="text-[12px] text-gray-500 block mt-1">AaBbCc 123</span>
                     </div>
                     <div>
-                      <span className="text-[8px] text-gray-300 block mb-1 uppercase tracking-[0.2em] font-bold text-[#E1E0CC]">Body</span>
-                      <span className="text-sm text-[#E1E0CC] block" style={{ fontFamily: typography.bodyFont }}>
+                      <span className="text-[11px] text-gray-500 font-medium block mb-1">Body</span>
+                      <span className="text-[14px] text-[#E1E0CC] block" style={{ fontFamily: typography.bodyFont }}>
                         {typography.bodyFont}
                       </span>
-                      <span className="text-xs text-gray-300 font-sans tracking-normal block mt-1">aAbBcC 456</span>
+                      <span className="text-[12px] text-gray-500 block mt-1">aAbBcC 456</span>
                     </div>
                   </div>
-                  <p className="text-[8px] text-gray-300 border-t border-[#E1E0CC]/10 pt-2 leading-relaxed font-sans tracking-normal">
+                  <p className="text-[12px] text-gray-500 border-t border-white/5 pt-4 leading-relaxed">
                     {typography.usage}
                   </p>
                 </div>
@@ -1395,15 +1527,15 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                 {/* ── ROW 2 ── */}
 
                 {/* BLOCK D: Brand Mood & Tone — TEXT ONLY (5 cols) */}
-                <div className="md:col-span-5 bg-[#1C1C1C] border border-[#E1E0CC]/5 hover:border-[#E1E0CC]/15 transition-all/50 border-none rounded-2xl p-5 flex flex-col gap-4 shadow-none">
-                  <p className="text-xs font-black text-gray-300 uppercase tracking-[0.2em]">Brand Mood & Tone</p>
+                <div className="md:col-span-5 bg-[#111] border border-white/5 rounded-2xl p-5 flex flex-col gap-4 shadow-sm">
+                  <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider">Brand Mood & Tone</p>
 
                   {/* Personality tags */}
                   <div className="flex flex-wrap gap-2">
                     {(dna?.brand_values || []).map((v) => (
                       <span
                         key={v}
-                        className="text-sm font-black uppercase tracking-[0.2em] font-bold text-[#E1E0CC] px-3 py-1.5 rounded-lg border bg-black text-[#0A0A0A] border-[#E1E0CC]/10"
+                        className="text-[11px] font-medium uppercase tracking-wider text-[#E1E0CC] px-3 py-1.5 rounded-md border bg-[#050505] border-white/10"
                       >
                         {v}
                       </span>
@@ -1411,24 +1543,24 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                   </div>
 
                   {/* Tone descriptors */}
-                  <div className="space-y-2 flex-1">
-                    <p className="text-[8px] text-gray-300 uppercase tracking-[0.2em] font-bold text-[#E1E0CC]">Voice Attributes</p>
-                    <div className="space-y-1.5">
+                  <div className="space-y-3 flex-1 mt-2">
+                    <p className="text-[11px] text-gray-500 font-medium uppercase tracking-wider block">Voice Attributes</p>
+                    <div className="space-y-2">
                       {[
                         { label: "Tone", value: dna?.brand_personality || "Professional" },
                         { label: "Audience", value: dna?.target_audience || "Not defined" },
                         { label: "Mission", value: dna?.mission || "Not defined" },
                       ].map(({ label, value }) => (
-                        <div key={label} className="flex gap-2 text-xs">
-                          <span className="text-gray-300 uppercase tracking-[0.2em] font-bold text-[#E1E0CC] w-14 shrink-0">{label}</span>
-                          <span className="text-gray-300 leading-snug line-clamp-2">{value}</span>
+                        <div key={label} className="flex gap-3 text-[13px]">
+                          <span className="text-gray-500 font-medium w-16 shrink-0">{label}</span>
+                          <span className="text-[#E1E0CC] leading-snug line-clamp-2">{value}</span>
                         </div>
                       ))}
                     </div>
                   </div>
 
                   {/* Separator words */}
-                  <div className="flex items-center gap-2 pt-2 border-t border-[#E1E0CC]/10 text-[8px] font-black text-gray-300 uppercase tracking-widest">
+                  <div className="flex items-center gap-3 pt-3 border-t border-white/5 text-[11px] font-medium text-gray-500 uppercase tracking-widest">
                     <span>Luxurious</span>
                     <span>•</span>
                     <span>Timeless</span>
@@ -1438,9 +1570,9 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                 </div>
 
                 {/* BLOCK E: Social Post Visual Direction — approved moodboard (7 cols) */}
-                <div className="md:col-span-7 bg-[#1C1C1C] border border-[#E1E0CC]/5 hover:border-[#E1E0CC]/15 transition-all/50 border-none rounded-2xl overflow-hidden flex flex-col shadow-none">
-                  <div className="px-5 pt-5 pb-3">
-                    <p className="text-xs font-black text-gray-300 uppercase tracking-[0.2em]">Social Post Visual Direction</p>
+                <div className="md:col-span-7 bg-[#111] border border-white/5 rounded-2xl overflow-hidden flex flex-col shadow-sm relative">
+                  <div className="px-5 pt-5 pb-3 z-10 relative">
+                    <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider drop-shadow-md">Social Post Visual Direction</p>
                   </div>
                   {moodboard?.imageUrl ? (
                     <div className="flex-1 relative">
@@ -1448,38 +1580,38 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                       <img
                         src={moodboard.imageUrl}
                         alt="Approved Moodboard"
-                        className="w-full h-full object-cover object-top"
+                        className="w-full h-full object-cover object-top opacity-80"
                         style={{ minHeight: "200px", maxHeight: "280px" }}
                       />
-                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-slate-950/80 to-transparent px-4 py-3">
-                        <p className="text-xs text-[#C9A84C] font-black uppercase tracking-[0.2em] font-bold text-[#E1E0CC]">✦ Approved Visual Direction</p>
-                        <p className="text-white text-sm font-bold mt-0.5">{moodboard.name}</p>
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A] via-[#0A0A0A]/40 to-transparent flex flex-col justify-end px-5 py-4">
+                        <p className="text-[11px] text-[#C9A84C] font-medium uppercase tracking-wider">✦ Approved Visual Direction</p>
+                        <p className="text-white text-lg font-bold mt-1">{moodboard.name}</p>
                       </div>
                     </div>
                   ) : (
                     <div className="flex-1 flex items-center justify-center p-6 text-center">
                       <div>
-                        <p className="text-gray-300 text-xs font-semibold">No moodboard approved yet.</p>
-                        <p className="text-gray-300 text-sm mt-1 leading-snug">Generate and approve a direction in the onboarding visual direction step.</p>
+                        <p className="text-gray-400 text-[13px] font-medium">No moodboard approved yet.</p>
+                        <p className="text-gray-500 text-[12px] mt-1 leading-snug">Generate and approve a direction in the onboarding visual direction step.</p>
                       </div>
                     </div>
                   )}
                 </div>
 
                 {/* ── ROW 3 — Full width: Visual Brain Summary ── */}
-                <div className="md:col-span-12 bg-[#1C1C1C] border border-[#E1E0CC]/5 hover:border-[#E1E0CC]/15 transition-all/80 border-none rounded-2xl p-5 flex flex-col md:flex-row md:items-center gap-5 shadow-none">
+                <div className="md:col-span-12 bg-[#111] border border-white/5 rounded-2xl p-5 flex flex-col md:flex-row md:items-center gap-6 shadow-sm">
                   <div className="space-y-2 flex-1">
-                    <p className="text-xs font-black text-gray-300 uppercase tracking-[0.2em]">Visual Brand Summary</p>
-                    <p className="text-xs text-gray-300 leading-relaxed font-medium">
+                    <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider">Visual Brand Summary</p>
+                    <p className="text-[13px] text-gray-300 leading-relaxed">
                       {dna?.business_description}
                     </p>
                   </div>
 
                   <div className="flex items-center gap-2 md:shrink-0">
-                    <div className="w-8 h-8 rounded-full border-none" style={{ backgroundColor: colors.primaryHex || "#1A0A00" }} />
-                    <div className="w-8 h-8 rounded-full border-none" style={{ backgroundColor: colors.secondaryHex || "#C9A84C" }} />
-                    <div className="w-8 h-8 rounded-full border-none bg-[#1C1C1C] border border-[#E1E0CC]/5 hover:border-[#E1E0CC]/15 transition-all" />
-                    <div className="w-8 h-8 rounded-full border-none bg-[#1C1C1C] border border-[#E1E0CC]/5 hover:border-[#E1E0CC]/15 transition-all" />
+                    <div className="w-8 h-8 rounded-full border border-white/10" style={{ backgroundColor: colors.primaryHex || "#1A0A00" }} />
+                    <div className="w-8 h-8 rounded-full border border-white/10" style={{ backgroundColor: colors.secondaryHex || "#C9A84C" }} />
+                    <div className="w-8 h-8 rounded-full border border-white/10 bg-[#0A0A0A]" />
+                    <div className="w-8 h-8 rounded-full border border-white/10 bg-[#E1E0CC]" />
                   </div>
                 </div>
 
@@ -1497,57 +1629,57 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 
                 {/* Box 1: Company Definition */}
-                <div className="bg-[#1C1C1C] bg-gradient-to-br from-[#1C1C1C] to-black border border-[#E1E0CC]/5 hover:border-[#E1E0CC]/15 transition-all shadow-[0_0_30px_rgba(225,224,204,0.02)]/80 rounded-2xl p-5 space-y-4 shadow-[0_4px_20px_rgb(0,0,0,0.01)]">
-                  <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1.5">
+                <div className="bg-[#0A0A0A] border border-white/5 rounded-2xl p-6 shadow-sm space-y-5">
+                  <h3 className="text-[11px] font-medium text-gray-400 uppercase tracking-wider flex items-center gap-2">
                     <Building className="w-4 h-4 text-brand-secondary" />
                     Company Definition
                   </h3>
                   
-                  <div className="space-y-2 text-xs">
-                    <div className="flex flex-col gap-1 border-b border-[#E1E0CC]/10 pb-2">
-                      <span className="text-gray-400 font-medium">Business Description</span>
-                      <p className="text-[#E1E0CC]/80 leading-relaxed">{dna?.business_description}</p>
+                  <div className="space-y-4 text-[13px]">
+                    <div className="flex flex-col gap-1.5 border-b border-white/5 pb-3">
+                      <span className="text-gray-500 font-medium">Business Description</span>
+                      <p className="text-[#E1E0CC] leading-relaxed">{dna?.business_description}</p>
                     </div>
                     {dna?.website && (
-                      <div className="flex justify-between border-b border-[#E1E0CC]/10 pb-2">
-                        <span className="text-gray-400">Website</span>
+                      <div className="flex justify-between border-b border-white/5 pb-3">
+                        <span className="text-gray-500 font-medium">Website</span>
                         <a href={dna?.website} target="_blank" rel="noreferrer" className="text-brand-secondary hover:underline font-semibold">{dna?.website}</a>
                       </div>
                     )}
                     <div className="flex justify-between">
-                      <span className="text-gray-400">USP (Unique Value)</span>
-                      <span className="font-semibold text-[#E1E0CC] text-right max-w-[200px]">{dna?.usp}</span>
+                      <span className="text-gray-500 font-medium">USP (Unique Value)</span>
+                      <span className="text-[#E1E0CC] text-right max-w-[200px] leading-snug">{dna?.usp}</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Box 2: Mission, Vision & Personality */}
-                <div className="bg-[#1C1C1C] bg-gradient-to-br from-[#1C1C1C] to-black border border-[#E1E0CC]/5 hover:border-[#E1E0CC]/15 transition-all shadow-[0_0_30px_rgba(225,224,204,0.02)]/80 rounded-2xl p-5 space-y-4 shadow-[0_4px_20px_rgb(0,0,0,0.01)]">
-                  <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1.5">
+                <div className="bg-[#0A0A0A] border border-white/5 rounded-2xl p-6 shadow-sm space-y-5">
+                  <h3 className="text-[11px] font-medium text-gray-400 uppercase tracking-wider flex items-center gap-2">
                     <Compass className="w-4 h-4 text-brand-secondary" />
                     Brand Identity DNA
                   </h3>
                   
-                  <div className="space-y-2 text-xs">
-                    <div className="flex flex-col gap-1 border-b border-[#E1E0CC]/10 pb-2">
-                      <span className="text-gray-400 font-medium">Mission</span>
-                      <p className="text-[#E1E0CC]/80 font-medium">{dna?.mission}</p>
+                  <div className="space-y-4 text-[13px]">
+                    <div className="flex flex-col gap-1.5 border-b border-white/5 pb-3">
+                      <span className="text-gray-500 font-medium">Mission</span>
+                      <p className="text-[#E1E0CC] leading-relaxed">{dna?.mission}</p>
                     </div>
                     {dna?.vision && (
-                      <div className="flex flex-col gap-1 border-b border-[#E1E0CC]/10 pb-2">
-                        <span className="text-gray-400 font-medium">Vision</span>
-                        <p className="text-[#E1E0CC]/80">{dna?.vision}</p>
+                      <div className="flex flex-col gap-1.5 border-b border-white/5 pb-3">
+                        <span className="text-gray-500 font-medium">Vision</span>
+                        <p className="text-[#E1E0CC] leading-relaxed">{dna?.vision}</p>
                       </div>
                     )}
-                    <div className="flex justify-between border-b border-[#E1E0CC]/10 pb-2">
-                      <span className="text-gray-400">Brand Personality</span>
-                      <span className="font-semibold text-[#E1E0CC] capitalize">{dna?.brand_personality}</span>
+                    <div className="flex justify-between border-b border-white/5 pb-3">
+                      <span className="text-gray-500 font-medium">Brand Personality</span>
+                      <span className="text-[#E1E0CC] capitalize">{dna?.brand_personality}</span>
                     </div>
-                    <div className="flex flex-col gap-1.5">
-                      <span className="text-gray-400">Core Brand Values</span>
-                      <div className="flex flex-wrap gap-1">
+                    <div className="flex flex-col gap-2">
+                      <span className="text-gray-500 font-medium">Core Brand Values</span>
+                      <div className="flex flex-wrap gap-2">
                         {(dna?.brand_values || []).map((v) => (
-                          <span key={v} className="px-2 py-1 rounded bg-black border-none text-sm text-gray-300 font-semibold">{v}</span>
+                          <span key={v} className="px-2.5 py-1 rounded bg-white/5 text-[11px] font-medium text-gray-300 tracking-wider uppercase">{v}</span>
                         ))}
                       </div>
                     </div>
@@ -1555,66 +1687,66 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                 </div>
 
                 {/* Box 3: Offerings & Pricing */}
-                <div className="bg-[#1C1C1C] bg-gradient-to-br from-[#1C1C1C] to-black border border-[#E1E0CC]/5 hover:border-[#E1E0CC]/15 transition-all shadow-[0_0_30px_rgba(225,224,204,0.02)]/80 rounded-2xl p-5 space-y-4 shadow-[0_4px_20px_rgb(0,0,0,0.01)]">
-                  <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1.5">
+                <div className="bg-[#0A0A0A] border border-white/5 rounded-2xl p-6 shadow-sm space-y-5">
+                  <h3 className="text-[11px] font-medium text-gray-400 uppercase tracking-wider flex items-center gap-2">
                     <Tag className="w-4 h-4 text-brand-secondary" />
                     Offerings & Commercials
                   </h3>
                   
-                  <div className="space-y-3 text-xs">
+                  <div className="space-y-4 text-[13px]">
                     {dna?.products && dna?.products.length > 0 && (
-                      <div className="flex flex-col gap-1.5 border-b border-[#E1E0CC]/10 pb-2">
-                        <span className="text-gray-400">Products</span>
-                        <div className="flex flex-wrap gap-1">
+                      <div className="flex flex-col gap-2 border-b border-white/5 pb-3">
+                        <span className="text-gray-500 font-medium">Products</span>
+                        <div className="flex flex-wrap gap-2">
                           {dna?.products.map(p => (
-                            <span key={p} className="px-2 py-1 rounded bg-[#E1E0CC]/10/50 border-none text-sm text-[#E1E0CC] font-semibold">{p}</span>
+                            <span key={p} className="px-2.5 py-1 rounded bg-white/5 text-[12px] text-[#E1E0CC]">{p}</span>
                           ))}
                         </div>
                       </div>
                     )}
                     {dna?.services && dna?.services.length > 0 && (
-                      <div className="flex flex-col gap-1.5 border-b border-[#E1E0CC]/10 pb-2">
-                        <span className="text-gray-400">Services</span>
-                        <div className="flex flex-wrap gap-1">
+                      <div className="flex flex-col gap-2 border-b border-white/5 pb-3">
+                        <span className="text-gray-500 font-medium">Services</span>
+                        <div className="flex flex-wrap gap-2">
                           {dna?.services.map(s => (
-                            <span key={s} className="px-2 py-1 rounded bg-[#E1E0CC]/10/50 border-none text-sm text-[#E1E0CC] font-semibold">{s}</span>
+                            <span key={s} className="px-2.5 py-1 rounded bg-white/5 text-[12px] text-[#E1E0CC]">{s}</span>
                           ))}
                         </div>
                       </div>
                     )}
                     <div className="flex justify-between">
-                      <span className="text-gray-400">Pricing Strategy</span>
-                      <span className="font-semibold text-[#E1E0CC]">{dna?.pricing}</span>
+                      <span className="text-gray-500 font-medium">Pricing Strategy</span>
+                      <span className="text-[#E1E0CC]">{dna?.pricing}</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Box 4: Target Audience Profile */}
-                <div className="bg-[#1C1C1C] bg-gradient-to-br from-[#1C1C1C] to-black border border-[#E1E0CC]/5 hover:border-[#E1E0CC]/15 transition-all shadow-[0_0_30px_rgba(225,224,204,0.02)]/80 rounded-2xl p-5 space-y-4 shadow-[0_4px_20px_rgb(0,0,0,0.01)]">
-                  <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1.5">
+                <div className="bg-[#0A0A0A] border border-white/5 rounded-2xl p-6 shadow-sm space-y-5">
+                  <h3 className="text-[11px] font-medium text-gray-400 uppercase tracking-wider flex items-center gap-2">
                     <Users className="w-4 h-4 text-brand-secondary" />
                     Target Audience & Market
                   </h3>
                   
-                  <div className="space-y-3 text-xs">
-                    <div className="flex flex-col gap-1 border-b border-[#E1E0CC]/10 pb-2">
-                      <span className="text-gray-400 font-medium">Target Demographics</span>
-                      <p className="text-[#E1E0CC]/80">{dna?.target_audience}</p>
+                  <div className="space-y-4 text-[13px]">
+                    <div className="flex flex-col gap-1.5 border-b border-white/5 pb-3">
+                      <span className="text-gray-500 font-medium">Target Demographics</span>
+                      <p className="text-[#E1E0CC] leading-relaxed">{dna?.target_audience}</p>
                     </div>
                     {dna?.customer_personas && (
-                      <div className="flex flex-col gap-1 border-b border-[#E1E0CC]/10 pb-2">
-                        <span className="text-gray-400 font-medium">Customer Persona</span>
-                        <p className="text-gray-300 italic leading-relaxed">{dna?.customer_personas}</p>
+                      <div className="flex flex-col gap-1.5 border-b border-white/5 pb-3">
+                        <span className="text-gray-500 font-medium">Customer Persona</span>
+                        <p className="text-gray-400 italic leading-relaxed">{dna?.customer_personas}</p>
                       </div>
                     )}
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <span className="text-gray-400 block mb-1">Country Focus</span>
-                        <span className="font-semibold text-[#E1E0CC]">{dna?.country}</span>
+                        <span className="text-gray-500 font-medium block mb-1">Country Focus</span>
+                        <span className="text-[#E1E0CC]">{dna?.country}</span>
                       </div>
                       <div>
-                        <span className="text-gray-400 block mb-1">Languages</span>
-                        <span className="font-semibold text-[#E1E0CC]">{(dna?.languages || []).join(", ")}</span>
+                        <span className="text-gray-500 font-medium block mb-1">Languages</span>
+                        <span className="text-[#E1E0CC]">{(dna?.languages || []).join(", ")}</span>
                       </div>
                     </div>
                   </div>
@@ -1624,18 +1756,18 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
 
               {/* Box 5: Brand Assets & Media Locker */}
               {assets && (
-                <div className="bg-[#1C1C1C] bg-gradient-to-br from-[#1C1C1C] to-black border border-[#E1E0CC]/5 hover:border-[#E1E0CC]/15 transition-all shadow-[0_0_30px_rgba(225,224,204,0.02)]/80 rounded-2xl p-6 space-y-5 shadow-[0_4px_20px_rgb(0,0,0,0.01)]">
-                  <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1.5 border-b border-[#E1E0CC]/10 pb-3">
+                <div className="bg-[#0A0A0A] border border-white/5 rounded-2xl p-6 shadow-sm space-y-6">
+                  <h3 className="text-[11px] font-medium text-gray-400 uppercase tracking-wider flex items-center gap-2 border-b border-white/5 pb-4">
                     <Image className="w-4 h-4 text-brand-secondary" />
                     Brand Assets & Media Locker
                   </h3>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-[13px]">
                     
                     {/* Logo & Guideline Column */}
                     <div className="space-y-4">
                       <div>
-                        <span className="text-gray-400 block mb-1.5 font-semibold">Active Logo Graphic</span>
+                        <span className="text-gray-500 block mb-2 font-medium">Active Logo Graphic</span>
                         {assets.logo_url ? (
                           (() => {
                             const activeFontName = typography.primaryFont || "Outfit";
@@ -1783,203 +1915,32 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
 
                   </div>
 
-                  {/* Logo Variations Suite Grid */}
-                  {assets && (
-                    (() => {
-                      const logoSource = assets.logo_url || assets.logo_studio_data?.imageUrl || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=200&q=80";
-                      
-                      const getFontImport = (fontName: string) => {
-                        const f = (fontName || "").toLowerCase();
-                        if (f.includes("cinzel")) {
-                          return "@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&display=swap');";
-                        }
-                        if (f.includes("syne")) {
-                          return "@import url('https://fonts.googleapis.com/css2?family=Syne:wght@800&display=swap');";
-                        }
-                        if (f.includes("montserrat")) {
-                          return "@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@200;400;700&display=swap');";
-                        }
-                        if (f.includes("playfair")) {
-                          return "@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;950&display=swap');";
-                        }
-                        return "@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@800;900&display=swap');";
-                      };
 
-                      const getFontStyle = (fontName: string) => {
-                        const f = (fontName || "").toLowerCase();
-                        if (f.includes("cinzel")) {
-                          return "tracking-[0.15em] font-black uppercase text-sm";
-                        }
-                        if (f.includes("syne")) {
-                          return "tracking-wider font-extrabold uppercase text-sm";
-                        }
-                        if (f.includes("montserrat")) {
-                          return "tracking-[0.2em] font-light uppercase text-[8px]";
-                        }
-                        if (f.includes("playfair")) {
-                          return "tracking-wider font-extrabold italic text-sm";
-                        }
-                        return "tracking-widest font-black uppercase text-sm";
-                      };
-
-                      const displayBrandName = (typography.primaryFont || "").toLowerCase().includes("montserrat") 
-                        ? dna?.brand_name.toUpperCase() 
-                        : dna?.brand_name;
-
-                      return (
-                        <div className="border-t border-[#E1E0CC]/10 pt-5 mt-5">
-                          <style dangerouslySetInnerHTML={{ __html: getFontImport(typography.primaryFont) }} />
-                          <span className="text-gray-400 block mb-3 font-bold uppercase tracking-[0.2em] font-bold text-[#E1E0CC] text-sm">
-                            Dynamic Logo Variations Suite (12+ Custom Layouts & Formats)
-                          </span>
-                          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
-                            {/* 1. Primary Full Color */}
-                            <div className="bg-black border-none rounded-2xl p-3 flex flex-col justify-between items-center text-center shadow-none">
-                              <div className="w-14 h-14 flex items-center justify-center p-1 bg-[#1C1C1C] border border-[#E1E0CC]/5 hover:border-[#E1E0CC]/15 transition-all rounded-lg border-none">
-                                <img src={logoSource} alt="Primary" className="max-w-full max-h-full object-contain" />
-                              </div>
-                              <span className="text-[8px] font-bold text-[#E1E0CC]/60 mt-2 block">Primary Full Color</span>
-                            </div>
-
-                            {/* 2. Solid Black Silhouette */}
-                            <div className="bg-[#1C1C1C] bg-gradient-to-br from-[#1C1C1C] to-black border border-[#E1E0CC]/5 hover:border-[#E1E0CC]/15 transition-all shadow-[0_0_30px_rgba(225,224,204,0.02)] rounded-2xl p-3 flex flex-col justify-between items-center text-center shadow-none">
-                              <div className="w-14 h-14 flex items-center justify-center p-1 bg-[#1C1C1C] border border-[#E1E0CC]/5 hover:border-[#E1E0CC]/15 transition-all rounded-lg">
-                                <img src={logoSource} alt="Solid Black" className="max-w-full max-h-full object-contain" style={{ filter: "grayscale(1) contrast(1000%)" }} />
-                              </div>
-                              <span className="text-[8px] font-bold text-[#E1E0CC]/60 mt-2 block">Black Version</span>
-                            </div>
-
-                            {/* 3. Solid White (Inverted) */}
-                            <div className="bg-black border-none rounded-2xl p-3 flex flex-col justify-between items-center text-center shadow-none">
-                              <div className="w-14 h-14 flex items-center justify-center p-1 bg-black rounded-lg">
-                                <img src={logoSource} alt="Solid White" className="max-w-full max-h-full object-contain" style={{ filter: "grayscale(1) contrast(1000%) invert(1)" }} />
-                              </div>
-                              <span className="text-[8px] font-bold text-gray-400 mt-2 block">White Inverted</span>
-                            </div>
-
-                            {/* 4. Grayscale */}
-                            <div className="bg-black border-none rounded-2xl p-3 flex flex-col justify-between items-center text-center shadow-none">
-                              <div className="w-14 h-14 flex items-center justify-center p-1 bg-[#1C1C1C] border border-[#E1E0CC]/5 hover:border-[#E1E0CC]/15 transition-all rounded-lg border-none">
-                                <img src={logoSource} alt="Grayscale" className="max-w-full max-h-full object-contain" style={{ filter: "grayscale(1)" }} />
-                              </div>
-                              <span className="text-[8px] font-bold text-[#E1E0CC]/60 mt-2 block">Grayscale</span>
-                            </div>
-
-                            {/* 5. Watermark */}
-                            <div className="bg-black border-none rounded-2xl p-3 flex flex-col justify-between items-center text-center shadow-none">
-                              <div className="w-14 h-14 flex items-center justify-center p-1 bg-[#1C1C1C] border border-[#E1E0CC]/5 hover:border-[#E1E0CC]/15 transition-all rounded-lg border-none relative">
-                                <img src={logoSource} alt="Watermark" className="max-w-full max-h-full object-contain opacity-20" />
-                              </div>
-                              <span className="text-[8px] font-bold text-[#E1E0CC]/60 mt-2 block">Watermark (20% Op)</span>
-                            </div>
-
-                            {/* 6. Favicon / Icon Version */}
-                            <div className="bg-black border-none rounded-2xl p-3 flex flex-col justify-between items-center text-center shadow-none">
-                              <div className="w-14 h-14 flex items-center justify-center">
-                                <div className="w-7 h-7 rounded-lg bg-[#E1E0CC] border border-white/10 flex items-center justify-center p-0.5 overflow-hidden shadow-none">
-                                  <img src={logoSource} alt="Favicon" className="max-w-full max-h-full object-contain" />
-                                </div>
-                              </div>
-                              <span className="text-[8px] font-bold text-[#E1E0CC]/60 mt-2 block">Favicon / App Icon</span>
-                            </div>
-
-                            {/* 7. Wordmark / Typographic */}
-                            <div className="bg-black border-none rounded-2xl p-3 flex flex-col justify-between items-center text-center shadow-none">
-                              <div className="w-14 h-14 flex items-center justify-center">
-                                <span 
-                                  className={`text-sm text-[#E1E0CC] text-center font-bold ${getFontStyle(typography.primaryFont)}`}
-                                  style={{ fontFamily: typography.primaryFont }}
-                                >
-                                  {displayBrandName}
-                                </span>
-                              </div>
-                              <span className="text-[8px] font-bold text-[#E1E0CC]/60 mt-2 block">Wordmark / Text</span>
-                            </div>
-
-                            {/* 8. Horizontal Layout */}
-                            <div className="bg-black border-none rounded-2xl p-3 flex flex-col justify-between items-center text-center shadow-none col-span-2 sm:col-span-1">
-                              <div className="w-full h-14 flex items-center justify-center gap-1.5 px-1 bg-[#1C1C1C] border border-[#E1E0CC]/5 hover:border-[#E1E0CC]/15 transition-all rounded-lg border-none">
-                                <img src={logoSource} alt="Icon" className="w-4 h-4 object-contain" style={{ filter: "grayscale(1) contrast(1000%)" }} />
-                                <span 
-                                  className="text-[8px] font-bold text-[#E1E0CC] uppercase truncate max-w-[50px]"
-                                  style={{ fontFamily: typography.primaryFont }}
-                                >
-                                  {displayBrandName}
-                                </span>
-                              </div>
-                              <span className="text-[8px] font-bold text-[#E1E0CC]/60 mt-2 block">Horizontal Layout</span>
-                            </div>
-
-                            {/* 9. Stacked / Vertical Layout */}
-                            <div className="bg-black border-none rounded-2xl p-3 flex flex-col justify-between items-center text-center shadow-none">
-                              <div className="w-14 h-14 flex flex-col items-center justify-center gap-0.5 bg-[#1C1C1C] border border-[#E1E0CC]/5 hover:border-[#E1E0CC]/15 transition-all rounded-lg border-none">
-                                <img src={logoSource} alt="Icon" className="w-4 h-4 object-contain" style={{ filter: "grayscale(1) contrast(1000%)" }} />
-                                <span 
-                                  className="text-[7px] font-bold text-[#E1E0CC] max-w-[45px] truncate text-center uppercase"
-                                  style={{ fontFamily: typography.primaryFont }}
-                                >
-                                  {displayBrandName}
-                                </span>
-                              </div>
-                              <span className="text-[8px] font-bold text-[#E1E0CC]/60 mt-2 block">Vertical Stacked</span>
-                            </div>
-
-                            {/* 10. Vintage Style */}
-                            <div className="bg-[#FAF6EE] border border-[#EBE3D5] rounded-2xl p-3 flex flex-col justify-between items-center text-center shadow-none">
-                              <div className="w-14 h-14 flex items-center justify-center p-1 bg-[#FAF6EE] rounded-lg">
-                                <img src={logoSource} alt="Vintage" className="max-w-full max-h-full object-contain" style={{ filter: "sepia(0.8) contrast(1.2)" }} />
-                              </div>
-                              <span className="text-[8px] font-bold text-[#E1E0CC] mt-2 block">Vintage / Retro</span>
-                            </div>
-
-                            {/* 11. Minimalist Style */}
-                            <div className="bg-black border-none rounded-2xl p-3 flex flex-col justify-between items-center text-center shadow-none">
-                              <div className="w-14 h-14 flex items-center justify-center p-1 bg-[#1C1C1C] border border-[#E1E0CC]/5 hover:border-[#E1E0CC]/15 transition-all rounded-lg border-none">
-                                <img src={logoSource} alt="Minimalist" className="max-w-full max-h-full object-contain" style={{ filter: "contrast(1.5) brightness(1.05)" }} />
-                              </div>
-                              <span className="text-[8px] font-bold text-[#E1E0CC]/60 mt-2 block">Minimalist</span>
-                            </div>
-
-                            {/* 12. Emblem / Badge Layout */}
-                            <div className="bg-black border-none rounded-2xl p-3 flex flex-col justify-between items-center text-center shadow-none">
-                              <div className="w-14 h-14 flex items-center justify-center">
-                                <div className="w-9 h-9 rounded-full border-2 border-dashed border-[#E1E0CC]/10 flex items-center justify-center p-1 overflow-hidden">
-                                  <img src={logoSource} alt="Emblem" className="max-w-full max-h-full object-contain" />
-                                </div>
-                              </div>
-                              <span className="text-[8px] font-bold text-[#E1E0CC]/60 mt-2 block">Emblem Badge</span>
-                            </div>
-
-                          </div>
-                        </div>
-                      );
-                    })()
-                  ) || null}
 
                   {/* If generated via AI Logo Studio, show colors & typographies specifications */}
                   {assets.logo_studio_data?.colors && (
-                    <div className="border-t border-[#E1E0CC]/10 pt-4 grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm text-[#E1E0CC]/70 font-light leading-relaxed font-medium uppercase tracking-[0.2em] font-bold text-[#E1E0CC] font-sans tracking-normal">
+                    <div className="border-t border-white/5 pt-5 grid grid-cols-2 sm:grid-cols-4 gap-4 text-[13px] font-medium tracking-wider uppercase">
                       <div>
-                        <span className="text-xs text-gray-400 block font-normal">PRIMARY HEX</span>
-                        <div className="flex items-center gap-1.5 font-bold text-[#E1E0CC]">
-                          <span className="w-3 h-3 rounded border-none" style={{ backgroundColor: assets.logo_studio_data.colors.primaryHex }} />
+                        <span className="text-[11px] text-gray-500 block mb-1">PRIMARY HEX</span>
+                        <div className="flex items-center gap-2 font-bold text-[#E1E0CC]">
+                          <span className="w-3 h-3 rounded-sm border border-white/10" style={{ backgroundColor: assets.logo_studio_data.colors.primaryHex }} />
                           {assets.logo_studio_data.colors.primaryHex}
                         </div>
                       </div>
                       <div>
-                        <span className="text-xs text-gray-400 block font-normal">SECONDARY HEX</span>
-                        <div className="flex items-center gap-1.5 font-bold text-[#E1E0CC]">
-                          <span className="w-3 h-3 rounded border-none" style={{ backgroundColor: assets.logo_studio_data.colors.secondaryHex }} />
+                        <span className="text-[11px] text-gray-500 block mb-1">SECONDARY HEX</span>
+                        <div className="flex items-center gap-2 font-bold text-[#E1E0CC]">
+                          <span className="w-3 h-3 rounded-sm border border-white/10" style={{ backgroundColor: assets.logo_studio_data.colors.secondaryHex }} />
                           {assets.logo_studio_data.colors.secondaryHex}
                         </div>
                       </div>
                       <div>
-                        <span className="text-xs text-gray-400 block font-normal">CMYK</span>
-                        <div className="font-bold text-[#E1E0CC]/80">{assets.logo_studio_data.colors.primaryCmyk}</div>
+                        <span className="text-[11px] text-gray-500 block mb-1">CMYK</span>
+                        <div className="font-bold text-[#E1E0CC]">{assets.logo_studio_data.colors.primaryCmyk}</div>
                       </div>
                       <div>
-                        <span className="text-xs text-gray-400 block font-normal">PANTONE APPROX</span>
-                        <div className="font-bold text-[#E1E0CC]/80">{assets.logo_studio_data.colors.pantoneApprox}</div>
+                        <span className="text-[11px] text-gray-500 block mb-1">PANTONE APPROX</span>
+                        <div className="font-bold text-[#E1E0CC]">{assets.logo_studio_data.colors.pantoneApprox}</div>
                       </div>
                     </div>
                   )}
@@ -2175,44 +2136,40 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                         return (
                           <div 
                             key={item.id || idx} 
-                            className="bg-[#1C1C1C] bg-gradient-to-br from-[#1C1C1C] to-black border border-[#E1E0CC]/5 hover:border-[#E1E0CC]/15 transition-all shadow-[0_0_30px_rgba(225,224,204,0.02)]/80 rounded-2xl p-6 shadow-[0_4px_20px_rgb(0,0,0,0.01)] hover:border-[#E1E0CC]/20 transition-all space-y-4"
+                            className="bg-[#0A0A0A] border border-white/5 hover:border-white/10 rounded-2xl p-6 shadow-sm transition-all space-y-5 group"
                           >
                             {/* Card Top Header */}
-                            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#E1E0CC]/10 pb-3">
-                              <div className="flex items-center gap-2">
-                                <span className="px-2.5 py-1 bg-[#E1E0CC] text-[#101010] font-sans tracking-normal text-sm font-bold rounded-md">
+                            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/5 pb-4">
+                              <div className="flex items-center gap-3">
+                                <span className="px-3 py-1 bg-white/5 text-[#E1E0CC] text-[11px] font-bold uppercase tracking-wider rounded-md border border-white/10">
                                   {item.date || `DAY ${idx + 1}`}
                                 </span>
-                                <span className="text-sm font-sans tracking-normal text-gray-400 font-semibold flex items-center gap-1">
-                                  <Clock className="w-3 h-3 text-gray-400" />
-                                  09:30 AM EST (Optimal Peak Window)
+                                <span className="text-[12px] text-gray-500 font-medium flex items-center gap-1.5">
+                                  <Clock className="w-3.5 h-3.5" />
+                                  09:30 AM EST (Optimal Peak)
                                 </span>
                               </div>
 
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-3">
                                 {/* Format Badge */}
-                                <span className={`text-xs font-sans tracking-normal font-bold uppercase tracking-[0.2em] font-bold text-[#E1E0CC] px-2.5 py-1 rounded-md border ${
-                                  isCarousel 
-                                    ? "bg-[#E1E0CC]/10 text-[#E1E0CC] border-[#E1E0CC]/20" 
-                                    : "bg-[#E1E0CC]/10 text-[#E1E0CC] border-[#E1E0CC]/20"
-                                }`}>
-                                  {isCarousel ? "Carousel Deck (5 Slides)" : "Static Post Graphic (1:1)"}
+                                <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 px-3 py-1 rounded-md border border-white/5 bg-black">
+                                  {isCarousel ? "Carousel Deck (5 Slides)" : "Static Post (1:1)"}
                                 </span>
 
                                 {/* Status Badge */}
-                                <span className={`text-xs font-sans tracking-normal font-bold uppercase tracking-[0.2em] font-bold text-[#E1E0CC] px-2.5 py-1 rounded-md border flex items-center gap-1 ${
+                                <span className={`text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-md border flex items-center gap-1.5 ${
                                   item.status === "completed" 
-                                    ? "bg-[#E1E0CC]/10 text-[#E1E0CC] border-[#E1E0CC]/20" 
-                                    : "bg-[#E1E0CC]/10 text-[#E1E0CC] border-[#E1E0CC]/20"
+                                    ? "bg-brand-primary/10 text-brand-primary border-brand-primary/20" 
+                                    : "bg-white/5 text-gray-400 border-white/10"
                                 }`}>
                                   {item.status === "completed" ? (
                                     <>
-                                      <Check className="w-3 h-3 text-[#E1E0CC]" />
+                                      <Check className="w-3 h-3" />
                                       <span>Generated</span>
                                     </>
                                   ) : (
                                     <>
-                                      <Clock className="w-3 h-3 text-[#E1E0CC]" />
+                                      <Clock className="w-3 h-3" />
                                       <span>Scheduled</span>
                                     </>
                                   )}
@@ -2221,28 +2178,28 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                             </div>
 
                             {/* Content Body */}
-                            <div className="space-y-3">
-                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                                <h4 className="text-sm font-bold text-[#E1E0CC] leading-snug">
+                            <div className="space-y-4">
+                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                <h4 className="text-[15px] font-semibold text-[#E1E0CC] leading-snug">
                                   {item.title}
                                 </h4>
-                                <span className="text-sm font-sans tracking-normal font-bold text-gray-300 bg-[#E1E0CC]/10 px-2.5 py-1 rounded-md border-none w-fit shrink-0 flex items-center gap-1">
-                                  <Target className="w-3 h-3 text-[#E1E0CC]/60" />
-                                  {item.goal || item.category || 'Thought Leadership & Lead Gen'}
+                                <span className="text-[11px] font-bold text-gray-400 bg-white/5 px-3 py-1 rounded-md border border-white/5 w-fit shrink-0 flex items-center gap-1.5 uppercase tracking-wider">
+                                  <Target className="w-3.5 h-3.5 text-gray-500" />
+                                  {item.goal || item.category || 'Thought Leadership'}
                                 </span>
                               </div>
 
                               {/* Detailed Concept Brief Box */}
-                              <div className="bg-black border-none rounded-2xl p-4 space-y-2">
+                              <div className="bg-black/50 border border-white/5 rounded-xl p-5 space-y-3">
                                 <div className="flex items-center justify-between">
-                                  <span className="text-xs font-sans tracking-normal font-bold uppercase tracking-[0.2em] font-bold text-[#E1E0CC] text-gray-400">
+                                  <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-500">
                                     Visual Concept & Execution Prompt
                                   </span>
-                                  <span className="text-xs font-sans tracking-normal text-gray-400">
-                                    Brand Vibe: {dna?.brand_personality || "Luxury Minimalist"}
+                                  <span className="text-[11px] text-gray-600 font-medium tracking-wide uppercase">
+                                    Vibe: {dna?.brand_personality || "Minimalist"}
                                   </span>
                                 </div>
-                                <p className="text-xs text-gray-300 leading-relaxed font-normal">
+                                <p className="text-[13px] text-gray-300 leading-relaxed">
                                   {item.concept_brief || item.description || item.title}
                                 </p>
                               </div>
@@ -2259,12 +2216,12 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                             </div>
 
                             {/* Card Footer Actions */}
-                            <div className="border-t border-[#E1E0CC]/10 pt-4 flex flex-wrap items-center justify-between gap-3">
-                              <div className="flex items-center gap-2">
+                            <div className="border-t border-white/5 pt-5 flex flex-wrap items-center justify-between gap-4 mt-2">
+                              <div className="flex items-center gap-3">
                                 {/* Redirection Button */}
                                 <button
                                   onClick={() => handleRedirectToStudio(item)}
-                                  className="px-4 py-2 bg-[#1C1C1C] border border-[#E1E0CC]/5 hover:border-[#E1E0CC]/15 transition-all hover:bg-brand-darkHover text-white font-bold text-xs uppercase tracking-[0.2em] font-bold text-[#E1E0CC] rounded-2xl transition-all shadow-none flex items-center gap-2 cursor-pointer"
+                                  className="px-5 py-2 bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 text-[#E1E0CC] text-[11px] font-bold uppercase tracking-wider rounded-xl transition-all flex items-center gap-2 cursor-pointer shadow-sm"
                                 >
                                   <Sparkles className="w-3.5 h-3.5 text-brand-secondary" />
                                   <span>Generate in Studio</span>
@@ -2310,12 +2267,12 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                                         setGeneratingAssetId(null);
                                       }
                                     }}
-                                    className="px-3.5 py-2 bg-[#E1E0CC]/10 hover:bg-[#E1E0CC]/20 text-[#E1E0CC] font-bold text-xs uppercase tracking-[0.2em] font-bold text-[#E1E0CC] rounded-2xl transition-all flex items-center gap-1.5 disabled:opacity-50 cursor-pointer border-none"
+                                    className="px-5 py-2 bg-transparent hover:bg-white/5 text-gray-400 hover:text-[#E1E0CC] font-semibold text-[11px] uppercase tracking-wider rounded-xl transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer border border-transparent"
                                   >
                                     {generatingAssetId === item.id ? (
                                       <>
-                                        <Loader2 className="w-3 h-3 animate-spin text-brand-primary" />
-                                        <span>Quick Generating...</span>
+                                        <Loader2 className="w-3.5 h-3.5 animate-spin text-brand-primary" />
+                                        <span>Generating...</span>
                                       </>
                                     ) : (
                                       <span>Quick Auto-Generate</span>
@@ -2327,11 +2284,11 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                                 <button
                                   disabled={publishingInstagramId === item.id}
                                   onClick={() => handlePublishToInstagram(item)}
-                                  className="px-5 py-2 bg-primary text-black font-medium rounded-full transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 hover:bg-[#E1E0CC]"
+                                  className="px-5 py-2 bg-white text-black hover:bg-gray-200 font-bold text-[11px] uppercase tracking-wider rounded-xl transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50 shadow-sm"
                                 >
                                   {publishingInstagramId === item.id ? (
                                     <>
-                                      <Loader2 className="w-3 h-3 animate-spin" />
+                                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
                                       <span>Posting to IG...</span>
                                     </>
                                   ) : (
@@ -3413,6 +3370,12 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
             </div>
           )}
 
+          {/* GDPR Footer */}
+          <footer className="px-6 py-6 text-center border-t border-white/5 bg-transparent mt-auto">
+            <p className="text-[10px] text-gray-500 font-medium uppercase tracking-wider flex items-center justify-center gap-1">
+              Secure 256-bit encryption · GDPR & DPDP compliant
+            </p>
+          </footer>
         </main>
 
         {/* Campaign Planning Modal Overlay */}
@@ -3976,15 +3939,6 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
             </div>
           </div>
         )}
-
-      </div>
-
-      {/* GDPR Footer */}
-      <footer className="px-6 py-4 text-center border-t border-[#E1E0CC]/10 bg-[#1C1C1C] border border-[#E1E0CC]/5 hover:border-[#E1E0CC]/15 transition-all">
-        <p className="text-sm text-[#E1E0CC]/70 font-light leading-relaxed font-medium uppercase tracking-[0.2em] font-bold text-[#E1E0CC] flex items-center justify-center gap-1 font-semibold uppercase tracking-[0.2em] font-bold text-[#E1E0CC]">
-          Secure 256-bit encryption · GDPR & DPDP compliant
-        </p>
-      </footer>
 
     </div>
   );
