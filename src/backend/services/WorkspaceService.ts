@@ -58,4 +58,25 @@ export class WorkspaceService {
       throw new BaseError('Failed to create workspace', 500, 'CREATE_WORKSPACE_FAILED', error.message);
     }
   }
+
+  async deleteWorkspace(userId: string, workspaceId: string, orgId: string) {
+    // Check if user is Admin/Owner in this org
+    const role = await this.repository.getUserRoleInOrg(orgId, userId);
+    
+    if (!role || !["owner", "admin"].includes(role)) {
+      throw new ForbiddenError("Admin rights required to delete a workspace in this organization.");
+    }
+
+    try {
+      await this.repository.deleteWorkspace(workspaceId, orgId);
+      
+      // Log Activity
+      await this.repository.logActivity(orgId, userId, "workspace_deleted", { 
+        workspaceId 
+      });
+    } catch (error: any) {
+      logger.error({ err: error, userId, orgId, workspaceId }, 'Failed to delete workspace');
+      throw new BaseError('Failed to delete workspace', 500, 'DELETE_WORKSPACE_FAILED', error.message);
+    }
+  }
 }

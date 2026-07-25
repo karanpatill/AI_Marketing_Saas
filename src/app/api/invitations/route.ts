@@ -1,7 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { createAdminClient } from "@/lib/supabaseServer";
 import { withApiWrapper } from "@/backend/middlewares/apiWrapper";
-import { requireAuth, requireWorkspaceAdmin } from "@/backend/middlewares/auth";
+import { requireAuth, requireOrgAdmin } from "@/backend/middlewares/auth";
 import { InvitationService } from "@/backend/services/InvitationService";
 import { createInvitationSchema } from "@/backend/validations/invitations";
 
@@ -14,7 +14,7 @@ export const GET = withApiWrapper(async (req: NextRequest) => {
   }
 
   // Assuming only admins can view pending invites
-  await requireWorkspaceAdmin(user.id, orgId);
+  await requireOrgAdmin(user.id, orgId);
 
   const supabaseAdmin = createAdminClient();
   const invitationService = new InvitationService(supabaseAdmin);
@@ -29,7 +29,7 @@ export const POST = withApiWrapper(async (req: NextRequest) => {
   const body = await req.json();
   const validatedData = createInvitationSchema.parse(body);
 
-  await requireWorkspaceAdmin(user.id, validatedData.orgId);
+  await requireOrgAdmin(user.id, validatedData.orgId);
 
   const supabaseAdmin = createAdminClient();
   const invitationService = new InvitationService(supabaseAdmin);
@@ -48,7 +48,7 @@ export const DELETE = withApiWrapper(async (req: NextRequest) => {
     return NextResponse.json({ error: { code: 'MISSING_PARAMS', message: 'Missing orgId or inviteId parameters' } }, { status: 400 });
   }
 
-  await requireWorkspaceAdmin(user.id, orgId);
+  await requireOrgAdmin(user.id, orgId);
 
   const supabaseAdmin = createAdminClient();
   const invitationService = new InvitationService(supabaseAdmin);

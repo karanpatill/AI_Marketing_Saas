@@ -71,4 +71,14 @@ export class WorkspaceRepository {
 
     if (error) throw error;
   }
+
+  async deleteWorkspace(workspaceId: string, orgId: string) {
+    const { error } = await this.supabase
+      .from("workspaces")
+      .delete()
+      .eq("id", workspaceId)
+      .eq("org_id", orgId);
+    
+    if (error) throw error;
+  }
 }

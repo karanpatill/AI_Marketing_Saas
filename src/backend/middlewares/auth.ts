@@ -52,3 +52,23 @@ export async function requireWorkspaceAdmin(userId: string, workspaceId: string)
     throw new ForbiddenError("Admin rights required for this workspace.");
   }
 }
+
+/**
+ * Middleware function to assert that a user has admin/owner rights to an organization.
+ * Throws ForbiddenError if not an admin.
+ */
+export async function requireOrgAdmin(userId: string, orgId: string): Promise<void> {
+  const supabaseAdmin = createAdminClient();
+  
+  // Check role in the org
+  const { data: member, error: memberError } = await supabaseAdmin
+    .from('members')
+    .select('role')
+    .eq('org_id', orgId)
+    .eq('user_id', userId)
+    .single();
+
+  if (memberError || !member || !['owner', 'admin'].includes(member.role)) {
+    throw new ForbiddenError("Admin rights required for this organization.");
+  }
+}

@@ -6,7 +6,7 @@ import { Button } from '../../../components/ui/Button';
 import { Input, Textarea } from '../../../components/ui/Input';
 import { Skeleton } from '../../../components/ui/Skeleton';
 import { Badge } from '../../../components/ui/Badge';
-import { Plus, Edit2, Save, X, ArrowLeft } from 'lucide-react';
+import { Plus, Edit2, Save, X, ArrowLeft, Trash2 } from 'lucide-react';
 
 interface Brand {
   id: string;
@@ -39,6 +39,12 @@ export default function BrandHubPage() {
     setIsEditing(false);
   };
 
+  const handleDelete = (id: string) => {
+    if (confirm("Are you sure you want to delete this brand?")) {
+      setBrands(brands.filter(b => b.id !== id));
+    }
+  };
+
   if (loading) {
     return (
       <div className="p-8 max-w-6xl mx-auto space-y-6 bg-black min-h-screen text-[#E1E0CC]">
@@ -55,16 +61,7 @@ export default function BrandHubPage() {
   }
 
   return (
-    <div className="p-8 max-w-6xl mx-auto space-y-8 bg-black min-h-screen text-[#E1E0CC]">
-      
-      <a 
-        href="/dashboard"
-        className="inline-flex items-center gap-1.5 text-xs font-medium text-[#E1E0CC]/60 hover:text-[#E1E0CC] transition-colors group"
-      >
-        <ArrowLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-1" />
-        Back to Dashboard
-      </a>
-
+    <div className="space-y-8 text-[#E1E0CC] animate-fade-up">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-medium text-[#E1E0CC] tracking-tight">Brand Hub</h1>
@@ -129,10 +126,16 @@ export default function BrandHubPage() {
                   </div>
                   <p className="text-[#E1E0CC]/60 text-sm mt-1 font-light">{brand.description}</p>
                 </div>
-                <Button variant="outline" size="sm" onClick={() => { setCurrentBrand(brand); setIsEditing(true); }}>
-                  <Edit2 className="w-4 h-4 mr-2" />
-                  Edit
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm" onClick={() => { setCurrentBrand(brand); setIsEditing(true); }}>
+                    <Edit2 className="w-4 h-4 mr-2" />
+                    Edit
+                  </Button>
+                  <Button variant="outline" size="sm" className="text-red-500 hover:text-red-400 hover:bg-red-500/10 border-red-500/20" onClick={() => handleDelete(brand.id)}>
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Delete
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="bg-[#212121] p-4 rounded-xl border border-[#E1E0CC]/10">

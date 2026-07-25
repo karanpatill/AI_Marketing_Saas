@@ -31,3 +31,22 @@ export const POST = withApiWrapper(async (req: NextRequest) => {
 
   return NextResponse.json({ data: workspace }, { status: 201 });
 });
+
+export const DELETE = withApiWrapper(async (req: NextRequest) => {
+  const user = await requireAuth();
+  
+  const url = new URL(req.url);
+  const workspaceId = url.searchParams.get("workspaceId");
+  const orgId = url.searchParams.get("orgId");
+  
+  if (!workspaceId || !orgId) {
+    return NextResponse.json({ error: "workspaceId and orgId are required" }, { status: 400 });
+  }
+
+  const supabaseAdmin = createAdminClient();
+  const workspaceService = new WorkspaceService(supabaseAdmin);
+  
+  await workspaceService.deleteWorkspace(user.id, workspaceId, orgId);
+  
+  return NextResponse.json({ success: true }, { status: 200 });
+});

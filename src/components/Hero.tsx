@@ -26,16 +26,20 @@ export default function Hero() {
         <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/90 pointer-events-none" />
 
         {/* ── Hero Content Grid ── */}
-        <div className="absolute bottom-0 left-0 right-0 p-6 md:p-10 grid grid-cols-12 gap-4 items-end z-10">
-          
-          {/* Main Heading Column (8 cols) */}
-          <div className="col-span-12 md:col-span-8">
-            <WordsPullUp 
-              text="Automarc" 
-              showAsterisk={true}
-              className="text-[14vw] sm:text-[12vw] md:text-[10vw] lg:text-[9vw] xl:text-[8vw] 2xl:text-[7.5vw] font-medium leading-[0.85] tracking-[-0.07em] text-[#E1E0CC] uppercase"
-            />
-          </div>
+        <div className="absolute bottom-0 left-0 right-0 px-4 md:px-10 z-10 pb-6 md:pb-10">
+          <div className="grid grid-cols-12 gap-6 md:gap-12 items-end w-full max-w-[1800px] mx-auto">
+            
+            {/* Main Heading Column (8 cols) */}
+            <div className="col-span-12 md:col-span-8 flex items-end justify-start">
+              <motion.img
+                initial={{ opacity: 0, scale: 0.95, y: 30 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                src="/text_logo_nobg.png"
+                alt="Automarc"
+                className="w-full max-w-[1200px] xl:max-w-[1600px] h-auto object-contain drop-shadow-2xl origin-bottom-left"
+              />
+            </div>
 
           {/* Description + CTA Column (4 cols) */}
           <div className="col-span-12 md:col-span-4 flex flex-col gap-4 pb-2">
@@ -74,6 +78,7 @@ export default function Hero() {
               </a>
             </motion.div>
           </div>
+        </div>
         </div>
 
       </div>

@@ -2686,7 +2686,7 @@ export default function OnboardingPage() {
                     const isApproved = (data.approvedMoodboard as any)?.id === inspectingMoodboard.id;
                     const logoGraphic = (data.selectedLogo as any)?.imageUrl || data.logoUrl;
                     return (
-                      <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md">
+                      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md">
                         <div 
                           className="w-full max-w-6xl rounded-3xl overflow-hidden border border-slate-200/80 shadow-2xl transition-all relative bg-white/95 backdrop-blur-lg text-slate-800"
                         >
@@ -2705,7 +2705,6 @@ export default function OnboardingPage() {
                                 <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded bg-slate-100 text-slate-800">
                                   Brand Board Direction
                                 </span>
-                                <span className="text-[10px] text-slate-400">Preset ID: {inspectingMoodboard.id}</span>
                               </div>
                               <h2 className="text-xl font-extrabold mt-1 text-slate-900">{inspectingMoodboard.name}</h2>
                               <p className="text-xs text-slate-500 font-medium">{inspectingMoodboard.tagline}</p>
@@ -2741,7 +2740,7 @@ export default function OnboardingPage() {
                           </div>
 
                           {/* ── BRAND BOARD CANVAS GRID ── */}
-                          <div className="p-5 md:p-7 grid grid-cols-1 md:grid-cols-12 gap-5 max-h-[72vh] overflow-y-auto">
+                          <div className="p-5 md:p-7 grid grid-cols-1 md:grid-cols-12 gap-5 max-h-[72vh] overflow-y-auto overscroll-contain">
 
                             {/* ── ROW 1 ── */}
 

@@ -43,7 +43,7 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  if (pathname?.startsWith("/dashboard") || pathname?.startsWith("/onboarding")) {
+  if (pathname?.startsWith("/onboarding")) {
     return null;
   }
 
