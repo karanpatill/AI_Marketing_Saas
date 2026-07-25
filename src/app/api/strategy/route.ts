@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { generateMarketingStrategy, getMarketingCalendar } from "@/lib/marketingStrategy";
 
+// Allow up to 60 seconds for the LLM to generate the 30-day strategy
+export const maxDuration = 60;
+
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);

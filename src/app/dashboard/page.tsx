@@ -17,6 +17,8 @@ import {
 import Footer from "@/components/Footer";
 import ExportZipButton from "@/components/ExportZipButton";
 import WordsPullUp from "@/components/ui/WordsPullUp";
+import { CalendarView } from "@/components/CalendarView";
+import { format } from "date-fns";
 import { toJpeg } from "html-to-image";
 import { saveAs } from "file-saver";
 import JSZip from "jszip";
@@ -182,6 +184,8 @@ export default function DashboardPage() {
   // Dynamic Lists for Strategy, Calendar & Mix
   const [campaigns, setCampaigns] = useState<any[]>([]);
   const [calendar, setCalendar] = useState<any[]>([]);
+  const [selectedCalendarDate, setSelectedCalendarDate] = useState<Date | null>(new Date());
+  const [isGeneratingCalendar, setIsGeneratingCalendar] = useState(false);
   const [contentMix, setContentMix] = useState<any[]>([]);
   
   // Modal & Generation States
@@ -341,6 +345,30 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
       if (mixRes.ok) setContentMix(await mixRes.json());
     } catch (err) {
       console.error("Failed to reload strategy details", err);
+    }
+  };
+
+  const handleGenerateStrategy = async () => {
+    if (!dna?.id) return;
+    setIsGeneratingCalendar(true);
+    try {
+      const res = await fetch("/api/strategy", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ brandDnaId: dna.id })
+      });
+      if (res.ok) {
+        setToast({ message: "30-day strategy generated successfully!", type: "success" });
+        await reloadDynamicData(dna.id);
+      } else {
+        const errData = await res.json();
+        setToast({ message: errData.error || "Failed to generate strategy.", type: "error" });
+      }
+    } catch (err: any) {
+      console.error(err);
+      setToast({ message: err.message || "Failed to generate strategy.", type: "error" });
+    } finally {
+      setIsGeneratingCalendar(false);
     }
   };
 
@@ -2155,18 +2183,54 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                 {/* Content Cards Grid */}
                 <div className="space-y-4">
                   {calendar.length === 0 ? (
-                    <div className="bg-[#1c1e21] bg-gradient-to-br from-[#1C1C1C] to-black border border-[#E1E0CC]/5 hover:border-[#E1E0CC]/15 transition-all shadow-[0_0_30px_rgba(225,224,204,0.02)]/80 rounded-2xl p-12 text-center space-y-3">
-                      <Loader2 className="w-6 h-6 text-[#828282] animate-spin mx-auto" />
-                      <p className="text-[#828282] italic text-xs font-sans tracking-normal">Compiling 30-day strategy timeline...</p>
+                    <div className="bg-[#1c1e21] bg-gradient-to-br from-[#1C1C1C] to-black border border-[#E1E0CC]/5 hover:border-[#E1E0CC]/15 transition-all shadow-[0_0_30px_rgba(225,224,204,0.02)]/80 rounded-2xl p-12 text-center space-y-4">
+                      {isGeneratingCalendar ? (
+                        <>
+                          <Loader2 className="w-6 h-6 text-[#828282] animate-spin mx-auto" />
+                          <p className="text-[#828282] italic text-xs font-sans tracking-normal">Compiling 30-day strategy timeline...</p>
+                        </>
+                      ) : (
+                        <>
+                          <p className="text-[#828282] text-sm">No calendar generated yet.</p>
+                          <button
+                            onClick={handleGenerateStrategy}
+                            className="px-6 py-2.5 bg-brand-primary text-black hover:bg-[#c9c5a9] transition-all rounded-xl text-xs font-bold uppercase tracking-[0.2em] shadow-lg shadow-brand-primary/20 mx-auto"
+                          >
+                            Generate 30-Day Strategy
+                          </button>
+                        </>
+                      )}
                     </div>
                   ) : (
-                    calendar
-                      .filter((item) => {
-                        if (calendarFilterType === "carousel") return item.post_type === "carousel";
-                        if (calendarFilterType === "static") return item.post_type !== "carousel";
-                        return true;
-                      })
-                      .map((item, idx) => {
+                    <>
+                      <div className="mb-8">
+                        <CalendarView 
+                          items={calendar} 
+                          selectedDate={selectedCalendarDate} 
+                          onSelectDate={setSelectedCalendarDate} 
+                        />
+                      </div>
+                      
+                      {selectedCalendarDate && (
+                        <h3 className="text-[#E1E0CC] font-serif-italic text-lg border-b border-[#828282]/20 pb-2 mb-4">
+                          Detailed Plan for {format(selectedCalendarDate, "MMMM do, yyyy")}
+                        </h3>
+                      )}
+                      
+                      {calendar
+                        .filter((item) => {
+                          // Type filter
+                          if (calendarFilterType === "carousel" && item.post_type !== "carousel") return false;
+                          if (calendarFilterType === "static" && item.post_type === "carousel") return false;
+                          
+                          // Date filter
+                          if (selectedCalendarDate && item.date !== format(selectedCalendarDate, "yyyy-MM-dd")) {
+                            return false;
+                          }
+                          
+                          return true;
+                        })
+                        .map((item, idx) => {
                         const isCarousel = item.post_type === "carousel";
                         return (
                           <div 
@@ -2366,7 +2430,8 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
 
                           </div>
                         );
-                      })
+                      })}
+                    </>
                   )}
                 </div>
 

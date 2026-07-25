@@ -877,7 +877,7 @@ export default function OnboardingPage() {
         logo_studio_data: {
           ...(data.kitType === "generate" ? (data.selectedLogo || {}) : {}),
           colors: {
-            ...(data.kitType === "generate" && data.selectedLogo?.colors ? data.selectedLogo.colors : {}),
+            ...(data.kitType === "generate" && (data.selectedLogo as any)?.colors ? (data.selectedLogo as any).colors : {}),
             primaryHex: data.primaryColor || "#0D0D0D",
             secondaryHex: data.accentColor || "#DEDBC8",
           }
