@@ -81,12 +81,22 @@ export class GenerationManager {
         }
 
       } else {
-        await this.updateJobStatus(jobId, 'failed', { error: result.error || 'Unknown execution error' });
+        let friendlyError = result.error || 'Unknown execution error';
+        if (typeof friendlyError === 'string' && (friendlyError.includes('429 Too Many Requests') || friendlyError.includes('Quota exceeded') || friendlyError.includes('quota'))) {
+          friendlyError = 'Our AI generation system is currently experiencing exceptionally high demand and has temporarily reached its safety limits. Please wait a moment and try generating your strategy again.';
+        }
+        await this.updateJobStatus(jobId, 'failed', { error: friendlyError });
       }
 
     } catch (err: any) {
       logger.error({ jobId, error: err.message }, 'Job execution failed');
-      await this.updateJobStatus(jobId, 'failed', { error: err.message });
+      
+      let friendlyError = err.message || 'An unknown error occurred during generation.';
+      if (friendlyError.includes('429 Too Many Requests') || friendlyError.includes('Quota exceeded') || friendlyError.includes('quota')) {
+        friendlyError = 'Our AI generation system is currently experiencing exceptionally high demand and has temporarily reached its safety limits. Please wait a moment and try generating your strategy again.';
+      }
+
+      await this.updateJobStatus(jobId, 'failed', { error: friendlyError });
     }
   }
 

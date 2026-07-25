@@ -310,15 +310,15 @@ export function getStyleProfile(vibe: string) {
     };
   } else if (v === "swiss style" || v === "swiss") {
     return {
-      fontName: "Helvetica Neue",
-      headingClass: "font-sans font-black tracking-tighter",
-      bodyClass: "font-sans font-normal",
-      headingDesc: "Strict, ultra-clean neo-grotesque sans-serif. Headings should be large, tight, and highly legible.",
-      bodyDesc: "Neutral, legible sans-serif. Extremely crisp and objective.",
-      borderClass: "border border-black/15 rounded-none",
-      cardClass: "bg-transparent border border-black/10 rounded-none",
-      bgStyle: "solid",
-      layoutStyle: "Classic Swiss graphic design. Strict grid systems, asymmetrical layouts, flush-left/ragged-right text, and highly objective mathematical spacing."
+      fontName: "Inter, Helvetica Neue",
+      headingClass: "font-sans font-black tracking-tighter drop-shadow-2xl",
+      bodyClass: "font-sans font-medium opacity-90",
+      headingDesc: "Hyper-modern, visually striking Swiss typography. Headings must be massive, highly impressive, with dramatic scale and tight tracking.",
+      bodyDesc: "Crisp, legible, extremely objective typography with a premium, sleek feel.",
+      borderClass: "border border-current opacity-20 rounded-[2rem]",
+      cardClass: "backdrop-blur-3xl bg-current/5 border border-current/10 rounded-[2rem] shadow-2xl overflow-hidden relative",
+      bgStyle: "radial-gradient",
+      layoutStyle: "Visually stunning Modern Swiss design. Use extreme minimalism augmented by highly impressive HTML/CSS (glassmorphism cards, massive overlapping typography watermarks in the background with opacity-5, subtle glowing radial gradients, strong asymmetrical grids, striking geometric accents like thick lines or abstract shapes). It MUST look like a breathtaking, expensive, premium digital aesthetic."
     };
   } else if (v === "blueprint") {
     return {

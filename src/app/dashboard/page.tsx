@@ -2046,7 +2046,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                     {/* Auto-Pilot Toggle Button */}
                     <button
                       onClick={() => setIsAutopilotActive(!isAutopilotActive)}
-                      className={`px-5 py-2.5 rounded-2xl text-xs font-bold uppercase tracking-[0.2em] font-bold text-[#ffffff] transition-all flex items-center gap-2 shrink-0 ${
+                      className={`px-5 py-2.5 rounded-2xl text-xs font-bold uppercase tracking-[0.2em] font-bold text-[#101010] transition-all flex items-center gap-2 shrink-0 ${
                         isAutopilotActive 
                           ? "bg-[#E1E0CC] text-[#101010] hover:bg-[#1c1e21] border border-[#E1E0CC]/5 hover:border-[#E1E0CC]/15 transition-all hover:text-[#ffffff] border border-transparent hover:border-[#E1E0CC]/50" 
                           : "bg-[#E1E0CC] text-[#101010] hover:bg-white"
@@ -2107,7 +2107,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                   {/* Engine Rules & Schedule */}
                   <div className="bg-gray-850 border-none rounded-2xl p-4 grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
                     <div className="flex items-center gap-3">
-                      <div className="p-2 bg-[#E1E0CC]/90 rounded-lg text-[#ffffff]">
+                      <div className="p-2 bg-[#E1E0CC]/90 rounded-lg text-[#101010]">
                         <Calendar className="w-4 h-4" />
                       </div>
                       <div>
@@ -2117,7 +2117,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                     </div>
 
                     <div className="flex items-center gap-3">
-                      <div className="p-2 bg-[#E1E0CC]/90 rounded-lg text-[#ffffff]">
+                      <div className="p-2 bg-[#E1E0CC]/90 rounded-lg text-[#101010]">
                         <Globe className="w-4 h-4" />
                       </div>
                       <div>
@@ -2127,7 +2127,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                     </div>
 
                     <div className="flex items-center gap-3">
-                      <div className="p-2 bg-[#E1E0CC]/90 rounded-lg text-[#ffffff]">
+                      <div className="p-2 bg-[#E1E0CC]/90 rounded-lg text-[#101010]">
                         <ShieldCheck className="w-4 h-4" />
                       </div>
                       <div>
@@ -2379,24 +2379,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                                   </button>
                                 )}
 
-                                {/* INSTAGRAM AUTO-POST BUTTON */}
-                                <button
-                                  disabled={publishingInstagramId === item.id}
-                                  onClick={() => handlePublishToInstagram(item)}
-                                  className="px-5 py-2 bg-white text-black hover:bg-gray-200 font-bold text-[11px] uppercase tracking-wider rounded-xl transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50 shadow-sm"
-                                >
-                                  {publishingInstagramId === item.id ? (
-                                    <>
-                                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                      <span>Posting to IG...</span>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Share2 className="w-3.5 h-3.5" />
-                                      <span>Auto-Post to IG</span>
-                                    </>
-                                  )}
-                                </button>
+
 
                                 {publishedPostLink && publishedPostLink.id === item.id && (
                                   <a

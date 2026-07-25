@@ -1,6 +1,7 @@
 import { IGenerationModule, GenerationContext, GenerationResult } from '../interfaces/IGenerationModule';
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { getContrastColor, getStyleProfile, blendColors, getBgStyleForSlide, resolveInitialImage, determineDesignLanguage } from '../utils/styleProfiles';
+import { determineDesignLanguage, getStyleProfile, getContrastColor, resolveInitialImage } from '../utils/styleProfiles';
+import { getTemplateForLanguage, TemplateOptions } from '../utils/htmlTemplates';
 
 export class CarouselGenerator implements IGenerationModule {
   jobType = 'generate_carousel';
@@ -154,51 +155,36 @@ Return the result STRICTLY as a JSON object with the following structure. DO NOT
     const headlineFontStyle = primaryFontName ? `font-family: '${primaryFontName}', serif, sans-serif;` : '';
     const bodyFontStyle = bodyFontName ? `font-family: '${bodyFontName}', sans-serif;` : '';
 
-    const textPrimaryClass = isLightBg ? "text-black" : "text-white";
-    const textSecondaryClass = isLightBg ? "text-black/80" : "text-white/80";
-    const textMutedClass = isLightBg ? "text-black/60" : "text-white/60";
-    const backgroundCssStyle = `background-color: ${secondaryColor};`;
+    const bgImgRes = await resolveInitialImage(assignedLanguage, context.inputParams);
+    const bgImageUrl = bgImgRes?.url || "";
 
     const finalSlides = parsedSlides.map((s: any, idx: number) => {
       const slideNum = (idx + 1).toString().padStart(2, '0');
       const totalSlides = parsedSlides.length.toString().padStart(2, '0');
 
-      const html = `
-${fontImportCss ? `<style>${fontImportCss}</style>` : ''}
-<div class="relative w-full h-full p-8 md:p-10 flex flex-col justify-between overflow-hidden select-none" style="${backgroundCssStyle} color: ${textColor}; aspect-ratio: ${aspectRatio.replace(':', '/')};">
-  
-  <div class="relative z-20 flex justify-between items-center w-full gap-3">
-    <div class="flex items-center gap-2.5">
-      ${logoUrl ? `<img src="${logoUrl}" alt="${brandName}" class="h-6 w-auto max-h-7 object-contain max-w-[110px]" />` : ''}
-      <span class="text-[9px] uppercase font-black tracking-widest px-2.5 py-1 rounded-full border bg-white/10 backdrop-blur-md border-white/20 ${textPrimaryClass}">
-        ${s.category || 'INSIGHT'}
-      </span>
-    </div>
-    <span class="text-[10px] font-mono font-bold tracking-widest ${textMutedClass}">
-      ${slideNum} / ${totalSlides}
-    </span>
-  </div>
+      const options: TemplateOptions = {
+        brandName,
+        website: website || "@" + brandName.toLowerCase(),
+        logoUrl,
+        primaryColor,
+        secondaryColor,
+        textColor,
+        isLightBg,
+        fontImportCss,
+        headlineFontStyle,
+        bodyFontStyle,
+        category: s.category || 'INSIGHT',
+        title: s.title || '',
+        content: s.content || '',
+        aspectRatio,
+        slideNum,
+        totalSlides,
+        bgImageUrl
+      };
 
-  <div class="relative z-20 flex flex-col gap-3.5 w-full max-w-[92%] my-auto py-2">
-    <div class="w-8 h-1 rounded-full mb-1 shrink-0" style="background-color: ${primaryColor};"></div>
-    <h2 class="${profile.headingClass} text-xl md:text-2xl font-extrabold tracking-tight leading-snug" style="${headlineFontStyle}">
-      ${s.title || ''}
-    </h2>
-    ${s.content ? `
-      <p class="${profile.bodyClass} text-xs md:text-sm ${textSecondaryClass} leading-relaxed opacity-90 font-normal" style="${bodyFontStyle}">
-        ${s.content}
-      </p>
-    ` : ''}
-  </div>
+      const html = getTemplateForLanguage(assignedLanguage, options);
 
-  <div class="relative z-20 flex justify-between items-center w-full pt-3 border-t border-white/10">
-    <span class="text-[10px] uppercase font-black tracking-[0.2em] ${textPrimaryClass}">${brandName.toUpperCase()}</span>
-    <span class="text-[9px] uppercase font-bold tracking-widest ${textMutedClass}">SWIPE FOR MORE →</span>
-  </div>
-
-</div>`.trim();
-
-      return { type: s.type || 'content', html };
+      return { type: s.type || 'content', html: html.trim() };
     });
     
     return {
