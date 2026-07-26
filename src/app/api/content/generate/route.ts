@@ -92,13 +92,15 @@ export const POST = withApiWrapper(async (req: NextRequest) => {
 
   // Token Check and Deduction
   let finalOrgId = orgId;
-  if (!finalOrgId && resolvedWorkspaceId) {
+  if (resolvedWorkspaceId && resolvedWorkspaceId !== "00000000-0000-0000-0000-000000000000") {
     const { data: ws } = await supabaseAdmin
       .from('workspaces')
       .select('org_id')
       .eq('id', resolvedWorkspaceId)
       .maybeSingle();
-    if (ws) finalOrgId = ws.org_id;
+    if (ws && ws.org_id) {
+      finalOrgId = ws.org_id;
+    }
   }
 
   if (finalOrgId) {

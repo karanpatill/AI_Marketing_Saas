@@ -26,10 +26,14 @@ export default function BillingPage() {
           const { organizations } = await wsRes.json();
           if (organizations && organizations.length > 0) {
             setOrgId(organizations[0].id || organizations[0].orgId);
+            return; // Exit early, fetchBilling will handle setLoading(false)
           }
         }
+        // If we reach here, we didn't set orgId, so we should stop loading
+        setLoading(false);
       } catch (error) {
         console.error("Failed to load orgs", error);
+        setLoading(false);
       }
     }
     loadData();
