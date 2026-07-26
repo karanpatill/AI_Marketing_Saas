@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
+import Link from "next/link";
 import WordsPullUpMultiStyle from "./ui/WordsPullUpMultiStyle";
 
 export default function Hero() {
@@ -37,7 +38,7 @@ export default function Hero() {
                   { text: "YOUR BUSINESS,", className: "font-serif-italic text-primary" },
                   { text: "SIMPLIFIED.", className: "font-normal text-[#E1E0CC]" }
                 ]}
-                className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-[90px] leading-[0.9] font-bold tracking-tight uppercase justify-start text-left drop-shadow-2xl"
+                className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-[60px] leading-[1.05] font-bold tracking-tight uppercase justify-start text-left drop-shadow-2xl"
               />
             </div>
 
@@ -59,23 +60,23 @@ export default function Hero() {
               className="flex flex-wrap items-center gap-3"
             >
               {/* Primary CTA Button */}
-              <a
+              <Link
                 href="/auth"
-                className="flex items-center gap-2 bg-primary text-black font-medium rounded-full pl-4 pr-1 py-1 text-sm sm:text-base group hover:gap-3 transition-all"
+                className="flex items-center gap-2 bg-primary text-black font-medium rounded-full pl-4 pr-1 py-1 text-sm sm:text-base group hover:gap-3 transition-all shadow-[0_0_20px_rgba(222,219,200,0.3)] hover:shadow-[0_0_30px_rgba(222,219,200,0.5)]"
               >
                 <span>GET STARTED</span>
                 <div className="bg-black text-primary rounded-full w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center transition-transform group-hover:scale-110">
                   <ArrowRight className="w-4 h-4" />
                 </div>
-              </a>
+              </Link>
 
               {/* Secondary Ghost Button */}
-              <a
-                href="/how-it-works"
-                className="border border-[#E1E0CC]/30 text-[#E1E0CC] rounded-full px-5 py-2 text-sm sm:text-base hover:border-[#E1E0CC]/60 transition-colors"
+              <Link
+                href="/dashboard/billing"
+                className="bg-black/40 hover:bg-black/60 text-[#E1E0CC] border border-[#E1E0CC]/30 rounded-full px-6 py-2 text-sm sm:text-base hover:border-[#E1E0CC]/60 transition-all font-medium backdrop-blur-md shadow-lg"
               >
-                How It Works
-              </a>
+                View Pricing
+              </Link>
             </motion.div>
           </div>
         </div>

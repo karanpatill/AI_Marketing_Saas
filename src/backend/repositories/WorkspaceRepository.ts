@@ -23,7 +23,8 @@ export class WorkspaceRepository {
     const { data, error } = await this.supabase
       .from("workspaces")
       .select("*")
-      .in("org_id", orgIds);
+      .in("org_id", orgIds)
+      .order("created_at", { ascending: false });
 
     if (error) throw error;
     return data || [];

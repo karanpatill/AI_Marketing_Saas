@@ -8,8 +8,8 @@ export const metadata = {
 
 export default function PrivacyPolicy() {
   return (
-    <main className="relative bg-black min-h-screen text-[#E1E0CC] flex flex-col justify-between">
-      <div className="flex-1 w-full max-w-5xl mx-auto px-5 sm:px-8 lg:px-16 pt-32 pb-20">
+    <main className="relative bg-black min-h-screen text-[#E1E0CC]">
+      <div className="flex-1 w-full max-w-5xl mx-auto px-5 sm:px-8 lg:px-16 pt-24 pb-20">
         <a 
           href="/" 
           className="inline-flex items-center gap-2 text-xs font-medium text-[#E1E0CC]/60 hover:text-[#E1E0CC] transition-colors mb-6 group"

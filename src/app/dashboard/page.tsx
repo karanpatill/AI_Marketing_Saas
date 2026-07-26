@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   Sparkles, Zap, BarChart3, Calendar,
   Brain, Target, Layers, Share2, Briefcase,
@@ -14,7 +15,7 @@ import {
   X, Check, Lock, ChevronDown, RefreshCw, Globe, Clock, Paintbrush, Save
 } from "lucide-react";
 
-import Footer from "@/components/Footer";
+
 import ExportZipButton from "@/components/ExportZipButton";
 import WordsPullUp from "@/components/ui/WordsPullUp";
 import { CalendarView } from "@/components/CalendarView";
@@ -22,7 +23,7 @@ import { format } from "date-fns";
 import { toJpeg } from "html-to-image";
 import { saveAs } from "file-saver";
 import JSZip from "jszip";
-
+import TokenCounter from "@/components/TokenCounter";
 // --- Types ---
 type BrandDna = {
   id: string;
@@ -111,6 +112,7 @@ export default function DashboardPage() {
   const [assets, setAssets] = useState<BrandAssets | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"control" | "dna" | "campaigns" | "mix" | "studio" | "carousel" | "video" | "settings">("control");
+  const [billingStatus, setBillingStatus] = useState<any>(null);
   const [showBrandEditor, setShowBrandEditor] = useState(false);
   const [isSavingColors, setIsSavingColors] = useState(false);
 
@@ -692,6 +694,12 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
         setPendingInvitations(inviteData);
       }
 
+      const billingRes = await fetch(`/api/billing?orgId=${orgId}`);
+      if (billingRes.ok) {
+        const billingData = await billingRes.json();
+        setBillingStatus(billingData.billingStatus);
+      }
+
       // Skip fetching activity_logs for now to prevent 500 errors if table is missing
       // const { data: logs } = await supabase
       //   .from("activity_logs")
@@ -940,6 +948,10 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
     }
   };
 
+  const planId = billingStatus?.subscription?.status === "active" ? billingStatus?.subscription?.plan_id : "free";
+  const hasCarouselAccess = planId === "pro" || planId === "automate";
+  const hasAutomateAccess = planId === "automate";
+
   if (loading) {
     return (
       <div className="min-h-screen bg-black flex flex-col items-center justify-center text-[#ffffff]">
@@ -1103,12 +1115,12 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
   ];
 
   return (
-    <div className="min-h-screen w-full bg-black text-[#ffffff] flex flex-col relative pt-24 md:pt-28 pb-12">
+    <div className="h-screen w-full bg-black text-[#ffffff] flex flex-col relative pt-24 md:pt-28 overflow-hidden">
       {/* Noise Texture Background */}
       <div className="fixed inset-0 bg-noise opacity-[0.04] pointer-events-none z-0 mix-blend-overlay" />
       
       {/* Main Content Area */}
-      <main className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 flex flex-col gap-6">
+      <main className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 flex flex-col gap-6 overflow-y-auto min-h-0 pb-12">
 
         {/* Unified Sub-Navigation Header */}
         <div className="flex flex-col gap-4">
@@ -1143,6 +1155,18 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
 
             {/* Notification Bell + Profile + Settings */}
             <div className="flex items-center gap-4">
+              
+              {/* Token Counter */}
+              {activeOrg?.id && <TokenCounter orgId={activeOrg.id} />}
+
+              {/* Upgrade Button */}
+              <Link 
+                href="/dashboard/billing"
+                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-[#DEDBC8] text-black hover:bg-white transition-all rounded-lg text-xs font-bold uppercase tracking-wider"
+              >
+                Upgrade
+              </Link>
+
               {/* Notifications */}
               <div className="relative">
                 <button
@@ -1331,7 +1355,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
 
           {/* Tab 1: Mission Control (Visual Style Tile Moodboard) */}
           {activeTab === "control" && (
-            <div className="bg-[#1c1e21] border border-[#828282]/20 rounded-2xl p-6 md:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.12)] relative overflow-hidden space-y-6">
+            <div className="bg-[#1c1e21] border border-[#828282]/20 rounded-2xl p-6 md:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.12)] relative space-y-6">
               
               {/* Top Header Section */}
               <div className="border-b border-[#828282]/20 pb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -2015,7 +2039,29 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
 
           {/* Tab 3: Content Planner & Automation Engine */}
           {activeTab === "campaigns" && (
-            <div className="space-y-8 animate-fade-up">
+            <div className="relative animate-fade-up">
+              {!hasAutomateAccess && (
+                <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/40 backdrop-blur-md rounded-3xl">
+                  <div className="text-center space-y-4 p-8">
+                    <div className="w-16 h-16 rounded-full bg-[#E1E0CC]/10 flex items-center justify-center text-[#E1E0CC] mx-auto mb-4">
+                      <Lock className="w-8 h-8" />
+                    </div>
+                    <h2 className="text-2xl font-bold tracking-tight text-[#ffffff]">Campaigns & Calendar</h2>
+                    <p className="text-sm text-[#828282] max-w-md mx-auto">
+                      Unlock the autonomous engine to plan, generate, design, and auto-post 30 days of brand strategy directly to your target channels.
+                    </p>
+                    <Link
+                      href="/dashboard/billing"
+                      className="inline-flex mt-4 bg-[#DEDBC8] text-black font-medium py-3 px-6 rounded-full hover:bg-[#E1E0CC] transition-colors items-center gap-2"
+                    >
+                      <Zap className="w-4 h-4" />
+                      Upgrade to Automate
+                    </Link>
+                  </div>
+                </div>
+              )}
+
+              <div className={`space-y-8 ${!hasAutomateAccess ? "opacity-50 pointer-events-none select-none filter blur-[4px]" : ""}`}>
               
               {/* MAIN USP HERO: AUTOMATE YOUR BRAND */}
               <div className="relative overflow-hidden rounded-2xl bg-[#1c1e21] border border-[#E1E0CC]/5 hover:border-[#E1E0CC]/15 transition-all p-6 sm:p-8 shadow-none text-[#ffffff]">
@@ -2419,7 +2465,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                 </div>
 
               </div>
-
+            </div>
             </div>
           )}
 
@@ -2576,16 +2622,33 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                         </div>
 
                         {/* Image body */}
-                        <div id="social-post-image" className={`w-full overflow-hidden bg-black flex items-center justify-center relative
-                          ${postAspectRatio === '9:16' ? 'aspect-[9/16]' : postAspectRatio === '16:9' ? 'aspect-[16/9]' : 'aspect-square'}
-                        `}>
+                        <div 
+                          className="w-full relative overflow-hidden bg-black flex items-center justify-center"
+                          style={{
+                            containerType: 'inline-size',
+                            aspectRatio: postAspectRatio === '9:16' ? '9/16' : postAspectRatio === '16:9' ? '16/9' : '1/1'
+                          }}
+                        >
                           <style dangerouslySetInnerHTML={{ __html: `
                             @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Syne:wght@400;750;800&family=Bricolage+Grotesque:wght@300;500;800&family=Space+Grotesk:wght@400;700&family=Outfit:wght@300;400;600;800&family=Plus+Jakarta+Sans:wght@300;400;600;800&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Montserrat:wght@300;400;700&family=Cinzel:wght@400;700;900&family=Inter:wght@300;400;600;700&display=swap');
                           `}} />
-                          <div
-                            dangerouslySetInnerHTML={{ __html: generatedPostImage }}
-                            className="w-full h-full [&>div]:w-full [&>div]:h-full"
-                          />
+                          <div 
+                            style={{
+                              width: '1080px',
+                              height: postAspectRatio === '9:16' ? '1920px' : postAspectRatio === '16:9' ? '607.5px' : '1080px',
+                              transform: 'scale(calc(100cqw / 1080))',
+                              transformOrigin: 'top left',
+                              position: 'absolute',
+                              top: 0,
+                              left: 0
+                            }}
+                          >
+                            <div
+                              id="social-post-image"
+                              dangerouslySetInnerHTML={{ __html: generatedPostImage }}
+                              className="w-full h-full [&>div]:w-full [&>div]:h-full bg-black relative overflow-hidden"
+                            />
+                          </div>
                         </div>
 
                         {/* Footer action buttons */}
@@ -2609,7 +2672,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                                 const node = document.getElementById('social-post-image');
                                 if (node) {
                                   const { toJpeg } = await import('html-to-image');
-                                  const dataUrl = await toJpeg(node, { quality: 0.95 });
+                                  const dataUrl = await toJpeg(node, { quality: 1, pixelRatio: 1 });
                                   const link = document.createElement('a');
                                   link.download = 'post-export.jpeg';
                                   link.href = dataUrl;
@@ -2648,7 +2711,29 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
 
           {/* Tab 6: Carousel Generator Studio */}
           {activeTab === "carousel" && (
-            <div className="space-y-6 animate-fade-up">
+            <div className="relative animate-fade-up">
+              {!hasCarouselAccess && (
+                <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/40 backdrop-blur-md rounded-3xl">
+                  <div className="text-center space-y-4 p-8">
+                    <div className="w-16 h-16 rounded-full bg-[#E1E0CC]/10 flex items-center justify-center text-[#E1E0CC] mx-auto mb-4">
+                      <Lock className="w-8 h-8" />
+                    </div>
+                    <h2 className="text-2xl font-bold tracking-tight text-[#ffffff]">Carousel Studio</h2>
+                    <p className="text-sm text-[#828282] max-w-md mx-auto">
+                      Generate beautiful, high-converting carousel posts tailored to your brand DNA in a single click.
+                    </p>
+                    <Link
+                      href="/dashboard/billing"
+                      className="inline-flex mt-4 bg-[#DEDBC8] text-black font-medium py-3 px-6 rounded-full hover:bg-[#E1E0CC] transition-colors items-center gap-2"
+                    >
+                      <Zap className="w-4 h-4" />
+                      Upgrade to Pro
+                    </Link>
+                  </div>
+                </div>
+              )}
+
+              <div className={`space-y-6 ${!hasCarouselAccess ? "opacity-50 pointer-events-none select-none filter blur-[4px]" : ""}`}>
               {/* Header */}
               <div className="bg-[#1c1e21] bg-gradient-to-br from-[#1C1C1C] to-black border border-[#E1E0CC]/5 hover:border-[#E1E0CC]/15 transition-all shadow-[0_0_30px_rgba(225,224,204,0.02)]/80 rounded-2xl p-5 shadow-[0_4px_20px_rgb(0,0,0,0.01)] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
@@ -2756,7 +2841,10 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                         </div>
 
                         {/* Live slide viewport */}
-                        <div className="relative aspect-[4/5] w-full bg-black overflow-hidden flex items-center justify-center">
+                        <div 
+                          className="relative w-full bg-black overflow-hidden flex items-center justify-center"
+                          style={{ containerType: 'inline-size', aspectRatio: '4/5' }}
+                        >
                           <style dangerouslySetInnerHTML={{ __html: `
                             @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Syne:wght@400;750;800&family=Bricolage+Grotesque:wght@300;500;800&family=Space+Grotesk:wght@400;700&family=Outfit:wght@300;400;600;800&family=Plus+Jakarta+Sans:wght@300;400;600;800&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Montserrat:wght@300;400;700&family=Cinzel:wght@400;700;900&family=Inter:wght@300;400;600;700&display=swap');
                             
@@ -2767,49 +2855,60 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                               font-family: '${assets?.logo_studio_data?.typography?.bodyFont || "inherit"}', sans-serif !important;
                             }
                           `}} />
-                          {(() => {
-                            const slide = carouselSlides[activeSlide];
-                            const activeColors = assets?.logo_studio_data?.colors || {
-                              primaryHex: "#0D0D0D",
-                              secondaryHex: "#DEDBC8"
-                            };
-                            if (!slide?.html) {
+                          
+                          <div style={{
+                            width: '1080px',
+                            height: '1350px',
+                            transform: 'scale(calc(100cqw / 1080))',
+                            transformOrigin: 'top left',
+                            position: 'absolute',
+                            top: 0,
+                            left: 0
+                          }}>
+                            {(() => {
+                              const slide = carouselSlides[activeSlide];
+                              const activeColors = assets?.logo_studio_data?.colors || {
+                                primaryHex: "#0D0D0D",
+                                secondaryHex: "#DEDBC8"
+                              };
+                              if (!slide?.html) {
+                                return (
+                                  <div id="social-carousel-image" className="relative h-full w-full flex flex-col justify-between p-16 z-10 select-none overflow-hidden bg-black">
+                                    <div 
+                                      className="absolute inset-0 transition-all duration-700 ease-out z-0"
+                                      style={{
+                                        backgroundImage: `url(${generatedCarouselImage})`,
+                                        backgroundSize: "cover",
+                                        backgroundPosition: "center",
+                                        transform: `scale(${slide?.backgroundConfig?.scale || 1.15}) rotate(${slide?.backgroundConfig?.rotation || 0}deg)`,
+                                        filter: `brightness(${slide?.backgroundConfig?.brightness || 0.65}) contrast(${slide?.backgroundConfig?.contrast || 1.1}) saturate(${slide?.backgroundConfig?.saturation || 0.9})`,
+                                      }}
+                                    />
+                                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_30%,rgba(0,0,0,0.85)_100%)] z-0 pointer-events-none" />
+
+                                    <div className="relative flex items-center justify-between w-full z-10">
+                                      <span className="text-3xl font-bold text-[#ffffff]/95 uppercase">{dna?.brand_name || "Aethera"}</span>
+                                      <span className="text-3xl font-sans tracking-normal font-bold text-[#ffffff]/60">0{activeSlide + 1}</span>
+                                    </div>
+
+                                    <div className="relative space-y-8 my-auto max-w-[90%] z-10">
+                                      <h2 className="text-5xl md:text-6xl font-extrabold text-[#ffffff] leading-tight">{slide?.title}</h2>
+                                      <p className="text-2xl text-[#ffffff]/80 leading-relaxed font-medium">{slide?.description}</p>
+                                    </div>
+                                  </div>
+                                );
+                              }
+                              
                               return (
-                                <div className="relative h-full w-full flex flex-col justify-between p-6 z-10 select-none">
-                                  <div 
-                                    className="absolute inset-0 transition-all duration-700 ease-out z-0"
-                                    style={{
-                                      backgroundImage: `url(${generatedCarouselImage})`,
-                                      backgroundSize: "cover",
-                                      backgroundPosition: "center",
-                                      transform: `scale(${slide?.backgroundConfig?.scale || 1.15}) rotate(${slide?.backgroundConfig?.rotation || 0}deg)`,
-                                      filter: `brightness(${slide?.backgroundConfig?.brightness || 0.65}) contrast(${slide?.backgroundConfig?.contrast || 1.1}) saturate(${slide?.backgroundConfig?.saturation || 0.9})`,
-                                    }}
-                                  />
-                                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_30%,rgba(0,0,0,0.85)_100%)] z-0 pointer-events-none" />
-
-                                  <div className="relative flex items-center justify-between w-full z-10">
-                                    <span className="text-sm font-bold text-[#ffffff]/95 uppercase">{dna?.brand_name || "Aethera"}</span>
-                                    <span className="text-sm font-sans tracking-normal font-bold text-[#ffffff]/60">0{activeSlide + 1}</span>
-                                  </div>
-
-                                  <div className="relative space-y-3.5 my-auto max-w-[90%] z-10">
-                                    <h2 className="text-lg md:text-xl font-extrabold text-[#ffffff] leading-tight">{slide?.title}</h2>
-                                    <p className="text-xs text-[#ffffff]/80 leading-relaxed font-medium">{slide?.description}</p>
-                                  </div>
-                                </div>
+                                <div id="social-carousel-image"
+                                  className="w-full h-full [&>div]:h-full [&>div]:w-full select-none overflow-hidden bg-black relative"
+                                  dangerouslySetInnerHTML={{
+                                    __html: injectBgIntoHtml(slide.html, generatedCarouselImage, 0.08, undefined, undefined, activeColors.secondaryHex, activeColors.primaryHex)
+                                  }}
+                                />
                               );
-                            }
-                            
-                            return (
-                              <div 
-                                className="w-full h-full [&>div]:h-full [&>div]:w-full select-none"
-                                dangerouslySetInnerHTML={{
-                                  __html: injectBgIntoHtml(slide.html, generatedCarouselImage, 0.08, undefined, undefined, activeColors.secondaryHex, activeColors.primaryHex)
-                                }}
-                              />
-                            );
-                          })()}
+                            })()}
+                          </div>
                         </div>
 
                         {/* Footer action bar & slide dots */}
@@ -2854,22 +2953,111 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                       </div>
 
                       {/* Clean Export Footer (Removed HTML generated tag) */}
-                      <div className="bg-black/40 border-none rounded-2xl p-3.5 flex items-center justify-between">
+                      <div className="bg-black/40 border-none rounded-2xl p-3.5 flex flex-col sm:flex-row gap-4 sm:items-center justify-between">
                         <div className="space-y-0.5">
                           <span className="text-sm font-bold text-[#ffffff] block">Slide {activeSlide + 1} of {carouselSlides.length}</span>
                           <span className="text-sm text-[#ffffff]/70 font-light leading-relaxed block">High-resolution vector HTML layer with brand color palette</span>
                         </div>
-                        <button
-                          onClick={() => {
-                            const slideHtml = carouselSlides[activeSlide]?.html || "";
-                            const blob = new Blob([slideHtml], { type: 'text/html' });
-                            const url = URL.createObjectURL(blob);
-                            window.open(url, '_blank');
-                          }}
-                          className="text-xs font-bold bg-[#1c1e21] border border-[#E1E0CC]/5 hover:border-[#E1E0CC]/15 transition-all text-[#ffffff] px-3 py-1.5 rounded-lg hover:bg-[#1c1e21] border border-[#E1E0CC]/5 hover:border-[#E1E0CC]/15 transition-all/80 transition-all uppercase tracking-[0.2em] font-bold text-[#ffffff] cursor-pointer"
-                        >
-                          Export JPEG
-                        </button>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <button
+                            onClick={async () => {
+                              try {
+                                const node = document.getElementById('social-carousel-image');
+                                if (node) {
+                                  const { toJpeg } = await import('html-to-image');
+                                  const dataUrl = await toJpeg(node, { quality: 1, pixelRatio: 1 });
+                                  const link = document.createElement('a');
+                                  link.download = `carousel-slide-${activeSlide + 1}.jpeg`;
+                                  link.href = dataUrl;
+                                  link.click();
+                                }
+                              } catch (err) {
+                                console.error('Failed to export carousel image', err);
+                                alert('Failed to export image');
+                              }
+                            }}
+                            className="text-xs font-bold bg-[#1c1e21] border border-[#E1E0CC]/5 hover:border-[#E1E0CC]/15 transition-all text-[#ffffff] px-3 py-1.5 rounded-lg hover:bg-[#1c1e21] transition-all/80 uppercase tracking-[0.2em] cursor-pointer"
+                          >
+                            Export Slide (JPEG)
+                          </button>
+                          
+                          <button
+                            onClick={async () => {
+                              try {
+                                const { toJpeg } = await import('html-to-image');
+                                const JSZip = (await import('jszip')).default;
+                                const zip = new JSZip();
+                                
+                                for (let i = 0; i < carouselSlides.length; i++) {
+                                  const node = document.getElementById(`carousel-export-slide-${i}`);
+                                  if (node) {
+                                    const dataUrl = await toJpeg(node, { quality: 1, pixelRatio: 1 });
+                                    const base64Data = dataUrl.split(',')[1];
+                                    zip.file(`carousel-slide-${i + 1}.jpeg`, base64Data, { base64: true });
+                                  }
+                                }
+                                
+                                const content = await zip.generateAsync({ type: 'blob' });
+                                const link = document.createElement('a');
+                                link.href = URL.createObjectURL(content);
+                                link.download = 'carousel-export.zip';
+                                link.click();
+                              } catch (err) {
+                                console.error('Failed to export carousel ZIP', err);
+                                alert('Failed to export carousel ZIP');
+                              }
+                            }}
+                            className="text-xs font-bold bg-[#E1E0CC] text-[#101010] px-3 py-1.5 rounded-lg hover:bg-[#DEDBC8] transition-all uppercase tracking-[0.2em] cursor-pointer"
+                          >
+                            Export All (ZIP)
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Hidden render target for full ZIP export */}
+                      <div style={{ position: 'absolute', top: '-9999px', left: '-9999px', opacity: 0, pointerEvents: 'none', zIndex: -1 }}>
+                        {carouselSlides.map((slide, idx) => {
+                          const activeColors = assets?.logo_studio_data?.colors || {
+                            primaryHex: "#0D0D0D",
+                            secondaryHex: "#DEDBC8"
+                          };
+                          return (
+                            <div key={idx} style={{ width: '1080px', height: '1350px' }}>
+                              {!slide?.html ? (
+                                <div id={`carousel-export-slide-${idx}`} className="relative h-full w-full flex flex-col justify-between p-16 z-10 select-none overflow-hidden bg-black">
+                                  <div 
+                                    className="absolute inset-0 transition-all duration-700 ease-out z-0"
+                                    style={{
+                                      backgroundImage: `url(${generatedCarouselImage})`,
+                                      backgroundSize: "cover",
+                                      backgroundPosition: "center",
+                                      transform: `scale(${slide?.backgroundConfig?.scale || 1.15}) rotate(${slide?.backgroundConfig?.rotation || 0}deg)`,
+                                      filter: `brightness(${slide?.backgroundConfig?.brightness || 0.65}) contrast(${slide?.backgroundConfig?.contrast || 1.1}) saturate(${slide?.backgroundConfig?.saturation || 0.9})`,
+                                    }}
+                                  />
+                                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_30%,rgba(0,0,0,0.85)_100%)] z-0 pointer-events-none" />
+
+                                  <div className="relative flex items-center justify-between w-full z-10">
+                                    <span className="text-3xl font-bold text-[#ffffff]/95 uppercase">{dna?.brand_name || "Aethera"}</span>
+                                    <span className="text-3xl font-sans tracking-normal font-bold text-[#ffffff]/60">0{idx + 1}</span>
+                                  </div>
+
+                                  <div className="relative space-y-8 my-auto max-w-[90%] z-10">
+                                    <h2 className="text-5xl md:text-6xl font-extrabold text-[#ffffff] leading-tight">{slide?.title}</h2>
+                                    <p className="text-2xl text-[#ffffff]/80 leading-relaxed font-medium">{slide?.description}</p>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div id={`carousel-export-slide-${idx}`}
+                                  className="w-full h-full [&>div]:h-full [&>div]:w-full select-none overflow-hidden bg-black relative"
+                                  dangerouslySetInnerHTML={{
+                                    __html: injectBgIntoHtml(slide.html, generatedCarouselImage, 0.08, undefined, undefined, activeColors.secondaryHex, activeColors.primaryHex)
+                                  }}
+                                />
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
 
                     </div>
@@ -2889,6 +3077,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
 
                 </div>
               </div>
+            </div>
             </div>
           )}
 
@@ -3124,6 +3313,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                   
                   {/* profile tab */}
                   {settingsTab === "profile" && (
+                    <>
                     <form onSubmit={handleSaveProfile} className="space-y-6">
                       <div>
                         <h4 className="text-sm font-bold text-[#ffffff] mb-1">Profile Details</h4>
@@ -3191,6 +3381,64 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                         </button>
                       </div>
                     </form>
+                    
+                    <div className="mt-8 pt-8 border-t border-[#828282]/20 space-y-6">
+                      <div>
+                        <h4 className="text-sm font-bold text-[#ffffff] mb-1">Subscription Plan</h4>
+                        <p className="text-[11px] text-[#828282]">Manage your subscription and features access.</p>
+                      </div>
+                      
+                      <div className="bg-[#1c1e21] bg-gradient-to-br from-[#1C1C1C] to-black border border-[#E1E0CC]/10 rounded-2xl p-5 shadow-[0_0_30px_rgba(225,224,204,0.02)]">
+                        <div className="flex justify-between items-center mb-4">
+                          <div className="space-y-1">
+                            <span className="text-xs font-bold uppercase tracking-[0.2em] text-[#E1E0CC]">Current Plan</span>
+                            <h5 className="text-xl font-bold text-[#ffffff] capitalize">{billingStatus?.subscription?.plan_id || "Free"} Plan</h5>
+                          </div>
+                          {planId === "free" && (
+                            <Link
+                              href="/dashboard/billing"
+                              className="px-4 py-2 bg-[#DEDBC8] text-black hover:bg-white text-xs font-bold rounded-xl flex items-center gap-1.5 transition-all"
+                            >
+                              <Zap className="w-3.5 h-3.5" />
+                              Upgrade Now
+                            </Link>
+                          )}
+                        </div>
+                        
+                        <div className="border-t border-[#828282]/20 pt-4 mt-4 space-y-3">
+                          <h6 className="text-xs font-bold text-[#ffffff]/80 uppercase tracking-[0.2em]">Features Available</h6>
+                          <ul className="space-y-2">
+                            <li className="flex items-center gap-2 text-sm text-[#828282]">
+                              <Check className="w-4 h-4 text-[#E1E0CC]" /> Static Post Generator
+                            </li>
+                            <li className="flex items-center gap-2 text-sm text-[#828282]">
+                              <Check className="w-4 h-4 text-[#E1E0CC]" /> Brand DNA Builder
+                            </li>
+                            
+                            {hasAutomateAccess ? (
+                              <li className="flex items-center gap-2 text-sm text-[#828282]">
+                                <Check className="w-4 h-4 text-[#E1E0CC]" /> Campaign Automation
+                              </li>
+                            ) : (
+                              <li className="flex items-center gap-2 text-sm text-[#828282]/50">
+                                <Lock className="w-4 h-4" /> Campaign Automation
+                              </li>
+                            )}
+
+                            {hasCarouselAccess ? (
+                              <li className="flex items-center gap-2 text-sm text-[#828282]">
+                                <Check className="w-4 h-4 text-[#E1E0CC]" /> Carousel Studio
+                              </li>
+                            ) : (
+                              <li className="flex items-center gap-2 text-sm text-[#828282]/50">
+                                <Lock className="w-4 h-4" /> Carousel Studio
+                              </li>
+                            )}
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                    </>
                   )}
 
 
@@ -3386,7 +3634,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
 
         </main>
 
-        <Footer />
+
 
         {/* Campaign Planning Modal Overlay */}
         {isCampaignModalOpen && (

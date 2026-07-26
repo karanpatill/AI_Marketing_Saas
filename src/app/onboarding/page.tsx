@@ -1450,7 +1450,7 @@ export default function OnboardingPage() {
                             type="button"
                             onClick={() => updateData({ primaryColor: p.primary, accentColor: p.accent })}
                             className={`p-2.5 rounded-2xl border text-left transition-all flex flex-col justify-between gap-2 cursor-pointer
-                              ${isSelected ? "border-[#0A0A0A] bg-gray-900 text-white shadow-sm" : "border-[#E1E0CC]/15 hover:border-[#E1E0CC]/20 bg-[#0a0a0a] text-white"}`}
+                              ${isSelected ? "border-[#0A0A0A] bg-[#1C1C1C] text-white shadow-sm" : "border-[#E1E0CC]/15 hover:border-[#E1E0CC]/20 bg-[#0a0a0a] text-white"}`}
                           >
                             <div className="flex items-center gap-1.5">
                               <div className="w-4 h-4 rounded-full border border-black/20 shadow-xs" style={{ backgroundColor: p.primary }} />
@@ -1753,7 +1753,7 @@ export default function OnboardingPage() {
                             }`}
                         >
                           <div>
-                            <p className="text-xs font-bold text-gray-950">{plat.label}</p>
+                            <p className="text-xs font-bold text-white">{plat.label}</p>
                             <p className="text-[10px] text-[#E1E0CC]/40 mt-0.5">{plat.desc}</p>
                           </div>
                           <div className={`w-4 h-4 rounded-md border flex items-center justify-center transition-all
@@ -1918,7 +1918,7 @@ export default function OnboardingPage() {
                               </div>
 
                               {/* 3. Solid White Inverted */}
-                              <div className="bg-gray-950 border border-gray-800 rounded-2xl p-3 flex flex-col justify-between items-center text-center shadow-sm">
+                              <div className="bg-[#0A0A0A] border border-[#828282]/20 rounded-2xl p-3 flex flex-col justify-between items-center text-center shadow-sm">
                                 <div className="w-12 h-12 flex items-center justify-center p-1 bg-black rounded-lg">
                                   <img src={data.selectedLogo.imageUrl} alt="Solid White" className="max-w-full max-h-full object-contain" style={{ filter: "grayscale(1) contrast(1000%) invert(1)" }} />
                                 </div>
@@ -1944,7 +1944,7 @@ export default function OnboardingPage() {
                               {/* 6. Favicon / Icon */}
                               <div className="bg-[#0a0a0a] border border-gray-150 rounded-2xl p-3 flex flex-col justify-between items-center text-center shadow-sm">
                                 <div className="w-12 h-12 flex items-center justify-center">
-                                  <div className="w-7 h-7 rounded-lg bg-gray-900 border border-white/10 flex items-center justify-center p-0.5 overflow-hidden shadow-sm">
+                                  <div className="w-7 h-7 rounded-lg bg-[#0A0A0A] border border-white/10 flex items-center justify-center p-0.5 overflow-hidden shadow-sm">
                                     <img src={data.selectedLogo.imageUrl} alt="Favicon" className="max-w-full max-h-full object-contain" />
                                   </div>
                                 </div>
@@ -2024,7 +2024,7 @@ export default function OnboardingPage() {
                             <div className="pt-4 flex justify-end">
                               <button
                                 onClick={() => setStep(6)}
-                                className="px-6 py-2.5 bg-[#090D16] text-white hover:bg-gray-800 font-bold text-xs uppercase tracking-wider rounded-2xl transition-all flex items-center gap-2 shadow-lg shadow-black/10"
+                                className="px-6 py-2.5 bg-[#0A0A0A] text-white hover:bg-[#1C1C1C] font-bold text-xs uppercase tracking-wider rounded-2xl transition-all flex items-center gap-2 shadow-lg shadow-black/10"
                               >
                                 Continue to Social Media Visual Direction <ArrowRight className="w-4 h-4" />
                               </button>
@@ -2039,7 +2039,7 @@ export default function OnboardingPage() {
                     <div className="space-y-5">
                       {/* Generation Actions / Prompt Trigger */}
                       {logoOptions.length === 0 && !isGeneratingLogos && (
-                        <div className="bg-gradient-to-br from-gray-950 to-gray-900 border border-gray-800 rounded-2xl p-7 text-center space-y-4">
+                        <div className="bg-gradient-to-br from-[#0A0A0A] to-[#1C1C1C] border border-[#828282]/20 rounded-2xl p-7 text-center space-y-4">
                           <div className="w-14 h-14 rounded-2xl bg-[#0A0A0A]/10 border border-[#0A0A0A]/20 flex items-center justify-center mx-auto">
                             <Palette className="w-7 h-7 text-[#0A0A0A]" />
                           </div>
@@ -2051,7 +2051,7 @@ export default function OnboardingPage() {
                           </div>
                           <button
                             onClick={handleGenerateLogos}
-                            className="px-6 py-2.5 bg-[#0A0A0A] hover:bg-[#0A0A0A]/90 text-[#090D16] font-bold text-xs uppercase tracking-wider rounded-2xl transition-all flex items-center gap-2 mx-auto shadow-lg shadow-[#0A0A0A]/20"
+                            className="px-6 py-2.5 bg-[#0A0A0A] hover:bg-[#0A0A0A]/90 text-white font-bold text-xs uppercase tracking-wider rounded-2xl transition-all flex items-center gap-2 mx-auto shadow-lg shadow-[#0A0A0A]/20"
                           >
                             <Sparkles className="w-4 h-4" />
                             Generate Custom Logo
@@ -2062,14 +2062,14 @@ export default function OnboardingPage() {
                       {/* Loading skeleton */}
                       {isGeneratingLogos && (
                         <div className="space-y-5">
-                          <div className="bg-gray-950 border border-gray-800 rounded-2xl p-6 text-center space-y-2">
-                            <Loader2 className="w-8 h-8 text-[#0A0A0A] animate-spin mx-auto" />
+                          <div className="bg-[#0A0A0A] border border-[#828282]/20 rounded-2xl p-6 text-center space-y-2">
+                            <Loader2 className="w-8 h-8 text-white animate-spin mx-auto" />
                             <h4 className="text-sm font-bold text-white">Generating 6 Brand Logos in Parallel...</h4>
                             <p className="text-xs text-[#E1E0CC]/60">Calling fal.ai Flux Dev API. Please wait up to 10 seconds.</p>
                           </div>
                           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                             {Array.from({ length: 6 }).map((_, i) => (
-                              <div key={i} className="aspect-square bg-gray-900/50 border border-gray-800 rounded-2xl animate-pulse flex items-center justify-center">
+                              <div key={i} className="aspect-square bg-[#0A0A0A]/50 border border-[#828282]/20 rounded-2xl animate-pulse flex items-center justify-center">
                                 <Loader2 className="w-5 h-5 text-[#E1E0CC]/80 animate-spin" />
                               </div>
                             ))}
@@ -2086,7 +2086,7 @@ export default function OnboardingPage() {
                             <p className="text-[#E1E0CC] mt-1">{formatFetchError(logoError)}</p>
                             <button
                               onClick={handleGenerateLogos}
-                              className="mt-2 text-[#0A0A0A] hover:underline font-bold"
+                              className="mt-2 text-white hover:underline font-bold"
                             >
                               Try Again
                             </button>
@@ -2104,7 +2104,7 @@ export default function OnboardingPage() {
                             </div>
                             <button
                               onClick={handleGenerateLogos}
-                              className="text-[10px] text-[#E1E0CC]/60 hover:text-[#E1E0CC] font-bold flex items-center gap-1 border border-[#E1E0CC]/15 px-3 py-1.5 rounded-lg transition-all"
+                              className="text-[10px] text-[#E1E0CC]/60 hover:text-white font-bold flex items-center gap-1 border border-[#E1E0CC]/15 px-3 py-1.5 rounded-lg transition-all"
                             >
                               <Sparkles className="w-3 h-3" /> Regenerate
                             </button>
@@ -2114,10 +2114,10 @@ export default function OnboardingPage() {
                             {logoOptions.map((opt) => (
                               <div
                                 key={opt.id}
-                                className="bg-[#101010] border border-[#E1E0CC]/10 rounded-2xl p-5 shadow-sm space-y-4"
+                                className="bg-[#101010] border border-[#828282]/20 rounded-2xl p-5 shadow-sm space-y-4"
                               >
                                 {/* Logo Symbol Mark — inline SVG, no text */}
-                                <div className="bg-gradient-to-br from-[#1C1C1C] to-black border border-[#E1E0CC]/5 shadow-[0_0_30px_rgba(225,224,204,0.02)]/80 rounded-2xl aspect-square w-full flex items-center justify-center p-6 overflow-hidden shadow-inner">
+                                <div className="bg-[#0A0A0A] border border-[#828282]/20 rounded-2xl aspect-square w-full flex items-center justify-center p-2 overflow-hidden shadow-inner">
                                   {opt.svgContent ? (
                                     <div
                                       className="w-full h-full flex items-center justify-center [&>svg]:max-w-full [&>svg]:max-h-full [&>svg]:w-full [&>svg]:h-full"
@@ -2127,7 +2127,7 @@ export default function OnboardingPage() {
                                     <img
                                       src={opt.imageUrl}
                                       alt={opt.name}
-                                      className="max-h-[85%] max-w-[85%] object-contain rounded-lg"
+                                      className="w-full h-full object-cover rounded-xl"
                                     />
                                   ) : opt.error ? (
                                     <div className="text-center p-2 text-[10px] text-[#E1E0CC] bg-[#E1E0CC]/10 rounded w-full">
@@ -2159,7 +2159,7 @@ export default function OnboardingPage() {
                                       }
                                     }}
                                     disabled={!opt.svgContent && !opt.imageUrl}
-                                    className="px-5 py-2.5 bg-[#0A0A0A] hover:bg-[#0A0A0A]/90 text-[#090D16] font-bold text-xs uppercase tracking-wider rounded-2xl transition-all shadow-sm shadow-[#0A0A0A]/10 flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
+                                    className="px-5 py-2.5 bg-[#0A0A0A] hover:bg-[#1C1C1C] text-white font-bold text-xs uppercase tracking-wider rounded-2xl transition-all shadow-sm shadow-[#0A0A0A]/10 flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
                                   >
                                     <CheckCircle2 className="w-3.5 h-3.5" /> Approve Logo
                                   </button>
@@ -2346,7 +2346,7 @@ export default function OnboardingPage() {
                         </div>
                         <div className="flex flex-wrap gap-2 pt-1">
                           {data.brandVideos.map((vid, i) => (
-                            <div key={i} className="relative w-12 h-12 rounded-lg border border-[#E1E0CC]/15 overflow-hidden bg-gray-900 flex items-center justify-center group shrink-0">
+                            <div key={i} className="relative w-12 h-12 rounded-lg border border-[#E1E0CC]/15 overflow-hidden bg-[#0A0A0A] flex items-center justify-center group shrink-0">
                               <Video className="w-5 h-5 text-white/50" />
                               <button
                                 onClick={() => removeUploadedFile("brandVideos", i)}
@@ -2483,7 +2483,7 @@ export default function OnboardingPage() {
                   </div>
 
                   {/* ── PREMIUM APPROVED MOODBOARD DISPLAY ── */}
-                  <div className="relative overflow-hidden rounded-2xl border border-[#C9A84C]/30 shadow-2xl shadow-black/20 bg-gray-950">
+                  <div className="relative overflow-hidden rounded-2xl border border-[#C9A84C]/30 shadow-2xl shadow-black/20 bg-[#0A0A0A]">
                     {data.approvedMoodboard.imageUrl ? (
                       <>
                         {/* Thin gold top bar */}
@@ -2533,7 +2533,7 @@ export default function OnboardingPage() {
                 <div className="space-y-5">
                   {/* Action Trigger button */}
                   {moodOptions.length === 0 && !isGeneratingMoods && (
-                    <div className="bg-gradient-to-br from-gray-950 to-gray-900 border border-gray-800 rounded-2xl p-7 text-center space-y-4">
+                    <div className="bg-gradient-to-br from-[#0A0A0A] to-[#1C1C1C] border border-[#828282]/20 rounded-2xl p-7 text-center space-y-4">
                       <div className="w-14 h-14 rounded-2xl bg-[#0A0A0A]/10 border border-[#0A0A0A]/20 flex items-center justify-center mx-auto">
                         <Sparkles className="w-7 h-7 text-[#0A0A0A]" />
                       </div>
@@ -2556,14 +2556,14 @@ export default function OnboardingPage() {
                   {/* Loading State */}
                   {isGeneratingMoods && (
                     <div className="space-y-5">
-                      <div className="bg-gray-950 border border-gray-800 rounded-2xl p-6 text-center space-y-2">
+                      <div className="bg-[#0A0A0A] border border-[#828282]/20 rounded-2xl p-6 text-center space-y-2">
                         <Loader2 className="w-8 h-8 text-[#0A0A0A] animate-spin mx-auto" />
                         <h4 className="text-sm font-bold text-white">Generating 3 Moodboard Concepts in Parallel...</h4>
                         <p className="text-xs text-[#E1E0CC]/60">Processing with fal.ai Flux. This may take up to 10 seconds.</p>
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {Array.from({ length: 3 }).map((_, i) => (
-                          <div key={i} className="aspect-video bg-gray-900/50 border border-gray-800 rounded-2xl animate-pulse flex items-center justify-center">
+                          <div key={i} className="aspect-video bg-[#0A0A0A]/50 border border-[#828282]/20 rounded-2xl animate-pulse flex items-center justify-center">
                             <Loader2 className="w-5 h-5 text-[#E1E0CC]/80 animate-spin" />
                           </div>
                         ))}
@@ -2754,7 +2754,7 @@ export default function OnboardingPage() {
                                     setInspectingMoodboard(null);
                                   }
                                 }}
-                                className="px-5 py-2 bg-[#0A0A0A] hover:bg-[#0A0A0A]/90 text-gray-950 rounded-2xl text-xs font-black transition-all flex items-center gap-1.5"
+                                className="px-5 py-2 bg-[#0A0A0A] hover:bg-[#0A0A0A]/90 text-white rounded-2xl text-xs font-black transition-all flex items-center gap-1.5"
                               >
                                 {isApproved ? <Check className="w-4 h-4" /> : <Sparkles className="w-4 h-4" />}
                                 {isApproved ? "Approved Direction" : "Approve & Apply Direction"}

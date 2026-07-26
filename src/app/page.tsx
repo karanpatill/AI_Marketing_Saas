@@ -42,7 +42,7 @@ export default function Home() {
   };
 
   return (
-    <main className="relative bg-black text-[#E1E0CC] min-h-screen flex flex-col justify-between">
+    <main className="relative bg-black text-[#E1E0CC] min-h-screen">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
