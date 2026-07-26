@@ -123,7 +123,7 @@ export function renderMinimalism(opt: TemplateOptions): string {
       </div>
 
       <div class="flex-1 flex flex-col justify-end pb-12 w-[80%]">
-        <span class="text-xs tracking-[0.2em] uppercase mb-8" style="color: ${primaryColor}">— ${category}</span>
+        <span class="text-xs tracking-[0.2em] uppercase mb-8" style="color: ${primaryColor}">â€” ${category}</span>
         <h2 class="text-4xl md:text-5xl font-light leading-tight tracking-wide mb-8" style="${headlineFontStyle}">
           ${title}
         </h2>
@@ -278,4 +278,3 @@ export function getTemplateForLanguage(language: string, options: TemplateOption
   // Hand drawn, surreal, maximalism, etc can use generic for now or specific ones if added later
   return renderGeneric(options);
 }
-
