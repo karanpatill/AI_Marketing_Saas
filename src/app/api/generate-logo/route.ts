@@ -103,7 +103,7 @@ You must respond with a single, valid JSON object containing exactly these field
     };
 
     // Use Flash first (10 RPM free tier), retry on 429, then fall back to 1.5-flash
-    const models = ["gemini-2.5-flash", "gemini-1.5-flash"];
+    const models = ["gemini-3.5-flash", "gemini-3.5-flash-lite"];
     let geminiResponse: Response | null = null;
 
     for (const model of models) {

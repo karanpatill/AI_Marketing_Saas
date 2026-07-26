@@ -196,7 +196,7 @@ OUTPUT RULES:
 - Describe textures, lighting, mood, and typography precisely
 - The board must look like a real $50,000 agency deliverable`;
 
-        const models = ["gemini-2.5-flash", "gemini-1.5-flash"];
+        const models = ["gemini-3.5-flash", "gemini-3.5-flash-lite"];
         const geminiPayload = {
           contents: [{ parts: [{ text: promptGenerationInput }] }],
           generationConfig: {

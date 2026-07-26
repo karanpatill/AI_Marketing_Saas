@@ -7,7 +7,7 @@ interface LLMRequestOptions {
 /**
  * Centralized LLM Provider Router.
  * Route to Claude (if CLAUDE_API_KEY/ANTHROPIC_API_KEY is defined) or fall back to Gemini
- * with automatic retries and model iteration (gemini-2.5-flash -> gemini-1.5-flash).
+ * with automatic retries and model iteration (gemini-3.5-flash -> gemini-3.5-flash-lite).
  */
 export async function callLLM(prompt: string, options: LLMRequestOptions = {}): Promise<string> {
   const claudeKey = process.env.CLAUDE_API_KEY || process.env.ANTHROPIC_API_KEY;
@@ -53,8 +53,7 @@ export async function callLLM(prompt: string, options: LLMRequestOptions = {}): 
       payload.generationConfig.responseSchema = options.responseSchema;
     }
 
-    // Try models in order: gemini-2.5-flash first, then gemini-1.5-flash
-    const models = ["gemini-2.5-flash", "gemini-1.5-flash"];
+    const models = ["gemini-3.5-flash", "gemini-3.5-flash-lite"];
     for (const model of models) {
       const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`;
       lastResponse = await callGeminiWithRetry(geminiUrl, payload);

@@ -74,7 +74,7 @@ export class AutomationPlannerService {
   }
 
   private async generateTopicsFromGemini(dna: any, count: number): Promise<string[]> {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-3.5-flash-lite" });
     
     const prompt = `
       You are an expert social media strategist. 

@@ -100,7 +100,7 @@ Return the result STRICTLY as a JSON object with the following structure. DO NOT
     }
     
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-3.5-flash" });
 
     await updateProgress(40, 'generating_slides_content');
     

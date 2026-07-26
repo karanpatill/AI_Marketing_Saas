@@ -38,7 +38,7 @@ ${existingTagline ? `- Existing tagline (improve on this): "${existingTagline}"`
 Output format: Return ONLY a valid JSON array of 5 strings. No explanation, no markdown, no extra text. Example:
 ["Tagline One Here", "Tagline Two Here", "Tagline Three Here", "Tagline Four Here", "Tagline Five Here"]`;
 
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`;
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${geminiApiKey}`;
     const response = await fetch(geminiUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },

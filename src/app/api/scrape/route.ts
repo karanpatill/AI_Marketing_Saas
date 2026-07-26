@@ -183,7 +183,7 @@ export async function POST(req: Request) {
     }
 
     // Call Gemini 2.5 Flash to semantically parse the page text into Brand DNA JSON
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`;
     const prompt = `You are a world-class Brand Strategist and Analyst. 
 Analyze the scraped website homepage details of a business and compile their structured Brand DNA profile.
 
