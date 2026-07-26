@@ -114,7 +114,10 @@ Return the result STRICTLY as a JSON object with the following structure. DO NOT
     jsonOutput = jsonOutput.replace(/^```(json)?\n?/i, '').replace(/\n?```$/i, '').trim();
     let parsedSlides: any[] = [];
     try {
-      const parsed = JSON.parse(jsonOutput);
+      let parsed = JSON.parse(jsonOutput);
+      if (Array.isArray(parsed)) {
+        parsed = { slides: parsed };
+      }
       parsedSlides = parsed.slides || [];
     } catch (err) {
       console.error("Failed to parse carousel JSON", err, "RAW:", jsonOutput);

@@ -102,6 +102,9 @@ Return the result STRICTLY as a JSON object with the following structure. DO NOT
     let parsed: any = {};
     try {
       parsed = JSON.parse(jsonOutput);
+      if (Array.isArray(parsed)) {
+        parsed = parsed[0] || {};
+      }
     } catch (err) {
       console.error("Failed to parse image post JSON", err, "RAW:", jsonOutput);
       parsed = {
