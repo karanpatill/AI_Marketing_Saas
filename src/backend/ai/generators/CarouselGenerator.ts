@@ -155,7 +155,7 @@ Return the result STRICTLY as a JSON object with the following structure. DO NOT
     const headlineFontStyle = primaryFontName ? `font-family: '${primaryFontName}', serif, sans-serif;` : '';
     const bodyFontStyle = bodyFontName ? `font-family: '${bodyFontName}', sans-serif;` : '';
 
-    const bgImgRes = await resolveInitialImage(assignedLanguage, context.inputParams);
+    const bgImgRes = await resolveInitialImage(assignedLanguage, context.inputParams.topic || context.inputParams.prompt || "");
     const bgImageUrl = bgImgRes?.url || "";
 
     const finalSlides = parsedSlides.map((s: any, idx: number) => {

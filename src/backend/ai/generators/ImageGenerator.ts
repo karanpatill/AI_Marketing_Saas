@@ -144,7 +144,7 @@ Return the result STRICTLY as a JSON object with the following structure. DO NOT
     const textSecondaryClass = isLightBg ? "text-black/80" : "text-white/80";
     const textMutedClass = isLightBg ? "text-black/60" : "text-white/60";
     
-    const bgImgRes = await resolveInitialImage(assignedLanguage, context.inputParams, parsed.category, parsed.title);
+    const bgImgRes = await resolveInitialImage(assignedLanguage, context.inputParams.topic || context.inputParams.prompt || "", `${parsed.category} ${parsed.title}`);
     const bgImageUrl = bgImgRes?.url || "";
 
     const options: TemplateOptions = {
