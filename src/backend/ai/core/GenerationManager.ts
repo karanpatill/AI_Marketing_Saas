@@ -69,8 +69,27 @@ export class GenerationManager {
         if (!isValid) {
             throw new Error("Validation failed on generated output.");
         }
+        // Save the asset before completing the job so it is available as soon as
+        // the client receives the completed status.
+        let assetType = 'other';
+        if (job.job_type === 'generate_post') assetType = 'image';
+        else if (job.job_type === 'generate_carousel') assetType = 'carousel';
+
+        // Don't duplicate if we already saved it (some jobs might retry, though jobs usually just fail)
+        const { error: assetError } = await this.supabase.from('assets').insert({
+          workspace_id: job.workspace_id,
+          project_id: null,
+          job_id: job.id,
+          type: assetType,
+          url: 'generated', // We store the actual output in metadata for HTML/JSON since there is no single URL
+          metadata_json: result.outputReference
+        });
+        if (assetError) {
+          throw new Error(`Failed to save generated asset: ${assetError.message}`);
+        }
+
         await this.updateJobStatus(jobId, 'completed', { output: result.outputReference, progress: 100, current_step: 'finished' });
-        
+
         // Save to calendar if applicable
         if (job.input_payload?.calendarItemId) {
           await this.supabase.from('content_calendar').update({
@@ -79,21 +98,6 @@ export class GenerationManager {
             updated_at: new Date().toISOString()
           }).eq('id', job.input_payload.calendarItemId);
         }
-
-        // Save generated asset to the assets table
-        let assetType = 'other';
-        if (job.job_type === 'generate_post') assetType = 'image';
-        else if (job.job_type === 'generate_carousel') assetType = 'carousel';
-        
-        // Don't duplicate if we already saved it (some jobs might retry, though jobs usually just fail)
-        await this.supabase.from('assets').insert({
-          workspace_id: job.workspace_id,
-          project_id: null,
-          job_id: job.id,
-          type: assetType,
-          url: 'generated', // We store the actual output in metadata for HTML/JSON since there is no single URL
-          metadata_json: result.outputReference
-        });
 
       } else {
         let friendlyError = result.error || 'Unknown execution error';

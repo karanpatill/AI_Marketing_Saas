@@ -173,6 +173,7 @@ export default function DashboardPage() {
   const [isGeneratingCarousel, setIsGeneratingCarousel] = useState(false);
   const [generatedCarouselImage, setGeneratedCarouselImage] = useState<string | null>(null);
   const [carouselSlides, setCarouselSlides] = useState<any[]>([]);
+  const [assetRefreshKey, setAssetRefreshKey] = useState(0);
   const [carouselError, setCarouselError] = useState<string | null>(null);
 
   // Video Generator Studio States
@@ -394,7 +395,8 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
           prompt: postPrompt,
           aspectRatio: postAspectRatio,
           jobType: 'generate_post',
-          orgId: (dna as any)?.workspace_id || activeWorkspace?.id,
+          // The selected workspace is the canonical owner for generated assets.
+          orgId: activeWorkspace?.id,
           brandName: dna?.brand_name || activeOrg?.name || "Brand",
           brandPersonality: dna?.brand_personality || "Luxury",
           businessDescription: dna?.business_description || "",
@@ -430,6 +432,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
           const jobData = await jobRes.json();
           if (jobData.job.status === 'completed') {
             setGeneratedPostImage(jobData.job.output_reference?.html || jobData.job.output_reference?.imageUrl);
+            setAssetRefreshKey((current) => current + 1);
 
             isCompleted = true;
           } else if (jobData.job.status === 'failed') {
@@ -466,7 +469,8 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
           prompt: carouselPrompt,
           aspectRatio: "4/5",
           jobType: 'generate_carousel',
-          orgId: (dna as any)?.workspace_id || activeWorkspace?.id,
+          // Keep generation and the Generated Assets query on the same workspace ID.
+          orgId: activeWorkspace?.id,
           brandName: dna?.brand_name || activeOrg?.name || "Brand",
           brandPersonality: dna?.brand_personality || "Luxury",
           businessDescription: dna?.business_description || "",
@@ -504,6 +508,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
             setGeneratedCarouselImage(jobData.job.output_reference?.html || jobData.job.output_reference?.imageUrl);
 
             setCarouselSlides(jobData.job.output_reference?.slides || []);
+            setAssetRefreshKey((current) => current + 1);
             isCompleted = true;
           } else if (jobData.job.status === 'failed') {
             throw new Error(jobData.job.error?.message || "Generation job failed");
@@ -1128,11 +1133,11 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
           
           {/* Top row: Org/Workspace & User actions */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-[#1c1e21] border border-[#828282]/20 rounded-2xl px-5 py-3 shadow-[0_4px_20px_rgb(0,0,0,0.01)] relative z-30">
-            <div className="flex items-center gap-3">
+            <div className="flex min-w-0 flex-wrap items-center gap-3">
               {/* Organization */}
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-black border border-[#828282]/20 rounded-lg text-[#ffffff] font-medium text-xs">
+              <div className="flex min-w-0 flex-1 items-center gap-2 px-3 py-1.5 bg-black border border-[#828282]/20 rounded-lg text-[#ffffff] font-medium text-xs">
                 <Building className="w-3.5 h-3.5 text-[#828282] shrink-0" />
-                <span className="truncate max-w-[150px]">{dna?.brand_name || activeOrg?.name || "My Organization"}</span>
+                <span className="truncate">{dna?.brand_name || activeOrg?.name || "My Organization"}</span>
               </div>
 
               {/* Workspace Switcher */}
@@ -1142,7 +1147,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                   const ws = workspaces.find(w => w.id === e.target.value);
                   if (ws) setActiveWorkspace(ws);
                 }}
-                className="bg-black border border-[#828282]/20 rounded-lg px-3 py-1.5 text-xs font-medium text-[#ffffff] outline-none cursor-pointer hover:bg-[#ffffff]/5 transition-all appearance-none max-w-[150px]"
+                className="min-w-0 flex-1 bg-black border border-[#828282]/20 rounded-lg px-3 py-1.5 text-xs font-medium text-[#ffffff] outline-none cursor-pointer hover:bg-[#ffffff]/5 transition-all appearance-none"
               >
                 {workspaces
                   .filter(w => w.org_id === activeOrg?.id)
@@ -1155,7 +1160,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
             </div>
 
             {/* Notification Bell + Profile + Settings */}
-            <div className="flex items-center gap-4">
+            <div className="flex flex-wrap items-center gap-3 sm:gap-4">
               
               {/* Token Counter */}
               {activeOrg?.id && <TokenCounter orgId={activeOrg.id} />}
@@ -1181,7 +1186,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                 </button>
 
                 {showNotifications && (
-                  <div className="absolute right-0 mt-2 w-80 bg-[#1c1e21] border border-[#828282]/20 rounded-2xl shadow-2xl p-4 z-50 space-y-3">
+                  <div className="absolute right-0 mt-2 w-[min(20rem,calc(100vw-3rem))] bg-[#1c1e21] border border-[#828282]/20 rounded-2xl shadow-2xl p-4 z-50 space-y-3">
                     <div className="flex justify-between items-center pb-2 border-b border-[#828282]/20">
                       <h4 className="text-xs font-black text-[#ffffff] uppercase tracking-wider">Notifications</h4>
                       <button onClick={() => setShowNotifications(false)} className="text-[#ffffff]/50 hover:text-[#ffffff]/80 text-xs">Close</button>
@@ -2051,7 +2056,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
           )}
 
           {activeTab === "assets" && (
-            <AssetsView workspaceId={dna?.id || ""} />
+            <AssetsView workspaceId={activeWorkspace?.id || ""} refreshKey={assetRefreshKey} />
           )}
 
           {/* Tab 3: Content Planner & Automation Engine */}
@@ -2534,7 +2539,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                     <label className="text-sm font-bold text-[#828282] uppercase tracking-[0.2em] font-bold text-[#ffffff] block">
                       Aspect Ratio
                     </label>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                       {[
                         { id: "1:1", label: "Square (1:1)", desc: "Feed Posts" },
                         { id: "9:16", label: "Portrait (9:16)", desc: "Stories / Reels" },
@@ -2623,7 +2628,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                   ) : generatedPostImage ? (
                     <div className="w-full flex flex-col gap-4">
                       {/* Social post frame */}
-                      <div className="bg-[#111111] border-none rounded-2xl overflow-hidden shadow-xl max-w-md mx-auto w-full">
+                      <div className="bg-[#111111] border-none rounded-2xl overflow-hidden shadow-xl max-w-md min-w-0 mx-auto w-full">
                         {/* Header */}
                         <div className="p-3 flex items-center justify-between border-b border-[#828282]/20">
                           <div className="flex items-center gap-2">
@@ -2640,20 +2645,41 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
 
                         {/* Image body */}
                         <div 
-                          className="w-full relative overflow-hidden bg-black flex items-center justify-center"
+                          className="w-full relative min-w-0 overflow-hidden isolate [contain:layout_paint] bg-black flex items-center justify-center"
                           style={{
-                            containerType: 'inline-size',
+                            containerType: 'size',
                             aspectRatio: postAspectRatio === '9:16' ? '9/16' : postAspectRatio === '16:9' ? '16/9' : '1/1'
                           }}
                         >
                           <style dangerouslySetInnerHTML={{ __html: `
                             @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Syne:wght@400;750;800&family=Bricolage+Grotesque:wght@300;500;800&family=Space+Grotesk:wght@400;700&family=Outfit:wght@300;400;600;800&family=Plus+Jakarta+Sans:wght@300;400;600;800&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Montserrat:wght@300;400;700&family=Cinzel:wght@400;700;900&family=Inter:wght@300;400;600;700&display=swap');
+
+                            /* Generated templates must stay within their 1080px source canvas. */
+                            #social-post-image,
+                            #social-post-image > div {
+                              width: 100% !important;
+                              height: 100% !important;
+                              min-height: 0 !important;
+                              max-height: 100% !important;
+                              overflow: hidden !important;
+                            }
+                            #social-post-image > div > * {
+                              min-height: 0;
+                              max-height: 100%;
+                            }
+                            #social-post-image h1,
+                            #social-post-image h2,
+                            #social-post-image h3,
+                            #social-post-image p {
+                              overflow-wrap: anywhere;
+                            }
                           `}} />
                           <div 
                             style={{
                               width: '1080px',
                               height: postAspectRatio === '9:16' ? '1920px' : postAspectRatio === '16:9' ? '607.5px' : '1080px',
-                              transform: 'scale(calc(100cqw / 1080))',
+                              // Fit by both dimensions so generated content cannot extend past the social frame.
+                              transform: `scale(min(calc(100cqw / 1080px), calc(100cqh / ${postAspectRatio === '9:16' ? '1920px' : postAspectRatio === '16:9' ? '607.5px' : '1080px'})))`,
                               transformOrigin: 'top left',
                               position: 'absolute',
                               top: 0,
@@ -2663,7 +2689,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                             <div
                               id="social-post-image"
                               dangerouslySetInnerHTML={{ __html: generatedPostImage }}
-                              className="w-full h-full [&>div]:w-full [&>div]:h-full bg-black relative overflow-hidden"
+                              className="w-full h-full max-w-full [contain:layout_paint] [&>div]:w-full [&>div]:h-full [&>div]:max-w-full bg-black relative overflow-hidden"
                             />
                           </div>
                         </div>
@@ -2836,7 +2862,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                   ) : carouselSlides.length > 0 && generatedCarouselImage ? (
                     <div className="w-full flex flex-col gap-4">
                       {/* Social Carousel Post Frame */}
-                      <div className="bg-[#111111] border-none rounded-2xl overflow-hidden shadow-xl max-w-md mx-auto w-full">
+                      <div className="bg-[#111111] border-none rounded-2xl overflow-hidden shadow-xl max-w-md min-w-0 mx-auto w-full">
                         
                         {/* Post Header */}
                         <div className="p-3 flex items-center justify-between border-b border-[#828282]/20">
@@ -2859,11 +2885,31 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
 
                         {/* Live slide viewport */}
                         <div 
-                          className="relative w-full bg-black overflow-hidden flex items-center justify-center"
-                          style={{ containerType: 'inline-size', aspectRatio: '4/5' }}
+                          className="relative w-full min-w-0 bg-black overflow-hidden isolate [contain:layout_paint] flex items-center justify-center"
+                          style={{ containerType: 'size', aspectRatio: '4/5' }}
                         >
                           <style dangerouslySetInnerHTML={{ __html: `
                             @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Syne:wght@400;750;800&family=Bricolage+Grotesque:wght@300;500;800&family=Space+Grotesk:wght@400;700&family=Outfit:wght@300;400;600;800&family=Plus+Jakarta+Sans:wght@300;400;600;800&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Montserrat:wght@300;400;700&family=Cinzel:wght@400;700;900&family=Inter:wght@300;400;600;700&display=swap');
+
+                            /* Keep each generated 1080x1350 slide inside the live social frame. */
+                            #social-carousel-image,
+                            #social-carousel-image > div {
+                              width: 100% !important;
+                              height: 100% !important;
+                              min-height: 0 !important;
+                              max-height: 100% !important;
+                              overflow: hidden !important;
+                            }
+                            #social-carousel-image > div > * {
+                              min-height: 0;
+                              max-height: 100%;
+                            }
+                            #social-carousel-image h1,
+                            #social-carousel-image h2,
+                            #social-carousel-image h3,
+                            #social-carousel-image p {
+                              overflow-wrap: anywhere;
+                            }
                             
                             .brand-font-heading {
                               font-family: '${assets?.logo_studio_data?.typography?.primaryFont || "inherit"}', sans-serif !important;
@@ -2876,7 +2922,8 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                           <div style={{
                             width: '1080px',
                             height: '1350px',
-                            transform: 'scale(calc(100cqw / 1080))',
+                            // The preview is 4:5, but measuring both axes keeps any malformed HTML slide contained.
+                            transform: 'scale(min(calc(100cqw / 1080px), calc(100cqh / 1350px)))',
                             transformOrigin: 'top left',
                             position: 'absolute',
                             top: 0,
@@ -2918,7 +2965,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                               
                               return (
                                 <div id="social-carousel-image"
-                                  className="w-full h-full [&>div]:h-full [&>div]:w-full select-none overflow-hidden bg-black relative"
+                                  className="w-full h-full max-w-full [contain:layout_paint] [&>div]:h-full [&>div]:w-full [&>div]:max-w-full select-none overflow-hidden bg-black relative"
                                   dangerouslySetInnerHTML={{
                                     __html: injectBgIntoHtml(slide.html, generatedCarouselImage, 0.08, undefined, undefined, activeColors.secondaryHex, activeColors.primaryHex)
                                   }}

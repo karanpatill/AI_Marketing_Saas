@@ -4,14 +4,14 @@ import { useEffect, useState } from "react";
 import { Loader2, Image as ImageIcon, Layers, Download, ExternalLink, Calendar as CalendarIcon, Clock } from "lucide-react";
 import { format } from "date-fns";
 
-export function AssetsView({ workspaceId }: { workspaceId: string }) {
+export function AssetsView({ workspaceId, refreshKey = 0 }: { workspaceId: string; refreshKey?: number }) {
   const [activeSubTab, setActiveSubTab] = useState<"image" | "carousel">("image");
   const [assets, setAssets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchAssets(activeSubTab);
-  }, [activeSubTab, workspaceId]);
+  }, [activeSubTab, workspaceId, refreshKey]);
 
   const fetchAssets = async (type: string) => {
     setLoading(true);
@@ -94,12 +94,20 @@ export function AssetsView({ workspaceId }: { workspaceId: string }) {
                       alt="Generated" 
                       className="object-cover w-full h-full absolute inset-0"
                     />
+                  ) : activeSubTab === "image" && asset.metadata_json?.html ? (
+                    <div className="absolute inset-0 overflow-hidden bg-black">
+                      <div
+                        className="origin-top-left scale-[0.24] sm:scale-[0.28]"
+                        style={{ width: '1080px', height: '1080px' }}
+                        dangerouslySetInnerHTML={{ __html: asset.metadata_json.html }}
+                      />
+                    </div>
                   ) : activeSubTab === "carousel" && asset.metadata_json?.slides ? (
                     <div className="w-full aspect-[4/5] bg-[#1c1e21] rounded-lg shadow-lg relative overflow-hidden border border-[#ffffff]/10">
                        <div 
-                         className="absolute inset-0 origin-top-left scale-[0.4] sm:scale-[0.5] md:scale-[0.4] lg:scale-[0.5]"
+                         className="absolute inset-0 origin-top-left scale-[0.24] sm:scale-[0.28] lg:scale-[0.3]"
                          style={{ width: '1080px', height: '1350px' }}
-                         dangerouslySetInnerHTML={{ __html: asset.metadata_json.slides[0] }}
+                         dangerouslySetInnerHTML={{ __html: typeof asset.metadata_json.slides[0] === "string" ? asset.metadata_json.slides[0] : asset.metadata_json.slides[0]?.html || "" }}
                        />
                        <div className="absolute top-2 right-2 bg-black/80 backdrop-blur-sm text-xs font-bold px-2 py-1 rounded text-white z-10 border border-white/20">
                          {asset.metadata_json.slides.length} Slides

@@ -113,21 +113,21 @@ export function renderMinimalism(opt: TemplateOptions): string {
   
   return `
     ${fontImportCss ? `<style>${fontImportCss}</style>` : ""}
-    <div class="relative w-full h-full overflow-hidden flex flex-col p-16" style="background-color: ${secondaryColor}; color: ${textColor}; aspect-ratio: ${aspectRatio.replace(":", "/")};">
+    <div class="relative w-full h-full overflow-hidden flex flex-col p-14" style="background-color: ${secondaryColor}; color: ${textColor}; aspect-ratio: ${aspectRatio.replace(":", "/")};">
       <div class="w-full flex justify-between items-start">
         <div class="flex items-center gap-3">
-          ${logoUrl ? `<img src="${logoUrl}" alt="${brandName}" class="h-6 w-auto max-h-7 object-contain max-w-[110px]" />` : ""}
-          <span class="text-[10px] tracking-widest uppercase opacity-40">${brandName}</span>
+          ${logoUrl ? `<img src="${logoUrl}" alt="${brandName}" class="h-10 w-auto max-h-12 object-contain max-w-[180px]" />` : ""}
+          <span class="text-sm tracking-widest uppercase opacity-50">${brandName}</span>
         </div>
         ${isCarousel ? `<span class="text-[10px] tracking-widest opacity-40">${slideNum}</span>` : ""}
       </div>
 
-      <div class="flex-1 flex flex-col justify-end pb-12 w-[80%]">
+      <div class="flex-1 min-h-0 flex flex-col justify-center py-16 w-[88%]">
         <span class="text-xs tracking-[0.2em] uppercase mb-8" style="color: ${primaryColor}">— ${category}</span>
-        <h2 class="text-4xl md:text-5xl font-light leading-tight tracking-wide mb-8" style="${headlineFontStyle}">
+        <h2 class="text-7xl md:text-8xl font-light leading-[1.05] tracking-wide mb-10" style="${headlineFontStyle}">
           ${title}
         </h2>
-        ${content ? `<p class="text-lg md:text-xl leading-relaxed opacity-60 font-light" style="${bodyFontStyle}">${content}</p>` : ""}
+        ${content ? `<p class="text-2xl md:text-3xl leading-relaxed opacity-70 font-light max-w-[92%]" style="${bodyFontStyle}">${content}</p>` : ""}
       </div>
 
       <div class="w-full flex justify-end items-end mt-auto">
