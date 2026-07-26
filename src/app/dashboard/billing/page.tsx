@@ -130,8 +130,14 @@ export default function BillingPage() {
                 
                 <h3 className="text-xl md:text-2xl font-black uppercase tracking-tight mb-4 text-[#E1E0CC]">{plan.name}</h3>
                 <div className="flex items-end gap-1.5 mb-8">
-                  <span className="text-4xl md:text-5xl font-black text-[#DEDBC8]">,1{plan.price_monthly / 100}</span>
-                  <span className="text-[#E1E0CC]/50 text-base md:text-lg mb-1 font-medium">/mo</span>
+                  {plan.price_monthly === 0 ? (
+                    <span className="text-4xl md:text-5xl font-black text-[#DEDBC8]">Free</span>
+                  ) : (
+                    <>
+                      <span className="text-4xl md:text-5xl font-black text-[#DEDBC8]">${plan.price_monthly / 100}</span>
+                      <span className="text-[#E1E0CC]/50 text-base md:text-lg mb-1 font-medium">/mo</span>
+                    </>
+                  )}
                 </div>
                 
                 <div className="flex items-center gap-3 mb-8 pb-8 border-b border-[#E1E0CC]/10">

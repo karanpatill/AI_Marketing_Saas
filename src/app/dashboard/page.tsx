@@ -10,7 +10,7 @@ import {
   Loader2, LogOut, ArrowRight, ShieldCheck,
   Tag, Compass, HelpCircle, Users, Eye, Flag,
   Building, Image, FileText, Video, Plus,
-  Settings, Bell, Search, Activity, Trash2,
+  Settings, Bell, Search, Activity, Trash2, Archive,
   Shield, CreditCard, Mail, User, AlertCircle,
   X, Check, Lock, ChevronDown, RefreshCw, Globe, Clock, Paintbrush, Save
 } from "lucide-react";
@@ -24,6 +24,7 @@ import { toJpeg } from "html-to-image";
 import { saveAs } from "file-saver";
 import JSZip from "jszip";
 import TokenCounter from "@/components/TokenCounter";
+import { AssetsView } from "@/components/dashboard/AssetsView";
 // --- Types ---
 type BrandDna = {
   id: string;
@@ -111,7 +112,7 @@ export default function DashboardPage() {
   const [dna, setDna] = useState<BrandDna | null>(null);
   const [assets, setAssets] = useState<BrandAssets | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"control" | "dna" | "campaigns" | "mix" | "studio" | "carousel" | "video" | "settings">("control");
+  const [activeTab, setActiveTab] = useState<"control" | "dna" | "campaigns" | "mix" | "studio" | "carousel" | "video" | "settings" | "assets">("control");
   const [billingStatus, setBillingStatus] = useState<any>(null);
   const [showBrandEditor, setShowBrandEditor] = useState(false);
   const [isSavingColors, setIsSavingColors] = useState(false);
@@ -1281,6 +1282,18 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
             </button>
 
             <button
+              onClick={() => setActiveTab("assets")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${
+                activeTab === "assets"
+                  ? "bg-[#ffffff]/10 text-[#ffffff] shadow-sm border border-[#828282]/20"
+                  : "text-[#828282] hover:text-[#ffffff] hover:bg-[#ffffff]/5 border border-transparent"
+              }`}
+            >
+              <Archive className="w-4 h-4 shrink-0" />
+              <span>Generated Assets</span>
+            </button>
+
+            <button
               onClick={() => setActiveTab("dna")}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${
                 activeTab === "dna"
@@ -2035,6 +2048,10 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                 </div>
               )}
             </div>
+          )}
+
+          {activeTab === "assets" && (
+            <AssetsView workspaceId={dna?.id || ""} />
           )}
 
           {/* Tab 3: Content Planner & Automation Engine */}

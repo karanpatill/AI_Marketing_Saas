@@ -8,6 +8,7 @@ export const GET = withApiWrapper(async (req: NextRequest) => {
   await requireAuth();
   const url = new URL(req.url);
   const workspaceId = url.searchParams.get("workspaceId");
+  const type = url.searchParams.get("type") || undefined;
   
   if (!workspaceId) {
     return NextResponse.json({ error: "workspaceId is required" }, { status: 400 });
@@ -15,7 +16,7 @@ export const GET = withApiWrapper(async (req: NextRequest) => {
 
   const supabase = createAdminClient();
   const service = new AssetService(supabase);
-  const data = await service.getAssets(workspaceId);
+  const data = await service.getAssets(workspaceId, type);
 
   return NextResponse.json(data);
 });

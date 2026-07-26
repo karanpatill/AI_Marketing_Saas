@@ -80,6 +80,21 @@ export class GenerationManager {
           }).eq('id', job.input_payload.calendarItemId);
         }
 
+        // Save generated asset to the assets table
+        let assetType = 'other';
+        if (job.job_type === 'generate_post') assetType = 'image';
+        else if (job.job_type === 'generate_carousel') assetType = 'carousel';
+        
+        // Don't duplicate if we already saved it (some jobs might retry, though jobs usually just fail)
+        await this.supabase.from('assets').insert({
+          workspace_id: job.workspace_id,
+          project_id: null,
+          job_id: job.id,
+          type: assetType,
+          url: 'generated', // We store the actual output in metadata for HTML/JSON since there is no single URL
+          metadata_json: result.outputReference
+        });
+
       } else {
         let friendlyError = result.error || 'Unknown execution error';
         if (typeof friendlyError === 'string' && (friendlyError.includes('429 Too Many Requests') || friendlyError.includes('Quota exceeded') || friendlyError.includes('quota'))) {

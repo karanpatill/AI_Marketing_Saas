@@ -12,8 +12,8 @@ export class AssetService {
     return this.repo.createAsset({ workspace_id: workspaceId, type, url, ...data });
   }
 
-  async getAssets(workspaceId: string) {
-    return this.repo.getAssetsByWorkspace(workspaceId);
+  async getAssets(workspaceId: string, type?: string) {
+    return this.repo.getAssetsByWorkspace(workspaceId, type);
   }
 
   async getAsset(id: string) {
