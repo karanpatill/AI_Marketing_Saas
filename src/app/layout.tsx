@@ -43,6 +43,7 @@ export const metadata: Metadata = {
 
 import SmoothScroll from "@/components/SmoothScroll";
 import Navbar from "@/components/Navbar";
+import TailwindCache from "@/components/TailwindCache";
 
 export default function RootLayout({
   children,
@@ -57,6 +58,7 @@ export default function RootLayout({
       <body className="bg-black text-[#E1E0CC] min-h-screen font-sans antialiased selection:bg-[#DEDBC8]/20 selection:text-[#E1E0CC]">
         <Navbar />
         <SmoothScroll>{children}</SmoothScroll>
+        <TailwindCache />
       </body>
     </html>
   );
