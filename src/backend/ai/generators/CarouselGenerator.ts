@@ -110,12 +110,18 @@ Return the result STRICTLY as a JSON object with the following structure. DO NOT
     });
     
     let jsonOutput = result.response.text();
+    // Clean up potential markdown wrapper
+    jsonOutput = jsonOutput.replace(/^```(json)?\n?/i, '').replace(/\n?```$/i, '').trim();
     let parsedSlides: any[] = [];
     try {
       const parsed = JSON.parse(jsonOutput);
       parsedSlides = parsed.slides || [];
     } catch (err) {
-      console.error("Failed to parse carousel JSON", err);
+      console.error("Failed to parse carousel JSON", err, "RAW:", jsonOutput);
+      parsedSlides = [
+        { type: "hook", category: "MARKETING INSIGHT", title: "Brand Strategy", content: "Discover how our unique approach transforms business operations." },
+        { type: "content", category: "Step 1", title: "Core Values", content: "We prioritize excellence and innovation." }
+      ];
     }
 
     await updateProgress(90, 'rendering_html_carousel');

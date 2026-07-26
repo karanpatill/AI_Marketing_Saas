@@ -97,11 +97,17 @@ Return the result STRICTLY as a JSON object with the following structure. DO NOT
     });
     
     let jsonOutput = result.response.text();
+    // Clean up potential markdown wrapper
+    jsonOutput = jsonOutput.replace(/^```(json)?\n?/i, '').replace(/\n?```$/i, '').trim();
     let parsed: any = {};
     try {
       parsed = JSON.parse(jsonOutput);
     } catch (err) {
-      console.error("Failed to parse image post JSON", err);
+      console.error("Failed to parse image post JSON", err, "RAW:", jsonOutput);
+      parsed = {
+        title: "Marketing Insight",
+        content: "Discover how our unique approach transforms business operations."
+      };
     }
 
     await updateProgress(90, 'rendering_html');
