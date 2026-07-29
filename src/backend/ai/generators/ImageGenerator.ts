@@ -2,6 +2,7 @@ import { IGenerationModule, GenerationContext, GenerationResult } from '../inter
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { determineDesignLanguage, getStyleProfile, getContrastColor, resolveInitialImage } from "../utils/styleProfiles";
 import { getTemplateForLanguage, TemplateOptions } from "../utils/htmlTemplates";
+import { ModelRegistry } from "../utils/ModelRegistry";
 
 export class ImageGenerator implements IGenerationModule {
   jobType = 'generate_post';
@@ -28,6 +29,7 @@ export class ImageGenerator implements IGenerationModule {
     } = inputParams;
 
     const assignedLanguage = determineDesignLanguage(brandPersonality, businessDescription);
+    const profile = getStyleProfile(assignedLanguage);
 
     return `
 You are an elite, world-class copywriter, art director, and content strategist specializing in ultra-premium, high-converting LinkedIn and Instagram posts.
@@ -42,6 +44,9 @@ Your style flawlessly matches the brand's visual identity, vibe, and tone of voi
 - Assigned Design Language: ${assignedLanguage}
 
 DESIGN LANGUAGE DIRECTIVES for ${assignedLanguage}:
+- Layout Philosophy: ${profile.layoutStyle}
+- Heading Tone: ${profile.headingDesc}
+- Body Copy Style: ${profile.bodyDesc}
 
 Topic of the Post: "${topic}"
 
@@ -87,107 +92,126 @@ Return the result STRICTLY as a JSON object with the following structure. DO NOT
     }
     
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-3.5-flash" });
+    const targetModel = context.inputParams?.targetModel || "gemini-3.5-flash";
+    const model = genAI.getGenerativeModel({ model: targetModel });
 
     await updateProgress(40, 'generating_content');
     
-    const result = await model.generateContent({
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      generationConfig: { responseMimeType: "application/json" }
-    });
-    
-    let jsonOutput = result.response.text();
-    // Clean up potential markdown wrapper
-    jsonOutput = jsonOutput.replace(/^```(json)?\n?/i, '').replace(/\n?```$/i, '').trim();
-    let parsed: any = {};
     try {
-      parsed = JSON.parse(jsonOutput);
-      if (Array.isArray(parsed)) {
-        parsed = parsed[0] || {};
+      const result = await model.generateContent({
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: { responseMimeType: "application/json" }
+      });
+      
+      let jsonOutput = result.response.text();
+      // Clean up potential markdown wrapper
+      jsonOutput = jsonOutput.replace(/^```(json)?\n?/i, '').replace(/\n?```$/i, '').trim();
+      let parsed: any = {};
+      try {
+        parsed = JSON.parse(jsonOutput);
+        if (Array.isArray(parsed)) {
+          parsed = parsed[0] || {};
+        }
+      } catch (err) {
+        console.error("Failed to parse image post JSON", err, "RAW:", jsonOutput);
+        parsed = {
+          category: 'BRAND',
+          title: 'Brand Update',
+          content: jsonOutput.substring(0, 100)
+        };
       }
-    } catch (err) {
-      console.error("Failed to parse image post JSON", err, "RAW:", jsonOutput);
-      parsed = {
-        title: "Marketing Insight",
-        content: "Discover how our unique approach transforms business operations."
+
+      await updateProgress(90, 'rendering_html');
+
+      const { 
+        brandName = "Brand",
+        brandPersonality = "Luxury", 
+        primaryColor = "#FFB800",
+        secondaryColor = "#000000",
+        website = "",
+        logoUrl = "",
+        fonts = [],
+        aspectRatio = "4/5"
+      } = context.inputParams;
+
+      const assignedLanguage = determineDesignLanguage(brandPersonality, context.inputParams.businessDescription || "");
+      const profile = getStyleProfile(assignedLanguage);
+      const textColor = getContrastColor(secondaryColor);
+      const isLightBg = textColor === "#000000";
+      
+      const primaryFontName = context.inputParams.primaryFont || (Array.isArray(fonts) && fonts.length > 0 ? fonts[0] : null);
+      const bodyFontName = context.inputParams.bodyFont || (Array.isArray(fonts) && fonts.length > 1 ? fonts[1] : null);
+
+      let fontImports: string[] = [];
+      if (primaryFontName) {
+        fontImports.push(`family=${encodeURIComponent(primaryFontName)}:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400`);
+      }
+      if (bodyFontName && bodyFontName !== primaryFontName) {
+        fontImports.push(`family=${encodeURIComponent(bodyFontName)}:ital,wght@0,300;0,400;0,600;0,700`);
+      }
+
+      const fontImportCss = fontImports.length > 0 
+        ? `@import url('https://fonts.googleapis.com/css2?${fontImports.join('&')}&display=swap');` 
+        : '';
+
+      const headlineFontStyle = primaryFontName ? `font-family: '${primaryFontName}', serif, sans-serif;` : '';
+      const bodyFontStyle = bodyFontName ? `font-family: '${bodyFontName}', sans-serif;` : '';
+
+      const bgImgRes = await resolveInitialImage(assignedLanguage, context.inputParams.topic || context.inputParams.prompt || "", `${parsed.category} ${parsed.title}`);
+      const bgImageUrl = bgImgRes?.url || "";
+
+      const options: TemplateOptions = {
+        brandName,
+        website: website || "@" + brandName.toLowerCase(),
+        logoUrl,
+        primaryColor,
+        secondaryColor,
+        textColor,
+        isLightBg,
+        fontImportCss,
+        headlineFontStyle,
+        bodyFontStyle,
+        category: parsed.category || 'INSIGHT',
+        title: parsed.title || '',
+        content: parsed.content || '',
+        aspectRatio,
+        bgImageUrl
+      };
+
+      const finalHtml = getTemplateForLanguage(assignedLanguage, options);
+
+        return {
+          status: 'completed',
+          outputReference: { 
+            id: `img_${Date.now()}`,
+            url: 'generated',
+            html: finalHtml,
+            html_content: finalHtml,
+            imageUrl: bgImageUrl,
+            raw_json: parsed,
+            caption: `${parsed.category}: ${parsed.title}\n\n${parsed.content}`
+          },
+          metadata: { 
+            provider: 'gemini',
+            duration: Date.now() - startTime
+          }
+        };
+    } catch (error: any) {
+      console.error("[ImageGenerator] Error:", error);
+      ModelRegistry.reportFailure(targetModel, error.message || String(error));
+      
+      return {
+        status: 'failed',
+        error: error.message || 'Unknown generation error',
+        metadata: {
+          provider: 'gemini',
+          duration: Date.now() - startTime
+        }
       };
     }
-
-    await updateProgress(90, 'rendering_html');
-
-    const { 
-      brandName = "Brand",
-      brandPersonality = "Luxury", 
-      primaryColor = "#FFB800",
-      secondaryColor = "#000000",
-      website = "",
-      logoUrl = "",
-      fonts = [],
-      aspectRatio = "4/5"
-    } = context.inputParams;
-
-    const assignedLanguage = determineDesignLanguage(brandPersonality, context.inputParams.businessDescription || "");
-    const profile = getStyleProfile(assignedLanguage);
-    const textColor = getContrastColor(secondaryColor);
-    const isLightBg = textColor === "#000000";
-    
-    const primaryFontName = context.inputParams.primaryFont || (Array.isArray(fonts) && fonts.length > 0 ? fonts[0] : null);
-    const bodyFontName = context.inputParams.bodyFont || (Array.isArray(fonts) && fonts.length > 1 ? fonts[1] : null);
-
-    let fontImports: string[] = [];
-    if (primaryFontName) {
-      fontImports.push(`family=${encodeURIComponent(primaryFontName)}:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400`);
-    }
-    if (bodyFontName && bodyFontName !== primaryFontName) {
-      fontImports.push(`family=${encodeURIComponent(bodyFontName)}:ital,wght@0,300;0,400;0,600;0,700`);
-    }
-
-    const fontImportCss = fontImports.length > 0 
-      ? `@import url('https://fonts.googleapis.com/css2?${fontImports.join('&')}&display=swap');` 
-      : '';
-
-    const headlineFontStyle = primaryFontName ? `font-family: '${primaryFontName}', serif, sans-serif;` : '';
-    const bodyFontStyle = bodyFontName ? `font-family: '${bodyFontName}', sans-serif;` : '';
-
-    const textPrimaryClass = isLightBg ? "text-black" : "text-white";
-    const textSecondaryClass = isLightBg ? "text-black/80" : "text-white/80";
-    const textMutedClass = isLightBg ? "text-black/60" : "text-white/60";
-    
-    const bgImgRes = await resolveInitialImage(assignedLanguage, context.inputParams.topic || context.inputParams.prompt || "", `${parsed.category} ${parsed.title}`);
-    const bgImageUrl = bgImgRes?.url || "";
-
-    const options: TemplateOptions = {
-      brandName,
-      website: website || "@" + brandName.toLowerCase(),
-      logoUrl,
-      primaryColor,
-      secondaryColor,
-      textColor,
-      isLightBg,
-      fontImportCss,
-      headlineFontStyle,
-      bodyFontStyle,
-      category: parsed.category || 'INSIGHT',
-      title: parsed.title || '',
-      content: parsed.content || '',
-      aspectRatio,
-      bgImageUrl
-    };
-
-    const html = getTemplateForLanguage(assignedLanguage, options);
-
-    return {
-      status: 'completed',
-      outputReference: { html: html.trim() },
-      metadata: { 
-        provider: 'gemini',
-        duration: Date.now() - startTime
-      }
-    };
   }
 
   async validateOutput(rawResponse: any): Promise<boolean> {
-    return !!rawResponse?.html;
+    return !!rawResponse?.html_content || !!rawResponse?.html;
   }
 }
-

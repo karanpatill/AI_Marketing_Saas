@@ -2,6 +2,7 @@ import { IGenerationModule, GenerationContext, GenerationResult } from '../inter
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { determineDesignLanguage, getStyleProfile, getContrastColor, resolveInitialImage } from '../utils/styleProfiles';
 import { getTemplateForLanguage, TemplateOptions } from '../utils/htmlTemplates';
+import { ModelRegistry } from "../utils/ModelRegistry";
 
 export class CarouselGenerator implements IGenerationModule {
   jobType = 'generate_carousel';
@@ -28,6 +29,7 @@ export class CarouselGenerator implements IGenerationModule {
     } = inputParams;
 
     const assignedLanguage = determineDesignLanguage(brandPersonality, businessDescription);
+    const profile = getStyleProfile(assignedLanguage);
 
     return `
 You are an elite, world-class copywriter, art director, and content strategist specializing in ultra-premium, high-converting LinkedIn and Instagram carousels.
@@ -42,6 +44,9 @@ Your style flawlessly matches the brand's visual identity, vibe, and tone of voi
 - Assigned Design Language: ${assignedLanguage}
 
 DESIGN LANGUAGE DIRECTIVES for ${assignedLanguage}:
+- Layout Philosophy: ${profile.layoutStyle}
+- Heading Tone: ${profile.headingDesc}
+- Body Copy Style: ${profile.bodyDesc}
 
 Topic of the Carousel: "${topic}"
 Length: 5-7 slides.
@@ -100,114 +105,129 @@ Return the result STRICTLY as a JSON object with the following structure. DO NOT
     }
     
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-3.5-flash" });
+    const targetModel = context.inputParams?.targetModel || "gemini-3.5-flash";
+    const model = genAI.getGenerativeModel({ model: targetModel });
 
     await updateProgress(40, 'generating_slides_content');
     
-    const result = await model.generateContent({
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      generationConfig: { responseMimeType: "application/json" }
-    });
-    
-    let jsonOutput = result.response.text();
-    // Clean up potential markdown wrapper
-    jsonOutput = jsonOutput.replace(/^```(json)?\n?/i, '').replace(/\n?```$/i, '').trim();
-    let parsedSlides: any[] = [];
     try {
-      let parsed = JSON.parse(jsonOutput);
-      if (Array.isArray(parsed)) {
-        parsed = { slides: parsed };
+      const result = await model.generateContent({
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: { responseMimeType: "application/json" }
+      });
+      
+      let jsonOutput = result.response.text();
+      // Clean up potential markdown wrapper
+      jsonOutput = jsonOutput.replace(/^```(json)?\n?/i, '').replace(/\n?```$/i, '').trim();
+      let parsedSlides: any[] = [];
+      try {
+        let parsed = JSON.parse(jsonOutput);
+        if (Array.isArray(parsed)) {
+          parsed = { slides: parsed };
+        }
+        parsedSlides = parsed.slides || [];
+      } catch (err) {
+        console.error("Failed to parse carousel JSON", err, "RAW:", jsonOutput);
+        parsedSlides = [
+          { type: 'hook', category: 'BRAND', title: 'Loading Brand Story...', content: 'Swipe to discover more.' }
+        ];
       }
-      parsedSlides = parsed.slides || [];
-    } catch (err) {
-      console.error("Failed to parse carousel JSON", err, "RAW:", jsonOutput);
-      parsedSlides = [
-        { type: "hook", category: "MARKETING INSIGHT", title: "Brand Strategy", content: "Discover how our unique approach transforms business operations." },
-        { type: "content", category: "Step 1", title: "Core Values", content: "We prioritize excellence and innovation." }
-      ];
-    }
 
-    await updateProgress(90, 'rendering_html_carousel');
+      await updateProgress(90, 'rendering_html_carousel');
 
-    // Build HTML from structured JSON
-    const { 
-      brandName = "Brand",
-      brandPersonality = "Luxury", 
-      primaryColor = "#FFB800",
-      secondaryColor = "#000000",
-      website = "",
-      logoUrl = "",
-      fonts = [],
-      aspectRatio = "4/5"
-    } = context.inputParams;
+      // Build HTML from structured JSON
+      const { 
+        brandName = "Brand",
+        brandPersonality = "Luxury", 
+        primaryColor = "#FFB800",
+        secondaryColor = "#000000",
+        website = "",
+        logoUrl = "",
+        fonts = [],
+        aspectRatio = "4/5"
+      } = context.inputParams;
 
-    const assignedLanguage = determineDesignLanguage(brandPersonality, context.inputParams.businessDescription || "");
-    const profile = getStyleProfile(assignedLanguage);
-    const textColor = getContrastColor(secondaryColor);
-    const isLightBg = textColor === "#000000";
-    
-    const primaryFontName = context.inputParams.primaryFont || (Array.isArray(fonts) && fonts.length > 0 ? fonts[0] : null);
-    const bodyFontName = context.inputParams.bodyFont || (Array.isArray(fonts) && fonts.length > 1 ? fonts[1] : null);
+      const assignedLanguage = determineDesignLanguage(brandPersonality, context.inputParams.businessDescription || "");
+      const profile = getStyleProfile(assignedLanguage);
+      const textColor = getContrastColor(secondaryColor);
+      const isLightBg = textColor === "#000000";
+      
+      const primaryFontName = context.inputParams.primaryFont || (Array.isArray(fonts) && fonts.length > 0 ? fonts[0] : null);
+      const bodyFontName = context.inputParams.bodyFont || (Array.isArray(fonts) && fonts.length > 1 ? fonts[1] : null);
 
-    let fontImports: string[] = [];
-    if (primaryFontName) {
-      fontImports.push(`family=${encodeURIComponent(primaryFontName)}:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400`);
-    }
-    if (bodyFontName && bodyFontName !== primaryFontName) {
-      fontImports.push(`family=${encodeURIComponent(bodyFontName)}:ital,wght@0,300;0,400;0,600;0,700`);
-    }
+      let fontImports: string[] = [];
+      if (primaryFontName) {
+        fontImports.push(`family=${encodeURIComponent(primaryFontName)}:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400`);
+      }
+      if (bodyFontName && bodyFontName !== primaryFontName) {
+        fontImports.push(`family=${encodeURIComponent(bodyFontName)}:ital,wght@0,300;0,400;0,600;0,700`);
+      }
 
-    const fontImportCss = fontImports.length > 0 
-      ? `@import url('https://fonts.googleapis.com/css2?${fontImports.join('&')}&display=swap');` 
-      : '';
+      const fontImportCss = fontImports.length > 0 
+        ? `@import url('https://fonts.googleapis.com/css2?${fontImports.join('&')}&display=swap');` 
+        : '';
 
-    const headlineFontStyle = primaryFontName ? `font-family: '${primaryFontName}', serif, sans-serif;` : '';
-    const bodyFontStyle = bodyFontName ? `font-family: '${bodyFontName}', sans-serif;` : '';
+      const headlineFontStyle = primaryFontName ? `font-family: '${primaryFontName}', serif, sans-serif;` : '';
+      const bodyFontStyle = bodyFontName ? `font-family: '${bodyFontName}', sans-serif;` : '';
 
-    const bgImgRes = await resolveInitialImage(assignedLanguage, context.inputParams.topic || context.inputParams.prompt || "");
-    const bgImageUrl = bgImgRes?.url || "";
+      const bgImgRes = await resolveInitialImage(assignedLanguage, context.inputParams.topic || context.inputParams.prompt || "");
+      const bgImageUrl = bgImgRes?.url || "";
 
-    const finalSlides = parsedSlides.map((s: any, idx: number) => {
-      const slideNum = (idx + 1).toString().padStart(2, '0');
-      const totalSlides = parsedSlides.length.toString().padStart(2, '0');
+      const finalSlides = parsedSlides.map((s: any, idx: number) => {
+        const slideNum = (idx + 1).toString().padStart(2, '0');
+        const totalSlides = parsedSlides.length.toString().padStart(2, '0');
 
-      const options: TemplateOptions = {
-        brandName,
-        website: website || "@" + brandName.toLowerCase(),
-        logoUrl,
-        primaryColor,
-        secondaryColor,
-        textColor,
-        isLightBg,
-        fontImportCss,
-        headlineFontStyle,
-        bodyFontStyle,
-        category: s.category || 'INSIGHT',
-        title: s.title || '',
-        content: s.content || '',
-        aspectRatio,
-        slideNum,
-        totalSlides,
-        bgImageUrl
+        const options: TemplateOptions = {
+          brandName,
+          website: website || "@" + brandName.toLowerCase(),
+          logoUrl,
+          primaryColor,
+          secondaryColor,
+          textColor,
+          isLightBg,
+          fontImportCss,
+          headlineFontStyle,
+          bodyFontStyle,
+          category: s.category || 'INSIGHT',
+          title: s.title || '',
+          content: s.content || '',
+          aspectRatio,
+          slideNum,
+          totalSlides,
+          bgImageUrl
+        };
+
+        const html = getTemplateForLanguage(assignedLanguage, options);
+
+        return { type: s.type || 'content', html: html.trim() };
+      });
+      
+      return {
+        status: 'completed',
+        outputReference: { html: "Generated Carousel", slides: finalSlides },
+        metadata: { 
+          provider: 'gemini',
+          duration: Date.now() - startTime
+        }
       };
-
-      const html = getTemplateForLanguage(assignedLanguage, options);
-
-      return { type: s.type || 'content', html: html.trim() };
-    });
-    
-    return {
-      status: 'completed',
-      outputReference: { html: "Generated Carousel", slides: finalSlides },
-      metadata: { 
-        provider: 'gemini',
-        duration: Date.now() - startTime
-      }
-    };
+    } catch (error: any) {
+      console.error("[CarouselGenerator] Error:", error);
+      ModelRegistry.reportFailure(targetModel, error.message || String(error));
+      
+      return {
+        status: 'failed',
+        error: error.message || 'Unknown generation error',
+        metadata: {
+          provider: 'gemini',
+          duration: Date.now() - startTime
+        }
+      };
+    }
   }
 
   async validateOutput(rawResponse: any): Promise<boolean> {
     return Array.isArray(rawResponse?.slides);
   }
+
 }
 

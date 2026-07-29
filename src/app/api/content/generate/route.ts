@@ -8,7 +8,7 @@ export const POST = withApiWrapper(async (req: NextRequest) => {
   const user = await requireAuth();
   
   const body = await req.json();
-  const { calendarItemId, orgId, prompt, jobType, aspectRatio } = body;
+  const { calendarItemId, orgId, prompt, jobType, aspectRatio, targetModel } = body;
 
   if (!calendarItemId && !prompt) {
     return NextResponse.json({ error: "Missing calendarItemId or prompt in body" }, { status: 400 });
@@ -24,8 +24,8 @@ export const POST = withApiWrapper(async (req: NextRequest) => {
 
   if (calendarItemId) {
     const { data: item } = await supabaseAdmin
-      .from('content_calendar')
-      .select('*')
+      .from('brand_calendar')
+      .select('*, brand_dna!inner(workspace_id)')
       .eq('id', calendarItemId)
       .single();
 
@@ -33,7 +33,7 @@ export const POST = withApiWrapper(async (req: NextRequest) => {
       topic = item.title;
       // Depending on the content type, route to correct generator
       finalJobType = item.post_type?.toLowerCase().includes('carousel') ? 'generate_carousel' : 'generate_post';
-      resolvedWorkspaceId = item.workspace_id || resolvedWorkspaceId;
+      resolvedWorkspaceId = item.brand_dna?.workspace_id || resolvedWorkspaceId;
       // Default aspect ratio for calendar items if not specified
       finalAspectRatio = "1:1";
     }
@@ -122,6 +122,7 @@ export const POST = withApiWrapper(async (req: NextRequest) => {
     jobType: finalJobType,
     payload: { 
       calendarItemId,
+      brandDnaId: brand?.id,
       prompt: topic,
       topic: topic,
       aspectRatio: finalAspectRatio,
@@ -136,7 +137,8 @@ export const POST = withApiWrapper(async (req: NextRequest) => {
       primaryFont,
       bodyFont,
       primaryColor,
-      secondaryColor
+      secondaryColor,
+      targetModel
     }
   });
 

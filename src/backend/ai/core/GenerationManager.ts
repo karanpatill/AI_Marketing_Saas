@@ -79,10 +79,9 @@ export class GenerationManager {
         const { error: assetError } = await this.supabase.from('assets').insert({
           workspace_id: job.workspace_id,
           project_id: null,
-          job_id: job.id,
           type: assetType,
-          url: 'generated', // We store the actual output in metadata for HTML/JSON since there is no single URL
-          metadata_json: result.outputReference
+          file_url: 'generated', // We store the actual output in metadata for HTML/JSON since there is no single URL
+          metadata: result.outputReference
         });
         if (assetError) {
           throw new Error(`Failed to save generated asset: ${assetError.message}`);
@@ -92,11 +91,29 @@ export class GenerationManager {
 
         // Save to calendar if applicable
         if (job.input_payload?.calendarItemId) {
-          await this.supabase.from('content_calendar').update({
-            status: 'completed',
-            post: result.outputReference,
-            updated_at: new Date().toISOString()
-          }).eq('id', job.input_payload.calendarItemId);
+          const postPayload = {
+            brand_dna_id: job.input_payload.brandDnaId,
+            post_type: job.job_type === 'generate_carousel' ? 'carousel' : 'static',
+            caption: result.outputReference?.caption || "",
+            generated_assets: result.outputReference || {},
+            is_winning: false,
+            engagement_score: 0.0
+          };
+          
+          const { data: postResult, error: postErr } = await this.supabase
+            .from('brand_posts')
+            .insert(postPayload)
+            .select()
+            .single();
+
+          if (postResult && !postErr) {
+            await this.supabase.from('brand_calendar').update({
+              status: 'completed',
+              post_id: postResult.id,
+            }).eq('id', job.input_payload.calendarItemId);
+          } else if (postErr) {
+            logger.error({ error: postErr }, 'Failed to save generated post to brand_posts');
+          }
         }
 
       } else {

@@ -185,6 +185,10 @@ export default function DashboardPage() {
   const [generatedVideoPrompt, setGeneratedVideoPrompt] = useState<string | null>(null);
   const [videoError, setVideoError] = useState<string | null>(null);
 
+  // Model Selection States
+  const [availableModels, setAvailableModels] = useState<any[]>([]);
+  const [selectedModel, setSelectedModel] = useState<string>("gemini-3.5-flash");
+
   // Dynamic Lists for Strategy, Calendar & Mix
   const [campaigns, setCampaigns] = useState<any[]>([]);
   const [calendar, setCalendar] = useState<any[]>([]);
@@ -320,6 +324,33 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
     };
   }, [isVideoPlaying]);
 
+  // --- Fetch Available AI Models
+  useEffect(() => {
+    async function fetchModels() {
+      try {
+        const res = await fetch("/api/models");
+        if (res.ok) {
+          const data = await res.json();
+          setAvailableModels(data.models || []);
+          
+          // Auto-fallback if currently selected model is in high demand
+          const current = data.models?.find((m: any) => m.id === selectedModel);
+          if (current?.status === "high_demand") {
+            const fallback = data.models.find((m: any) => m.status === "online");
+            if (fallback) setSelectedModel(fallback.id);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch models", err);
+      }
+    }
+    fetchModels();
+    const interval = setInterval(fetchModels, 30000); // Poll every 30s
+    return () => clearInterval(interval);
+  }, [selectedModel]);
+
+  // --- SaaS Initializer mount useEffect 🚀 ---
+
   const getActiveSubtitleText = () => {
     if (!viewingAsset || viewingAsset.post_type !== "video") return "";
     const timings = viewingAsset.generated_assets?.script?.timings || [];
@@ -387,35 +418,36 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
       secondaryHex: "#DEDBC8"
     };
 
-    try {
-      const res = await fetch("/api/content/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          prompt: postPrompt,
-          aspectRatio: postAspectRatio,
-          jobType: 'generate_post',
-          // The selected workspace is the canonical owner for generated assets.
-          orgId: activeWorkspace?.id,
-          brandName: dna?.brand_name || activeOrg?.name || "Brand",
-          brandPersonality: dna?.brand_personality || "Luxury",
-          businessDescription: dna?.business_description || "",
-          targetAudience: dna?.target_audience || "",
-          usp: dna?.usp || "",
-          website: dna?.website || "",
-          logoUrl: assets?.logo_url || "",
-          fonts: assets?.fonts || [typography.primaryFont, typography.bodyFont],
-          primaryFont: typography.primaryFont,
-          bodyFont: typography.bodyFont,
-          primaryColor: activeColors.primaryHex || "#FFB800",
-          secondaryColor: activeColors.secondaryHex || "#000000"
-        }),
-      });
+      try {
+        const res = await fetch("/api/content/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            prompt: postPrompt,
+            aspectRatio: postAspectRatio,
+            jobType: 'generate_post',
+            targetModel: selectedModel,
+            // The selected workspace is the canonical owner for generated assets.
+            orgId: activeWorkspace?.id,
+            brandName: dna?.brand_name || activeOrg?.name || "Brand",
+            brandPersonality: dna?.brand_personality || "Luxury",
+            businessDescription: dna?.business_description || "",
+            targetAudience: dna?.target_audience || "",
+            usp: dna?.usp || "",
+            website: dna?.website || "",
+            logoUrl: assets?.logo_url || "",
+            fonts: assets?.fonts || [typography.primaryFont, typography.bodyFont],
+            primaryFont: typography.primaryFont,
+            bodyFont: typography.bodyFont,
+            primaryColor: activeColors.primaryHex || "#FFB800",
+            secondaryColor: activeColors.secondaryHex || "#000000"
+          }),
+        });
 
-      if (!res.ok) {
-        const errText = await res.text();
-        throw new Error(errText || `Server returned ${res.status}`);
-      }
+        if (!res.ok) {
+          const errText = await res.text();
+          throw new Error(errText || `Server returned ${res.status}`);
+        }
 
       const enqueueResult = await res.json();
       if (enqueueResult.error) {
@@ -469,6 +501,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
           prompt: carouselPrompt,
           aspectRatio: "4/5",
           jobType: 'generate_carousel',
+          targetModel: selectedModel,
           // Keep generation and the Generated Assets query on the same workspace ID.
           orgId: activeWorkspace?.id,
           brandName: dna?.brand_name || activeOrg?.name || "Brand",
@@ -543,6 +576,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           workspaceId: activeWorkspace?.id,
+          targetModel: selectedModel,
           prompt: videoPrompt,
           duration: videoDuration,
           brandName: dna?.brand_name,
@@ -954,9 +988,21 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
     }
   };
 
-  const planId = billingStatus?.subscription?.status === "active" ? billingStatus?.subscription?.plan_id : "free";
-  const hasCarouselAccess = planId === "pro" || planId === "automate";
-  const hasAutomateAccess = planId === "automate";
+  const getPlanType = () => {
+    if (billingStatus?.subscription?.status !== "active") return "free";
+    const sub = billingStatus.subscription;
+    if (sub.plans) {
+      if (Array.isArray(sub.plans) && sub.plans.length > 0) return sub.plans[0].type;
+      if (!Array.isArray(sub.plans) && sub.plans.type) return sub.plans.type;
+    }
+    return sub.plan_id || "free";
+  };
+  
+  const planType = getPlanType();
+  const planName = billingStatus?.subscription?.status === "active" ? 
+    (Array.isArray(billingStatus?.subscription?.plans) ? billingStatus.subscription.plans[0]?.name : billingStatus?.subscription?.plans?.name) : "Free";
+  const hasCarouselAccess = planType === "pro" || planType === "automate" || planType === "automate_brand";
+  const hasAutomateAccess = planType === "automate" || planType === "automate_brand";
 
   if (loading) {
     return (
@@ -1157,6 +1203,28 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                     </option>
                   ))}
               </select>
+
+              {/* Model Switcher */}
+              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-black border border-[#828282]/20 rounded-lg hover:bg-[#ffffff]/5 transition-all">
+                <Brain className="w-3.5 h-3.5 text-[#828282]" />
+                <div className="relative flex items-center">
+                  <select
+                    value={selectedModel}
+                    onChange={(e) => setSelectedModel(e.target.value)}
+                    className="min-w-[130px] pr-6 bg-transparent border-none text-xs font-medium text-[#ffffff] outline-none cursor-pointer appearance-none"
+                  >
+                    {availableModels.map(m => (
+                      <option key={m.id} value={m.id} disabled={m.status === "high_demand"} className="bg-black text-[#ffffff]">
+                        {m.name} {m.status === "high_demand" ? "(High Demand)" : ""}
+                      </option>
+                    ))}
+                    {availableModels.length === 0 && (
+                      <option value="gemini-3.5-flash" className="bg-black text-[#ffffff]">Gemini 3.5 Flash</option>
+                    )}
+                  </select>
+                  <ChevronDown className="w-3.5 h-3.5 text-[#828282] absolute right-0 pointer-events-none" />
+                </div>
+              </div>
             </div>
 
             {/* Notification Bell + Profile + Settings */}
@@ -2405,7 +2473,10 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                                         const res = await fetch("/api/content/generate", {
                                           method: "POST",
                                           headers: { "Content-Type": "application/json" },
-                                          body: JSON.stringify({ calendarItemId: item.id })
+                                          body: JSON.stringify({
+                                            calendarItemId: item.id,
+                                            targetModel: selectedModel
+                                          })
                                         });
                                         if (res.ok) {
                                           const enqueueResult = await res.json();
@@ -2686,11 +2757,20 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                               left: 0
                             }}
                           >
-                            <div
-                              id="social-post-image"
-                              dangerouslySetInnerHTML={{ __html: generatedPostImage }}
-                              className="w-full h-full max-w-full [contain:layout_paint] [&>div]:w-full [&>div]:h-full [&>div]:max-w-full bg-black relative overflow-hidden"
-                            />
+                            {generatedPostImage.trim().startsWith('<') ? (
+                              <div
+                                id="social-post-image"
+                                dangerouslySetInnerHTML={{ __html: generatedPostImage }}
+                                className="w-full h-full max-w-full [contain:layout_paint] [&>div]:w-full [&>div]:h-full [&>div]:max-w-full bg-black relative overflow-hidden"
+                              />
+                            ) : (
+                              <img
+                                id="social-post-image"
+                                src={generatedPostImage}
+                                alt="Generated Post Preview"
+                                className="w-full h-full object-cover"
+                              />
+                            )}
                           </div>
                         </div>
 
@@ -3456,9 +3536,9 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                         <div className="flex justify-between items-center mb-4">
                           <div className="space-y-1">
                             <span className="text-xs font-bold uppercase tracking-[0.2em] text-[#E1E0CC]">Current Plan</span>
-                            <h5 className="text-xl font-bold text-[#ffffff] capitalize">{billingStatus?.subscription?.plan_id || "Free"} Plan</h5>
+                            <h5 className="text-xl font-bold text-[#ffffff] capitalize">{planName} Plan</h5>
                           </div>
-                          {planId === "free" && (
+                          {planType === "free" && (
                             <Link
                               href="/dashboard/billing"
                               className="px-4 py-2 bg-[#DEDBC8] text-black hover:bg-white text-xs font-bold rounded-xl flex items-center gap-1.5 transition-all"
@@ -3934,7 +4014,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                             onClick={async () => {
                               try {
                                 const zip = new JSZip();
-                                const slides = viewingAsset.generated_assets.carouselData;
+                                const slides = viewingAsset.generated_assets.slides;
                                 if (!slides) return;
                                 for (let i = 0; i < slides.length; i++) {
                                   const node = document.getElementById(`carousel-slide-export-node-${i}`);

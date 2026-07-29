@@ -88,29 +88,29 @@ export function AssetsView({ workspaceId, refreshKey = 0 }: { workspaceId: strin
                 
                 {/* Preview Area */}
                 <div className="aspect-square bg-[#ffffff]/5 relative overflow-hidden flex flex-col items-center justify-center p-4">
-                  {activeSubTab === "image" && asset.metadata_json?.imageUrl ? (
+                  {activeSubTab === "image" && asset.metadata?.imageUrl ? (
                     <img 
-                      src={asset.metadata_json.imageUrl} 
+                      src={asset.metadata.imageUrl} 
                       alt="Generated" 
                       className="object-cover w-full h-full absolute inset-0"
                     />
-                  ) : activeSubTab === "image" && asset.metadata_json?.html ? (
+                  ) : activeSubTab === "image" && (asset.metadata?.html || asset.metadata?.html_content) ? (
                     <div className="absolute inset-0 overflow-hidden bg-black">
                       <div
                         className="origin-top-left scale-[0.24] sm:scale-[0.28]"
                         style={{ width: '1080px', height: '1080px' }}
-                        dangerouslySetInnerHTML={{ __html: asset.metadata_json.html }}
+                        dangerouslySetInnerHTML={{ __html: asset.metadata.html || asset.metadata.html_content }}
                       />
                     </div>
-                  ) : activeSubTab === "carousel" && asset.metadata_json?.slides ? (
+                  ) : activeSubTab === "carousel" && asset.metadata?.slides ? (
                     <div className="w-full aspect-[4/5] bg-[#1c1e21] rounded-lg shadow-lg relative overflow-hidden border border-[#ffffff]/10">
                        <div 
                          className="absolute inset-0 origin-top-left scale-[0.24] sm:scale-[0.28] lg:scale-[0.3]"
                          style={{ width: '1080px', height: '1350px' }}
-                         dangerouslySetInnerHTML={{ __html: typeof asset.metadata_json.slides[0] === "string" ? asset.metadata_json.slides[0] : asset.metadata_json.slides[0]?.html || "" }}
+                         dangerouslySetInnerHTML={{ __html: typeof asset.metadata.slides[0] === "string" ? asset.metadata.slides[0] : asset.metadata.slides[0]?.html || "" }}
                        />
                        <div className="absolute top-2 right-2 bg-black/80 backdrop-blur-sm text-xs font-bold px-2 py-1 rounded text-white z-10 border border-white/20">
-                         {asset.metadata_json.slides.length} Slides
+                         {asset.metadata.slides.length} Slides
                        </div>
                     </div>
                   ) : (
@@ -119,9 +119,9 @@ export function AssetsView({ workspaceId, refreshKey = 0 }: { workspaceId: strin
 
                   {/* Hover Actions */}
                   <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3 backdrop-blur-sm z-20">
-                    {activeSubTab === "image" && asset.metadata_json?.imageUrl && (
+                    {activeSubTab === "image" && asset.metadata?.imageUrl && (
                        <a 
-                         href={asset.metadata_json.imageUrl}
+                         href={asset.metadata.imageUrl}
                          target="_blank"
                          className="w-10 h-10 rounded-full bg-[#DEDBC8] text-black flex items-center justify-center hover:scale-110 transition-transform"
                          title="Open Full Image"
@@ -131,7 +131,7 @@ export function AssetsView({ workspaceId, refreshKey = 0 }: { workspaceId: strin
                     )}
                     {activeSubTab === "carousel" && (
                        <div className="text-xs font-bold text-white bg-black/50 px-3 py-1.5 rounded-full border border-white/20">
-                         {asset.metadata_json.slides?.length || 0} Slides
+                         {asset.metadata.slides?.length || 0} Slides
                        </div>
                     )}
                   </div>
