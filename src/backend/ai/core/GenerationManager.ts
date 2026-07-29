@@ -47,12 +47,25 @@ export class GenerationManager {
         .limit(1)
         .single();
 
+      let brandAssets = null;
+      if (brand) {
+        const { data: assets } = await this.supabase
+          .from('brand_assets')
+          .select('*')
+          .eq('brand_dna_id', brand.id)
+          .single();
+        brandAssets = assets;
+      }
+
       await updateProgress(10, 'building_context');
       const context = await generator.buildContext(job.input_payload, job.workspace_id);
       
       // Inject unified brand context
       if (brand) {
-        context.brandContext = brand;
+        context.brandContext = {
+          ...brand,
+          colors: brandAssets?.logo_studio_data?.colors || null
+        };
       }
 
       await updateProgress(20, 'building_prompt');

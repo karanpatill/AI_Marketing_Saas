@@ -28,7 +28,18 @@ export class ImageGenerator implements IGenerationModule {
       aspectRatio = "4/5"
     } = inputParams;
 
-    const assignedLanguage = determineDesignLanguage(brandPersonality, businessDescription);
+    // Use brandContext from GenerationManager if available, fallback to defaults
+    const bCtx = context.brandContext || {};
+    const colors = bCtx.colors || {};
+    const primaryColor = colors.primaryHex || inputParams.primaryColor || "#000000";
+    const secondaryColor = colors.secondaryHex || inputParams.secondaryColor || "#ffffff";
+    const brandNameToUse = bCtx.brand_name || brandName;
+    const brandPersonalityToUse = bCtx.brand_personality || brandPersonality;
+    const businessDescriptionToUse = bCtx.business_description || businessDescription;
+    const targetAudienceToUse = bCtx.target_audience || targetAudience;
+    const uspToUse = bCtx.usp || usp;
+
+    const assignedLanguage = bCtx.internal_design_language || inputParams.internal_design_language || determineDesignLanguage(brandPersonalityToUse, businessDescriptionToUse);
     const profile = getStyleProfile(assignedLanguage);
 
     return `
@@ -36,11 +47,12 @@ You are an elite, world-class copywriter, art director, and content strategist s
 Your style flawlessly matches the brand's visual identity, vibe, and tone of voice, acting as the ultimate manifestation of the brand's DNA.
 
 --- BRAND DNA & IDENTITY ---
-- Brand Name: ${brandName}
-- Visual Vibe & Tone: ${brandPersonality}
-- Core Business: ${businessDescription}
-- Target Audience: ${targetAudience ? targetAudience : 'General professional audience'}
-- Unique Selling Proposition (USP): ${usp ? usp : 'Premium quality and design'}
+- Brand Name: ${brandNameToUse}
+- Visual Vibe & Tone: ${brandPersonalityToUse}
+- Core Business: ${businessDescriptionToUse}
+- Target Audience: ${targetAudienceToUse ? targetAudienceToUse : 'General professional audience'}
+- Unique Selling Proposition (USP): ${uspToUse ? uspToUse : 'Premium quality and design'}
+- Brand Colors: Primary (${primaryColor}), Secondary (${secondaryColor})
 - Assigned Design Language: ${assignedLanguage}
 
 DESIGN LANGUAGE DIRECTIVES for ${assignedLanguage}:
@@ -69,7 +81,8 @@ Return the result STRICTLY as a JSON object with the following structure. DO NOT
 {
   "category": "MARKETING INSIGHT",
   "title": "The specific hook title that stops the scroll.",
-  "content": "Short, compelling subtitle setting up the premise."
+  "content": "Short, compelling subtitle setting up the premise.",
+  "image_prompt": "A detailed image generation prompt for the background image that strictly follows the ${assignedLanguage} design language aesthetics and prominently features the brand colors: ${primaryColor} and ${secondaryColor}."
 }
 `;
   }
@@ -134,7 +147,7 @@ Return the result STRICTLY as a JSON object with the following structure. DO NOT
         aspectRatio = "4/5"
       } = context.inputParams;
 
-      const assignedLanguage = determineDesignLanguage(brandPersonality, context.inputParams.businessDescription || "");
+      const assignedLanguage = context.inputParams.internal_design_language || determineDesignLanguage(brandPersonality, context.inputParams.businessDescription || "");
       const profile = getStyleProfile(assignedLanguage);
       const textColor = getContrastColor(secondaryColor);
       const isLightBg = textColor === "#000000";
@@ -157,7 +170,7 @@ Return the result STRICTLY as a JSON object with the following structure. DO NOT
       const headlineFontStyle = primaryFontName ? `font-family: '${primaryFontName}', serif, sans-serif;` : '';
       const bodyFontStyle = bodyFontName ? `font-family: '${bodyFontName}', sans-serif;` : '';
 
-      const bgImgRes = await resolveInitialImage(assignedLanguage, context.inputParams.topic || context.inputParams.prompt || "", `${parsed.category} ${parsed.title}`);
+      const bgImgRes = await resolveInitialImage(assignedLanguage, context.inputParams.topic || context.inputParams.prompt || "", parsed.image_prompt || `${parsed.category} ${parsed.title}`);
       const bgImageUrl = bgImgRes?.url || "";
 
       const options: TemplateOptions = {

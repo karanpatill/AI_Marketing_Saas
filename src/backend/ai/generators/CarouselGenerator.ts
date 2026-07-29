@@ -28,7 +28,18 @@ export class CarouselGenerator implements IGenerationModule {
       aspectRatio = "4/5"
     } = inputParams;
 
-    const assignedLanguage = determineDesignLanguage(brandPersonality, businessDescription);
+    // Use brandContext from GenerationManager if available, fallback to defaults
+    const bCtx = context.brandContext || {};
+    const colors = bCtx.colors || {};
+    const primaryColor = colors.primaryHex || inputParams.primaryColor || "#000000";
+    const secondaryColor = colors.secondaryHex || inputParams.secondaryColor || "#ffffff";
+    const brandNameToUse = bCtx.brand_name || brandName;
+    const brandPersonalityToUse = bCtx.brand_personality || brandPersonality;
+    const businessDescriptionToUse = bCtx.business_description || businessDescription;
+    const targetAudienceToUse = bCtx.target_audience || targetAudience;
+    const uspToUse = bCtx.usp || usp;
+
+    const assignedLanguage = bCtx.internal_design_language || inputParams.internal_design_language || determineDesignLanguage(brandPersonalityToUse, businessDescriptionToUse);
     const profile = getStyleProfile(assignedLanguage);
 
     return `
@@ -36,11 +47,12 @@ You are an elite, world-class copywriter, art director, and content strategist s
 Your style flawlessly matches the brand's visual identity, vibe, and tone of voice, acting as the ultimate manifestation of the brand's DNA.
 
 --- BRAND DNA & IDENTITY ---
-- Brand Name: ${brandName}
-- Visual Vibe & Tone: ${brandPersonality}
-- Core Business: ${businessDescription}
-- Target Audience: ${targetAudience}
-- Unique Selling Proposition: ${usp}
+- Brand Name: ${brandNameToUse}
+- Visual Vibe & Tone: ${brandPersonalityToUse}
+- Core Business: ${businessDescriptionToUse}
+- Target Audience: ${targetAudienceToUse}
+- Unique Selling Proposition: ${uspToUse}
+- Brand Colors: Primary (${primaryColor}), Secondary (${secondaryColor})
 - Assigned Design Language: ${assignedLanguage}
 
 DESIGN LANGUAGE DIRECTIVES for ${assignedLanguage}:
@@ -69,6 +81,7 @@ When writing for specific design languages, adapt the pacing, punctuation, and l
 
 Return the result STRICTLY as a JSON object with the following structure. DO NOT include markdown formatting (\`\`\`json):
 {
+  "image_prompt": "A detailed image generation prompt for the background image that strictly follows the ${assignedLanguage} design language aesthetics and prominently features the brand colors: ${primaryColor} and ${secondaryColor}.",
   "slides": [
     { 
       "type": "hook", 
@@ -147,7 +160,7 @@ Return the result STRICTLY as a JSON object with the following structure. DO NOT
         aspectRatio = "4/5"
       } = context.inputParams;
 
-      const assignedLanguage = determineDesignLanguage(brandPersonality, context.inputParams.businessDescription || "");
+      const assignedLanguage = context.inputParams.internal_design_language || determineDesignLanguage(brandPersonality, context.inputParams.businessDescription || "");
       const profile = getStyleProfile(assignedLanguage);
       const textColor = getContrastColor(secondaryColor);
       const isLightBg = textColor === "#000000";
@@ -170,7 +183,7 @@ Return the result STRICTLY as a JSON object with the following structure. DO NOT
       const headlineFontStyle = primaryFontName ? `font-family: '${primaryFontName}', serif, sans-serif;` : '';
       const bodyFontStyle = bodyFontName ? `font-family: '${bodyFontName}', sans-serif;` : '';
 
-      const bgImgRes = await resolveInitialImage(assignedLanguage, context.inputParams.topic || context.inputParams.prompt || "");
+      const bgImgRes = await resolveInitialImage(assignedLanguage, context.inputParams.topic || context.inputParams.prompt || "", parsed.image_prompt || "");
       const bgImageUrl = bgImgRes?.url || "";
 
       const finalSlides = parsedSlides.map((s: any, idx: number) => {
