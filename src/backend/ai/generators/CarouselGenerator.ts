@@ -133,8 +133,9 @@ Return the result STRICTLY as a JSON object with the following structure. DO NOT
       // Clean up potential markdown wrapper
       jsonOutput = jsonOutput.replace(/^```(json)?\n?/i, '').replace(/\n?```$/i, '').trim();
       let parsedSlides: any[] = [];
+      let parsed: any = {};
       try {
-        let parsed = JSON.parse(jsonOutput);
+        parsed = JSON.parse(jsonOutput);
         if (Array.isArray(parsed)) {
           parsed = { slides: parsed };
         }
