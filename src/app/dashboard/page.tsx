@@ -1958,18 +1958,12 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                               ? dna?.brand_name.toUpperCase() 
                               : dna?.brand_name;
                             return (
-                              <div className="w-32 h-32 bg-[#1c1e21] border border-[#E1E0CC]/5 hover:border-[#E1E0CC]/15 transition-all rounded-2xl flex flex-col items-center justify-center p-4 relative overflow-hidden shadow-inner bg-gradient-to-b from-white to-gray-50/30">
-                                <div className="flex-1 flex items-center justify-center w-full">
-                                  <img src={assets.logo_url} alt="Symbol Mark" className="max-h-[55%] max-w-[55%] object-contain" />
-                                </div>
-                                <div className="pt-1 text-center">
-                                  <span 
-                                    className={`text-[#ffffff] ${activeFontStyle}`}
-                                    style={{ fontFamily: activeFontName }}
-                                  >
-                                    {displayActiveBrandName}
-                                  </span>
-                                </div>
+                              <div className="w-32 h-32 bg-[#1c1e21] border border-[#E1E0CC]/5 hover:border-[#E1E0CC]/15 transition-all rounded-2xl flex items-center justify-center relative overflow-hidden shadow-inner">
+                                <img 
+                                  src={assets.logo_url} 
+                                  alt="Brand Logo" 
+                                  className="w-full h-full object-cover" 
+                                />
                               </div>
                             );
                           })()

@@ -88,22 +88,23 @@ export function AssetsView({ workspaceId, refreshKey = 0 }: { workspaceId: strin
                 
                 {/* Preview Area */}
                 <div className="aspect-square bg-[#ffffff]/5 relative overflow-hidden flex flex-col items-center justify-center p-4">
-                  {activeSubTab === "image" && asset.metadata?.imageUrl ? (
-                    <img 
-                      src={asset.metadata.imageUrl} 
-                      alt="Generated" 
-                      className="object-cover w-full h-full absolute inset-0"
-                    />
-                  ) : activeSubTab === "image" && (asset.metadata?.html || asset.metadata?.html_content) ? (
-                    <div className="absolute inset-0 overflow-hidden bg-black">
+                  {activeSubTab === "image" && (asset.metadata?.html || asset.metadata?.html_content) ? (
+                    <div className="absolute inset-0 overflow-hidden bg-black" id={`asset-preview-${asset.id}`}>
                       <div
                         className="origin-top-left scale-[0.24] sm:scale-[0.28]"
                         style={{ width: '1080px', height: '1080px' }}
                         dangerouslySetInnerHTML={{ __html: asset.metadata.html || asset.metadata.html_content }}
                       />
                     </div>
+                  ) : activeSubTab === "image" && asset.metadata?.imageUrl ? (
+                    <img 
+                      id={`asset-preview-${asset.id}`}
+                      src={asset.metadata.imageUrl} 
+                      alt="Generated" 
+                      className="object-cover w-full h-full absolute inset-0"
+                    />
                   ) : activeSubTab === "carousel" && asset.metadata?.slides ? (
-                    <div className="w-full aspect-[4/5] bg-[#1c1e21] rounded-lg shadow-lg relative overflow-hidden border border-[#ffffff]/10">
+                    <div className="w-full aspect-[4/5] bg-[#1c1e21] rounded-lg shadow-lg relative overflow-hidden border border-[#ffffff]/10" id={`asset-preview-${asset.id}`}>
                        <div 
                          className="absolute inset-0 origin-top-left scale-[0.24] sm:scale-[0.28] lg:scale-[0.3]"
                          style={{ width: '1080px', height: '1350px' }}
@@ -124,11 +125,61 @@ export function AssetsView({ workspaceId, refreshKey = 0 }: { workspaceId: strin
                          href={asset.metadata.imageUrl}
                          target="_blank"
                          className="w-10 h-10 rounded-full bg-[#DEDBC8] text-black flex items-center justify-center hover:scale-110 transition-transform"
-                         title="Open Full Image"
+                         title="Open Background Image"
                        >
                          <ExternalLink className="w-4 h-4" />
                        </a>
                     )}
+                    {activeSubTab === "image" && (
+                       <button
+                         onClick={async (e) => {
+                           e.preventDefault();
+                           try {
+                             const node = document.getElementById(`asset-preview-${asset.id}`);
+                             if (node) {
+                               const { toJpeg } = await import('html-to-image');
+                               // Scale up for high quality download
+                               const dataUrl = await toJpeg(node, { quality: 1, pixelRatio: 2, style: { transform: 'scale(1)', width: '1080px', height: '1080px', transformOrigin: 'top left' } });
+                               const link = document.createElement('a');
+                               link.download = `brand-asset-${asset.id}.jpeg`;
+                               link.href = dataUrl;
+                               link.click();
+                             }
+                           } catch (err) {
+                             console.error('Failed to export image', err);
+                             alert('Failed to export image. Please try again.');
+                           }
+                         }}
+                         className="w-10 h-10 rounded-full bg-[#DEDBC8] text-black flex items-center justify-center hover:scale-110 transition-transform"
+                         title="Download Final JPEG"
+                       >
+                         <Download className="w-4 h-4" />
+                       </button>
+                    )}
+
+                      <button
+                        onClick={async (e) => {
+                          e.preventDefault();
+                          if (confirm("Are you sure you want to delete this asset?")) {
+                            try {
+                              const res = await fetch(`/api/assets/${asset.id}`, { method: 'DELETE' });
+                              if (res.ok) {
+                                setAssets((prev) => prev.filter((a) => a.id !== asset.id));
+                              } else {
+                                alert('Failed to delete asset');
+                              }
+                            } catch (err) {
+                              console.error(err);
+                              alert('Failed to delete asset');
+                            }
+                          }
+                        }}
+                        className="w-10 h-10 rounded-full bg-[#111111] text-white flex items-center justify-center hover:scale-110 hover:bg-[#DEDBC8] hover:text-black transition-all border border-[#ffffff]/10"
+                        title="Delete Asset"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+                      </button>
+
                     {activeSubTab === "carousel" && (
                        <div className="text-xs font-bold text-white bg-black/50 px-3 py-1.5 rounded-full border border-white/20">
                          {asset.metadata.slides?.length || 0} Slides
