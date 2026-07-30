@@ -54,13 +54,13 @@ export const POST = withApiWrapper(async (req: NextRequest) => {
   let primaryFont = body.primaryFont || (Array.isArray(fonts) && fonts.length > 0 ? fonts[0] : "");
   let bodyFont = body.bodyFont || (Array.isArray(fonts) && fonts.length > 1 ? fonts[1] : "");
 
-  const { data: brand } = await supabaseAdmin
-    .from('brand_dna')
-    .select('*')
-    .eq('workspace_id', resolvedWorkspaceId)
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  let brandQuery = supabaseAdmin.from('brand_dna').select('*');
+  if (brandDnaId) {
+    brandQuery = brandQuery.eq('id', brandDnaId);
+  } else {
+    brandQuery = brandQuery.eq('workspace_id', resolvedWorkspaceId).order('created_at', { ascending: false }).limit(1);
+  }
+  const { data: brand } = await brandQuery.maybeSingle();
 
   if (brand) {
     brandName = brand.brand_name || brandName;

@@ -45,7 +45,8 @@ export class ContextEngine {
   public static async gatherComprehensiveContext(
     workspaceId: string,
     projectId: string | undefined,
-    basePrompt: string
+    basePrompt: string,
+    brandDnaId?: string
   ): Promise<GenerationContext> {
     const supabase = createAdminClient();
     
@@ -58,13 +59,13 @@ export class ContextEngine {
 
     // 1. Fetch Brand Context
     try {
-      const { data: brand } = await supabase
-        .from('brand_dna')
-        .select('*')
-        .eq('workspace_id', workspaceId)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      let query = supabase.from('brand_dna').select('*');
+      if (brandDnaId) {
+        query = query.eq('id', brandDnaId);
+      } else {
+        query = query.eq('workspace_id', workspaceId).order('created_at', { ascending: false }).limit(1);
+      }
+      const { data: brand } = await query.maybeSingle();
 
       if (brand) {
         context.brandContext = brand;

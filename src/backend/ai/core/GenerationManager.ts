@@ -39,13 +39,14 @@ export class GenerationManager {
 
       await updateProgress(5, 'fetching_brand_context');
       // Fetch Brand context using the new os_modules schemas
-      const { data: brand } = await this.supabase
-        .from('brand_dna')
-        .select('*')
-        .eq('workspace_id', job.workspace_id)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
+      let brandQuery = this.supabase.from('brand_dna').select('*');
+      if (job.input_payload?.brandDnaId) {
+        brandQuery = brandQuery.eq('id', job.input_payload.brandDnaId);
+      } else {
+        brandQuery = brandQuery.eq('workspace_id', job.workspace_id).order('created_at', { ascending: false }).limit(1);
+      }
+      
+      const { data: brand } = await brandQuery.single();
 
       let brandAssets = null;
       if (brand) {

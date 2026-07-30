@@ -428,7 +428,8 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
             jobType: 'generate_post',
             targetModel: selectedModel,
             // The selected workspace is the canonical owner for generated assets.
-            orgId: activeWorkspace?.id,
+            brandDnaId: dna?.id,
+              orgId: activeWorkspace?.id,
             brandName: dna?.brand_name || activeOrg?.name || "Brand",
             brandPersonality: dna?.brand_personality || "Luxury",
             businessDescription: dna?.business_description || "",
@@ -503,7 +504,8 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
           jobType: 'generate_carousel',
           targetModel: selectedModel,
           // Keep generation and the Generated Assets query on the same workspace ID.
-          orgId: activeWorkspace?.id,
+          brandDnaId: dna?.id,
+              orgId: activeWorkspace?.id,
           brandName: dna?.brand_name || activeOrg?.name || "Brand",
           brandPersonality: dna?.brand_personality || "Luxury",
           businessDescription: dna?.business_description || "",
