@@ -161,7 +161,8 @@ Return the result STRICTLY as a JSON object with the following structure. DO NOT
         aspectRatio = "4/5"
       } = context.inputParams;
 
-      const assignedLanguage = context.inputParams.internal_design_language || determineDesignLanguage(brandPersonality, context.inputParams.businessDescription || "");
+      const bCtx = context.brandContext || {};
+      const assignedLanguage = bCtx.internal_design_language || context.inputParams.internal_design_language || determineDesignLanguage(brandPersonality, context.inputParams.businessDescription || "");
       const profile = getStyleProfile(assignedLanguage);
       const textColor = getContrastColor(secondaryColor);
       const isLightBg = textColor === "#000000";
