@@ -468,7 +468,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
 
             isCompleted = true;
           } else if (jobData.job.status === 'failed') {
-            throw new Error(jobData.job.error?.message || "Generation job failed");
+            throw new Error((typeof jobData.job.error === 'string' ? jobData.job.error : jobData.job.error?.message) || "Generation job failed");
           }
         }
       }
@@ -544,7 +544,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
             setAssetRefreshKey((current) => current + 1);
             isCompleted = true;
           } else if (jobData.job.status === 'failed') {
-            throw new Error(jobData.job.error?.message || "Generation job failed");
+            throw new Error((typeof jobData.job.error === 'string' ? jobData.job.error : jobData.job.error?.message) || "Generation job failed");
           }
         }
       }
@@ -632,7 +632,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
             setVideoQueueStatus(null);
             isCompleted = true;
           } else if (jobData.job.status === 'failed') {
-            throw new Error(jobData.job.error?.message || "Video generation job failed");
+            throw new Error((typeof jobData.job.error === 'string' ? jobData.job.error : jobData.job.error?.message) || "Video generation job failed");
           }
         }
       }

@@ -213,9 +213,11 @@ Return the result STRICTLY as a JSON object with the following structure. DO NOT
       console.error("[ImageGenerator] Error:", error);
       ModelRegistry.reportFailure(targetModel, error.message || String(error));
       
+      const { formatAiError } = require("../utils/errorHandler");
+      
       return {
         status: 'failed',
-        error: error.message || 'Unknown generation error',
+        error: formatAiError(error),
         metadata: {
           provider: 'gemini',
           duration: Date.now() - startTime
