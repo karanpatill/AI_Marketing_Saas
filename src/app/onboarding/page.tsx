@@ -825,40 +825,55 @@ export default function OnboardingPage() {
         }
       }
 
-      // TRANSACTION STEP 1: Insert Brand DNA profile
-      const { data: dnaResult, error: dnaError } = await supabase
-        .from("brand_dna")
-        .insert({
-          brand_name: data.brandName,
-          website: data.website || null,
-          industry: data.industry,
-          category: data.category || "General",
-          sub_category: data.subCategory || null,
-          business_description: data.businessDescription,
-          mission: data.mission,
-          vision: data.vision || null,
-          usp: data.usp,
-          brand_personality: data.brandPersonality,
-          brand_values: data.brandValues,
-          products: data.products,
-          services: data.services,
-          pricing: data.pricing,
-          target_audience: data.targetAudience,
-          customer_personas: data.customerPersonas || null,
-          country: data.country,
-          languages: data.languages,
-          competitors: (data.competitors || []).filter(c => c.trim().length > 0),
-          platforms: data.platforms || [],
-          main_goal: data.mainGoal,
-          approved_moodboard: data.approvedMoodboard || null,
-          workspace_id: workspaceId,
-        })
-        .select()
-        .single();
+      // TRANSACTION STEP 1: Insert Brand DNA profile (Via Backend API to ensure AI design language assignment)
+      let dnaResult;
+      try {
+        const brandRes = await fetch("/api/brands", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            workspaceId: workspaceId,
+            name: data.brandName,
+            website: data.website || null,
+            industry: data.industry,
+            category: data.category || "General",
+            sub_category: data.subCategory || null,
+            business_description: data.businessDescription,
+            mission: data.mission,
+            vision: data.vision || null,
+            usp: data.usp,
+            brand_personality: data.brandPersonality,
+            brand_values: data.brandValues,
+            products: data.products,
+            services: data.services,
+            pricing: data.pricing,
+            target_audience: data.targetAudience,
+            customer_personas: data.customerPersonas || null,
+            country: data.country,
+            languages: data.languages,
+            competitors: (data.competitors || []).filter(c => c.trim().length > 0),
+            platforms: data.platforms || [],
+            main_goal: data.mainGoal,
+            approved_moodboard: data.approvedMoodboard || null,
+          })
+        });
 
-      if (dnaError || !dnaResult) {
-        console.error("Database DNA insert error:", dnaError);
+        if (!brandRes.ok) {
+          const errorText = await brandRes.text();
+          throw new Error(errorText || "Failed to create brand via API");
+        }
+        dnaResult = await brandRes.json();
+      } catch (dnaError: any) {
+        console.error("Database DNA insert error via API:", dnaError);
         alert(`Failed to save Brand DNA profile. Error: ${dnaError?.message || 'Unknown database error'} (Workspace: ${workspaceId})`);
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Check if we successfully got dnaResult
+      if (!dnaResult || !dnaResult.id) {
+        console.error("No DNA result returned from API");
+        alert(`Failed to save Brand DNA profile. (Workspace: ${workspaceId})`);
         setIsSubmitting(false);
         return;
       }
