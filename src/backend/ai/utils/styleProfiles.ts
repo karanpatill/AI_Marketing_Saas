@@ -139,10 +139,8 @@ export function getFallbackImage(query: string): string {
     return CURATED_PHOTOS.education[Math.floor(Math.random() * CURATED_PHOTOS.education.length)];
   }
   
-  // Custom queries fall back to dynamic LoremFlickr search instead of abstract wallpapers
-  const tags = query.trim().replace(/\s+/g, " ").split(" ").map(encodeURIComponent).join(",");
-  const cacheBuster = Math.floor(Math.random() * 1000000);
-  return `https://loremflickr.com/1080/1080/${tags}?random=${cacheBuster}`;
+  const list = CURATED_PHOTOS.abstract;
+  return list[Math.floor(Math.random() * list.length)];
 }
 
 export async function resolveInitialImage(industry: string, topic: string, imageKeywords?: string): Promise<{ url: string; query: string }> {

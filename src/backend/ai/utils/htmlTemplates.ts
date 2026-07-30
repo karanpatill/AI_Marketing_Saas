@@ -397,14 +397,14 @@ export function renderRetro(opt: TemplateOptions): string {
       <div class="relative z-10 flex-1 flex flex-col justify-center mt-12 mb-12 max-w-[85%]">
         <h2 class="text-5xl md:text-6xl lg:text-7xl mb-6 font-black uppercase leading-none tracking-tighter" style="${headlineFontStyle}; text-shadow: 4px 4px 0px ${primaryColor};">${title}</h2>
         <div class="w-24 h-2 mb-6" style="background-color: ${primaryColor};"></div>
-        <div class="bg-white/90 text-black p-6 rounded-lg border-4 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]" style="border-color: ${textColor};">
+        <div class="p-6 rounded-lg border-4" style="background-color: rgba(255,255,255,0.9); color: black; border-color: ${textColor}; box-shadow: 8px 8px 0px 0px rgba(0,0,0,1);">
             <p class="text-lg md:text-xl font-bold leading-relaxed" style="${bodyFontStyle}">${content.replace(/\n/g, '<br/>')}</p>
         </div>
       </div>
       
       <div class="relative z-10 w-full flex justify-between items-end">
-        ${isCarousel ? `<div class="bg-black text-white w-12 h-12 rounded-full flex items-center justify-center text-xl font-black border-4 shadow-[4px_4px_0px_0px_rgba(255,255,255,0.5)]" style="border-color: ${primaryColor}; ${headlineFontStyle}">${slideNum}</div>` : "<div></div>"}
-        ${website ? `<div class="text-sm font-black uppercase tracking-widest bg-black text-white px-4 py-2 rounded shadow-[4px_4px_0px_0px_rgba(255,255,255,0.5)]">${website}</div>` : ""}
+        ${isCarousel ? `<div class="bg-black text-white w-12 h-12 rounded-full flex items-center justify-center text-xl font-black border-4" style="border-color: ${primaryColor}; box-shadow: 4px 4px 0px 0px rgba(255,255,255,0.5); ${headlineFontStyle}">${slideNum}</div>` : "<div></div>"}
+        ${website ? `<div class="text-sm font-black uppercase tracking-widest bg-black text-white px-4 py-2 rounded" style="box-shadow: 4px 4px 0px 0px rgba(255,255,255,0.5);">${website}</div>` : ""}
       </div>
     </div>
   `;
