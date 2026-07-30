@@ -8,7 +8,7 @@ export const POST = withApiWrapper(async (req: NextRequest) => {
   const user = await requireAuth();
   
   const body = await req.json();
-  const { calendarItemId, orgId, prompt, jobType, aspectRatio, targetModel } = body;
+  const { calendarItemId, orgId, prompt, jobType, aspectRatio, targetModel, brandDnaId } = body;
 
   if (!calendarItemId && !prompt) {
     return NextResponse.json({ error: "Missing calendarItemId or prompt in body" }, { status: 400 });
