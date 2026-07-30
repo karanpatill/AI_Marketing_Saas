@@ -133,12 +133,31 @@ export function AssetsView({ workspaceId, refreshKey = 0 }: { workspaceId: strin
                          onClick={async (e) => {
                            e.preventDefault();
                            try {
-                             const node = document.getElementById(`asset-preview-${asset.id}`);
-                             if (node) {
+                             if (asset.metadata?.html || asset.metadata?.html_content) {
                                const { toJpeg } = await import('html-to-image');
-                               // Scale up for high quality download
-                               const dataUrl = await toJpeg(node, { quality: 1, pixelRatio: 2, style: { transform: 'scale(1)', width: `${dim.width}px`, height: `${dim.height}px`, transformOrigin: 'center' } });
+                               const tempDiv = document.createElement('div');
+                               tempDiv.style.position = 'absolute';
+                               tempDiv.style.left = '-9999px';
+                               tempDiv.style.top = '-9999px';
+                               tempDiv.style.width = `${dim.width}px`;
+                               tempDiv.style.height = `${dim.height}px`;
+                               tempDiv.innerHTML = asset.metadata.html || asset.metadata.html_content;
+                               document.body.appendChild(tempDiv);
+                               
+                               await new Promise(r => setTimeout(r, 200)); // allow render
+                               const dataUrl = await toJpeg(tempDiv, { quality: 1, pixelRatio: 2 });
+                               document.body.removeChild(tempDiv);
+                               
                                const resData = await fetch(dataUrl);
+                               const blob = await resData.blob();
+                               const objectUrl = URL.createObjectURL(blob);
+                               const link = document.createElement('a');
+                               link.download = `brand-asset-${asset.id}.jpeg`;
+                               link.href = objectUrl;
+                               link.click();
+                               URL.revokeObjectURL(objectUrl);
+                             } else if (asset.metadata?.imageUrl) {
+                               const resData = await fetch(asset.metadata.imageUrl);
                                const blob = await resData.blob();
                                const objectUrl = URL.createObjectURL(blob);
                                const link = document.createElement('a');
