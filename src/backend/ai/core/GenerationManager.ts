@@ -90,12 +90,15 @@ export class GenerationManager {
         else if (job.job_type === 'generate_carousel') assetType = 'carousel';
 
         // Don't duplicate if we already saved it (some jobs might retry, though jobs usually just fail)
-        const { error: assetError } = await this.supabase.from('assets').insert({
+        const { data: savedAsset, error: assetError } = await this.supabase.from('assets').insert({
           workspace_id: job.workspace_id,
           project_id: null,
           type: assetType,
           file_url: 'generated', // We store the actual output in metadata for HTML/JSON since there is no single URL
-          metadata: result.outputReference
+          metadata: {
+            ...result.outputReference,
+            systemPrompt: optimizedPrompt
+          }
         });
         if (assetError) {
           throw new Error(`Failed to save generated asset: ${assetError.message}`);

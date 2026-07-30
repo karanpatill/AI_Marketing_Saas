@@ -87,12 +87,12 @@ export function AssetsView({ workspaceId, refreshKey = 0 }: { workspaceId: strin
               <div key={asset.id} className="group relative bg-[#0A0A0A] border border-[#828282]/20 rounded-xl overflow-hidden hover:border-[#DEDBC8]/50 transition-colors">
                 
                 {/* Preview Area */}
-                <div className="aspect-square bg-[#ffffff]/5 relative overflow-hidden flex flex-col items-center justify-center p-4">
+                <div className="aspect-square bg-[#ffffff]/5 relative overflow-hidden flex items-center justify-center p-0">
                   {activeSubTab === "image" && (asset.metadata?.html || asset.metadata?.html_content) ? (
-                    <div className="absolute inset-0 overflow-hidden bg-black" id={`asset-preview-${asset.id}`}>
+                    <div className="absolute inset-0 bg-black flex items-center justify-center overflow-hidden" id={`asset-preview-${asset.id}`}>
                       <div
-                        className="origin-top-left scale-[0.24] sm:scale-[0.28]"
-                        style={{ width: '1080px', height: '1080px' }}
+                        className="origin-center scale-[0.24] sm:scale-[0.28] lg:scale-[0.3]"
+                        style={{ width: '1080px', height: '1080px', flexShrink: 0 }}
                         dangerouslySetInnerHTML={{ __html: asset.metadata.html || asset.metadata.html_content }}
                       />
                     </div>
@@ -104,10 +104,10 @@ export function AssetsView({ workspaceId, refreshKey = 0 }: { workspaceId: strin
                       className="object-cover w-full h-full absolute inset-0"
                     />
                   ) : activeSubTab === "carousel" && asset.metadata?.slides ? (
-                    <div className="w-full aspect-[4/5] bg-[#1c1e21] rounded-lg shadow-lg relative overflow-hidden border border-[#ffffff]/10" id={`asset-preview-${asset.id}`}>
+                    <div className="absolute inset-0 bg-[#1c1e21] shadow-lg flex items-center justify-center overflow-hidden" id={`asset-preview-${asset.id}`}>
                        <div 
-                         className="absolute inset-0 origin-top-left scale-[0.24] sm:scale-[0.28] lg:scale-[0.3]"
-                         style={{ width: '1080px', height: '1350px' }}
+                         className="origin-center scale-[0.24] sm:scale-[0.28] lg:scale-[0.3]"
+                         style={{ width: '1080px', height: '1080px', flexShrink: 0 }}
                          dangerouslySetInnerHTML={{ __html: typeof asset.metadata.slides[0] === "string" ? asset.metadata.slides[0] : asset.metadata.slides[0]?.html || "" }}
                        />
                        <div className="absolute top-2 right-2 bg-black/80 backdrop-blur-sm text-xs font-bold px-2 py-1 rounded text-white z-10 border border-white/20">
@@ -120,16 +120,6 @@ export function AssetsView({ workspaceId, refreshKey = 0 }: { workspaceId: strin
 
                   {/* Hover Actions */}
                   <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3 backdrop-blur-sm z-20">
-                    {activeSubTab === "image" && asset.metadata?.imageUrl && (
-                       <a 
-                         href={asset.metadata.imageUrl}
-                         target="_blank"
-                         className="w-10 h-10 rounded-full bg-[#DEDBC8] text-black flex items-center justify-center hover:scale-110 transition-transform"
-                         title="Open Background Image"
-                       >
-                         <ExternalLink className="w-4 h-4" />
-                       </a>
-                    )}
                     {activeSubTab === "image" && (
                        <button
                          onClick={async (e) => {
@@ -139,7 +129,7 @@ export function AssetsView({ workspaceId, refreshKey = 0 }: { workspaceId: strin
                              if (node) {
                                const { toJpeg } = await import('html-to-image');
                                // Scale up for high quality download
-                               const dataUrl = await toJpeg(node, { quality: 1, pixelRatio: 2, style: { transform: 'scale(1)', width: '1080px', height: '1080px', transformOrigin: 'top left' } });
+                               const dataUrl = await toJpeg(node, { quality: 1, pixelRatio: 2, style: { transform: 'scale(1)', width: '1080px', height: '1080px', transformOrigin: 'center' } });
                                const link = document.createElement('a');
                                link.download = `brand-asset-${asset.id}.jpeg`;
                                link.href = dataUrl;
@@ -152,6 +142,51 @@ export function AssetsView({ workspaceId, refreshKey = 0 }: { workspaceId: strin
                          }}
                          className="w-10 h-10 rounded-full bg-[#DEDBC8] text-black flex items-center justify-center hover:scale-110 transition-transform"
                          title="Download Final JPEG"
+                       >
+                         <Download className="w-4 h-4" />
+                       </button>
+                    )}
+
+                    {activeSubTab === "carousel" && (
+                       <button
+                         onClick={async (e) => {
+                           e.preventDefault();
+                           try {
+                             const JSZip = (await import('jszip')).default;
+                             const zip = new JSZip();
+                             const { toJpeg } = await import('html-to-image');
+                             
+                             const tempDiv = document.createElement('div');
+                             tempDiv.style.position = 'absolute';
+                             tempDiv.style.left = '-9999px';
+                             tempDiv.style.top = '-9999px';
+                             tempDiv.style.width = '1080px';
+                             tempDiv.style.height = '1080px';
+                             document.body.appendChild(tempDiv);
+                             
+                             for (let i = 0; i < asset.metadata.slides.length; i++) {
+                               const slideHtml = typeof asset.metadata.slides[i] === "string" ? asset.metadata.slides[i] : asset.metadata.slides[i].html;
+                               tempDiv.innerHTML = slideHtml;
+                               await new Promise(r => setTimeout(r, 100)); // allow render
+                               const dataUrl = await toJpeg(tempDiv, { quality: 1, pixelRatio: 2 });
+                               const base64Data = dataUrl.replace(/^data:image\/(png|jpeg);base64,/, "");
+                               zip.file(`slide-${i + 1}.jpeg`, base64Data, { base64: true });
+                             }
+                             
+                             document.body.removeChild(tempDiv);
+                             
+                             const blob = await zip.generateAsync({ type: "blob" });
+                             const link = document.createElement('a');
+                             link.download = `carousel-${asset.id}.zip`;
+                             link.href = URL.createObjectURL(blob);
+                             link.click();
+                           } catch (err) {
+                             console.error('Failed to export carousel', err);
+                             alert('Failed to export carousel. Please try again.');
+                           }
+                         }}
+                         className="w-10 h-10 rounded-full bg-[#DEDBC8] text-black flex items-center justify-center hover:scale-110 transition-transform"
+                         title="Download Zip"
                        >
                          <Download className="w-4 h-4" />
                        </button>
@@ -190,7 +225,7 @@ export function AssetsView({ workspaceId, refreshKey = 0 }: { workspaceId: strin
 
                 {/* Details Area */}
                 <div className="p-4 border-t border-[#828282]/20">
-                  <div className="flex items-center gap-4 text-xs text-[#828282]">
+                  <div className="flex items-center gap-4 text-xs text-[#828282] mb-3">
                     <div className="flex items-center gap-1.5">
                       <CalendarIcon className="w-3.5 h-3.5" />
                       {format(new Date(asset.created_at), 'MMM d, yyyy')}
@@ -200,6 +235,26 @@ export function AssetsView({ workspaceId, refreshKey = 0 }: { workspaceId: strin
                       {format(new Date(asset.created_at), 'h:mm a')}
                     </div>
                   </div>
+                  {asset.metadata?.systemPrompt && (
+                    <div className="mt-2 bg-[#111111] border border-[#ffffff]/10 rounded-md p-3 relative group/prompt">
+                      <div className="text-xs font-bold text-[#DEDBC8] mb-1 flex justify-between items-center">
+                        <span>Generation Prompt</span>
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(asset.metadata.systemPrompt);
+                            alert("Prompt copied to clipboard!");
+                          }}
+                          className="text-[#828282] hover:text-[#DEDBC8] transition-colors"
+                          title="Copy Prompt"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                        </button>
+                      </div>
+                      <p className="text-[10px] text-[#828282] leading-relaxed line-clamp-3 overflow-hidden text-ellipsis font-mono">
+                        {asset.metadata.systemPrompt}
+                      </p>
+                    </div>
+                  )}
                 </div>
 
               </div>

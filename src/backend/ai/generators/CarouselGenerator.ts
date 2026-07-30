@@ -25,7 +25,7 @@ export class CarouselGenerator implements IGenerationModule {
       businessDescription = "",
       targetAudience = "",
       usp = "",
-      aspectRatio = "4/5"
+      aspectRatio = "1:1"
     } = inputParams;
 
     // Use brandContext from GenerationManager if available, fallback to defaults
@@ -158,7 +158,7 @@ Return the result STRICTLY as a JSON object with the following structure. DO NOT
         website = "",
         logoUrl = "",
         fonts = [],
-        aspectRatio = "4/5"
+        aspectRatio = "1:1"
       } = context.inputParams;
 
       const bCtx = context.brandContext || {};

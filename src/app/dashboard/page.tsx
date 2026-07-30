@@ -370,13 +370,14 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
   // Helper to trigger refetches of dynamic tables
   const reloadDynamicData = async (dnaId: string) => {
     try {
-      const campaignsRes = await fetch(`/api/campaigns?brandDnaId=${dnaId}`);
+      const ts = Date.now();
+      const campaignsRes = await fetch(`/api/campaigns?brandDnaId=${dnaId}&t=${ts}`, { cache: 'no-store' });
       if (campaignsRes.ok) setCampaigns(await campaignsRes.json());
 
-      const calendarRes = await fetch(`/api/strategy?brandDnaId=${dnaId}`);
+      const calendarRes = await fetch(`/api/strategy?brandDnaId=${dnaId}&t=${ts}`, { cache: 'no-store' });
       if (calendarRes.ok) setCalendar(await calendarRes.json());
 
-      const mixRes = await fetch(`/api/content-mix?brandDnaId=${dnaId}`);
+      const mixRes = await fetch(`/api/content-mix?brandDnaId=${dnaId}&t=${ts}`, { cache: 'no-store' });
       if (mixRes.ok) setContentMix(await mixRes.json());
     } catch (err) {
       console.error("Failed to reload strategy details", err);
@@ -2962,12 +2963,12 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                         {/* Live slide viewport */}
                         <div 
                           className="relative w-full min-w-0 bg-black overflow-hidden isolate [contain:layout_paint] flex items-center justify-center"
-                          style={{ containerType: 'size', aspectRatio: '4/5' }}
+                          style={{ containerType: 'size', aspectRatio: '1/1' }}
                         >
                           <style dangerouslySetInnerHTML={{ __html: `
                             @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Syne:wght@400;750;800&family=Bricolage+Grotesque:wght@300;500;800&family=Space+Grotesk:wght@400;700&family=Outfit:wght@300;400;600;800&family=Plus+Jakarta+Sans:wght@300;400;600;800&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Montserrat:wght@300;400;700&family=Cinzel:wght@400;700;900&family=Inter:wght@300;400;600;700&display=swap');
 
-                            /* Keep each generated 1080x1350 slide inside the live social frame. */
+                            /* Keep each generated 1080x1080 slide inside the live social frame. */
                             #social-carousel-image,
                             #social-carousel-image > div {
                               width: 100% !important;
@@ -2997,9 +2998,9 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                           
                           <div style={{
                             width: '1080px',
-                            height: '1350px',
-                            // The preview is 4:5, but measuring both axes keeps any malformed HTML slide contained.
-                            transform: 'scale(min(calc(100cqw / 1080px), calc(100cqh / 1350px)))',
+                            height: '1080px',
+                            // The preview is 1:1, but measuring both axes keeps any malformed HTML slide contained.
+                            transform: 'scale(min(calc(100cqw / 1080px), calc(100cqh / 1080px)))',
                             transformOrigin: 'top left',
                             position: 'absolute',
                             top: 0,
@@ -3162,7 +3163,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                             secondaryHex: "#DEDBC8"
                           };
                           return (
-                            <div key={idx} style={{ width: '1080px', height: '1350px' }}>
+                            <div key={idx} style={{ width: '1080px', height: '1080px' }}>
                               {!slide?.html ? (
                                 <div id={`carousel-export-slide-${idx}`} className="relative h-full w-full flex flex-col justify-between p-16 z-10 select-none overflow-hidden bg-black">
                                   <div 
