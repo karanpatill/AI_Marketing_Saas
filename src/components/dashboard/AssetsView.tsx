@@ -5,6 +5,12 @@ import { Loader2, Image as ImageIcon, Layers, Download, ExternalLink, Calendar a
 import { format } from "date-fns";
 
 export function AssetsView({ workspaceId, refreshKey = 0 }: { workspaceId: string; refreshKey?: number }) {
+  const getDimensionsForRatio = (ratio?: string) => {
+    if (ratio === '9/16' || ratio === '9:16') return { width: 1080, height: 1920, tw: 'aspect-[9/16]' };
+    if (ratio === '16/9' || ratio === '16:9') return { width: 1080, height: 607.5, tw: 'aspect-video' };
+    if (ratio === '4/5' || ratio === '4:5') return { width: 1080, height: 1350, tw: 'aspect-[4/5]' };
+    return { width: 1080, height: 1080, tw: 'aspect-square' };
+  };
   const [activeSubTab, setActiveSubTab] = useState<"image" | "carousel">("image");
   const [assets, setAssets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -78,21 +84,23 @@ export function AssetsView({ workspaceId, refreshKey = 0 }: { workspaceId: strin
             </div>
             <h3 className="text-lg font-bold text-white mb-2">No {activeSubTab}s found</h3>
             <p className="text-sm text-[#828282] max-w-sm">
-              You haven't generated any {activeSubTab}s yet. Head over to the {activeSubTab === "image" ? "Post Generator" : "Carousel Studio"} to create your first asset.
+              You haven't generated any {activeSubTab}s yet. Head over to the {activeSubTab === "image" ? "Campaign Generate" : "Carousel Studio"} to create your first asset.
             </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {assets.map((asset) => (
+            {assets.map((asset) => {
+              const dim = getDimensionsForRatio(asset.metadata?.aspectRatio);
+              return (
               <div key={asset.id} className="group relative bg-[#0A0A0A] border border-[#828282]/20 rounded-xl overflow-hidden hover:border-[#DEDBC8]/50 transition-colors">
                 
                 {/* Preview Area */}
-                <div className="aspect-square bg-[#ffffff]/5 relative overflow-hidden flex items-center justify-center p-0">
+                <div className={`${dim.tw} bg-[#ffffff]/5 relative overflow-hidden flex items-center justify-center p-0`}>
                   {activeSubTab === "image" && (asset.metadata?.html || asset.metadata?.html_content) ? (
                     <div className="absolute inset-0 bg-black flex items-center justify-center overflow-hidden" id={`asset-preview-${asset.id}`}>
                       <div
                         className="origin-center scale-[0.24] sm:scale-[0.28] lg:scale-[0.3]"
-                        style={{ width: '1080px', height: '1080px', flexShrink: 0 }}
+                        style={{ width: `${dim.width}px`, height: `${dim.height}px`, flexShrink: 0 }}
                         dangerouslySetInnerHTML={{ __html: asset.metadata.html || asset.metadata.html_content }}
                       />
                     </div>
@@ -107,7 +115,7 @@ export function AssetsView({ workspaceId, refreshKey = 0 }: { workspaceId: strin
                     <div className="absolute inset-0 bg-[#1c1e21] shadow-lg flex items-center justify-center overflow-hidden" id={`asset-preview-${asset.id}`}>
                        <div 
                          className="origin-center scale-[0.24] sm:scale-[0.28] lg:scale-[0.3]"
-                         style={{ width: '1080px', height: '1080px', flexShrink: 0 }}
+                         style={{ width: `${dim.width}px`, height: `${dim.height}px`, flexShrink: 0 }}
                          dangerouslySetInnerHTML={{ __html: typeof asset.metadata.slides[0] === "string" ? asset.metadata.slides[0] : asset.metadata.slides[0]?.html || "" }}
                        />
                        <div className="absolute top-2 right-2 bg-black/80 backdrop-blur-sm text-xs font-bold px-2 py-1 rounded text-white z-10 border border-white/20">
@@ -129,11 +137,15 @@ export function AssetsView({ workspaceId, refreshKey = 0 }: { workspaceId: strin
                              if (node) {
                                const { toJpeg } = await import('html-to-image');
                                // Scale up for high quality download
-                               const dataUrl = await toJpeg(node, { quality: 1, pixelRatio: 2, style: { transform: 'scale(1)', width: '1080px', height: '1080px', transformOrigin: 'center' } });
+                               const dataUrl = await toJpeg(node, { quality: 1, pixelRatio: 2, style: { transform: 'scale(1)', width: `${dim.width}px`, height: `${dim.height}px`, transformOrigin: 'center' } });
+                               const resData = await fetch(dataUrl);
+                               const blob = await resData.blob();
+                               const objectUrl = URL.createObjectURL(blob);
                                const link = document.createElement('a');
                                link.download = `brand-asset-${asset.id}.jpeg`;
-                               link.href = dataUrl;
+                               link.href = objectUrl;
                                link.click();
+                               URL.revokeObjectURL(objectUrl);
                              }
                            } catch (err) {
                              console.error('Failed to export image', err);
@@ -160,8 +172,8 @@ export function AssetsView({ workspaceId, refreshKey = 0 }: { workspaceId: strin
                              tempDiv.style.position = 'absolute';
                              tempDiv.style.left = '-9999px';
                              tempDiv.style.top = '-9999px';
-                             tempDiv.style.width = '1080px';
-                             tempDiv.style.height = '1080px';
+                             tempDiv.style.width = `${dim.width}px`;
+                             tempDiv.style.height = `${dim.height}px`;
                              document.body.appendChild(tempDiv);
                              
                              for (let i = 0; i < asset.metadata.slides.length; i++) {
@@ -258,7 +270,8 @@ export function AssetsView({ workspaceId, refreshKey = 0 }: { workspaceId: strin
                 </div>
 
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

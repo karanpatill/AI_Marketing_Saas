@@ -219,7 +219,7 @@ Return the result STRICTLY as a JSON object with the following structure. DO NOT
       
       return {
         status: 'completed',
-        outputReference: { html: "Generated Carousel", slides: finalSlides },
+        outputReference: { html: "Generated Carousel", slides: finalSlides, aspectRatio: aspectRatio },
         metadata: { 
           provider: 'gemini',
           duration: Date.now() - startTime

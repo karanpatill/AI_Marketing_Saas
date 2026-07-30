@@ -161,7 +161,7 @@ export default function DashboardPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" | "info" } | null>(null);
 
-  // Post Generator Studio States
+  // Campaign Generate Studio States
   const [postPrompt, setPostPrompt] = useState("");
   const [postAspectRatio, setPostAspectRatio] = useState("1:1");
   const [isGeneratingPost, setIsGeneratingPost] = useState(false);
@@ -475,7 +475,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
         }
       }
     } catch (e: any) {
-      console.error("Post generation error:", e);
+      console.error("Campaign Generate error:", e);
       setPostError(e.message || "Failed to generate post image.");
     } finally {
       setIsGeneratingPost(false);
@@ -1340,7 +1340,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
               }`}
             >
               <Image className="w-4 h-4 shrink-0" />
-              <span>Post Generator</span>
+              <span>Campaign Generate</span>
               {activeTab !== "studio" && <span className="text-[10px] bg-[#DEDBC8]/10 text-[#DEDBC8] px-1.5 py-0.5 rounded-full font-bold">AI</span>}
             </button>
 
@@ -2560,7 +2560,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
           )}
 
 
-          {/* Tab 5: Post Generator Studio */}
+          {/* Tab 5: Campaign Generate Studio */}
           {activeTab === "studio" && (
             <div className="space-y-6 animate-fade-up">
               {/* Header */}
@@ -2568,7 +2568,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                 <div>
                   <h3 className="text-sm font-bold text-[#ffffff] flex items-center gap-1.5 uppercase tracking-[0.2em] font-bold text-[#ffffff]">
                     <Image className="w-4 h-4 text-[#0A0A0A]" />
-                    Post Generator Studio
+                    Campaign Generate Studio
                   </h3>
                   <p className="text-[11px] text-[#828282] mt-0.5">
                     Generate premium, brand-consistent marketing graphics using Flux Schnell.
@@ -2785,7 +2785,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                       {/* Download / Info block */}
                       <div className="bg-black/40 border-none rounded-2xl p-3.5 space-y-3">
                         <div className="flex items-center justify-between">
-                          <span className="text-xs font-black text-[#ffffff]/60 uppercase tracking-widest">Post Generation Details</span>
+                          <span className="text-xs font-black text-[#ffffff]/60 uppercase tracking-widest">Campaign Generate Details</span>
                           <button
                             onClick={async () => {
                               try {
@@ -2816,7 +2816,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                         <Image className="w-6 h-6" />
                       </div>
                       <div>
-                        <h4 className="text-xs font-bold text-[#ffffff] uppercase tracking-[0.2em] font-bold text-[#ffffff]">Post Generation Canvas</h4>
+                        <h4 className="text-xs font-bold text-[#ffffff] uppercase tracking-[0.2em] font-bold text-[#ffffff]">Campaign Generate Canvas</h4>
                         <p className="text-sm text-[#ffffff]/60 mt-1.5 leading-relaxed">
                           Enter a description on the left side and press generate to create a visual post. The image will render here inside a live feed preview mockup.
                         </p>
@@ -3550,7 +3550,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                           <h6 className="text-xs font-bold text-[#ffffff]/80 uppercase tracking-[0.2em]">Features Available</h6>
                           <ul className="space-y-2">
                             <li className="flex items-center gap-2 text-sm text-[#828282]">
-                              <Check className="w-4 h-4 text-[#E1E0CC]" /> Static Post Generator
+                              <Check className="w-4 h-4 text-[#E1E0CC]" /> Static Campaign Generate
                             </li>
                             <li className="flex items-center gap-2 text-sm text-[#828282]">
                               <Check className="w-4 h-4 text-[#E1E0CC]" /> Brand DNA Builder

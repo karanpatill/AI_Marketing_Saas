@@ -203,6 +203,7 @@ Return the result STRICTLY as a JSON object with the following structure. DO NOT
             html_content: finalHtml,
             imageUrl: bgImageUrl,
             raw_json: parsed,
+            aspectRatio: aspectRatio,
             caption: `${parsed.category}: ${parsed.title}\n\n${parsed.content}`
           },
           metadata: { 
