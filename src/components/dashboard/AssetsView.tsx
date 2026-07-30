@@ -134,7 +134,7 @@ export function AssetsView({ workspaceId, refreshKey = 0 }: { workspaceId: strin
                            e.preventDefault();
                            try {
                              if (asset.metadata?.html || asset.metadata?.html_content) {
-                               const { toJpeg } = await import('html-to-image');
+                               const html2canvas = (await import('html2canvas')).default;
                                const tempDiv = document.createElement('div');
                                tempDiv.style.position = 'absolute';
                                tempDiv.style.left = '-9999px';
@@ -145,7 +145,8 @@ export function AssetsView({ workspaceId, refreshKey = 0 }: { workspaceId: strin
                                document.body.appendChild(tempDiv);
                                
                                await new Promise(r => setTimeout(r, 200)); // allow render
-                               const dataUrl = await toJpeg(tempDiv, { quality: 1, pixelRatio: 2 });
+                               const canvas = await html2canvas(tempDiv, { scale: 1, useCORS: true, allowTaint: true, logging: false });
+                               const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
                                document.body.removeChild(tempDiv);
                                
                                const resData = await fetch(dataUrl);
@@ -185,7 +186,7 @@ export function AssetsView({ workspaceId, refreshKey = 0 }: { workspaceId: strin
                            try {
                              const JSZip = (await import('jszip')).default;
                              const zip = new JSZip();
-                             const { toJpeg } = await import('html-to-image');
+                             const html2canvas = (await import('html2canvas')).default;
                              
                              const tempDiv = document.createElement('div');
                              tempDiv.style.position = 'absolute';
@@ -199,7 +200,8 @@ export function AssetsView({ workspaceId, refreshKey = 0 }: { workspaceId: strin
                                const slideHtml = typeof asset.metadata.slides[i] === "string" ? asset.metadata.slides[i] : asset.metadata.slides[i].html;
                                tempDiv.innerHTML = slideHtml;
                                await new Promise(r => setTimeout(r, 100)); // allow render
-                               const dataUrl = await toJpeg(tempDiv, { quality: 1, pixelRatio: 2 });
+                               const canvas = await html2canvas(tempDiv, { scale: 1, useCORS: true, allowTaint: true, logging: false });
+                               const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
                                const base64Data = dataUrl.replace(/^data:image\/(png|jpeg);base64,/, "");
                                zip.file(`slide-${i + 1}.jpeg`, base64Data, { base64: true });
                              }
