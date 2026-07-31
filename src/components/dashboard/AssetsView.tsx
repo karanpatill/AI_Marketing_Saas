@@ -141,11 +141,21 @@ export function AssetsView({ workspaceId, refreshKey = 0 }: { workspaceId: strin
                                tempDiv.style.top = '-9999px';
                                tempDiv.style.width = `${dim.width}px`;
                                tempDiv.style.height = `${dim.height}px`;
-                               tempDiv.innerHTML = asset.metadata.html || asset.metadata.html_content;
-                               document.body.appendChild(tempDiv);
-                               
-                               await new Promise(r => setTimeout(r, 200)); // allow render
-                               const canvas = await html2canvas(tempDiv, { scale: 1, useCORS: true, allowTaint: true, logging: false });
+                                 
+                                 // Fix for older generated assets that used Tailwind classes unsupported by html2canvas
+                                 let rawHtml = asset.metadata.html || asset.metadata.html_content;
+                                 if (rawHtml) {
+                                   rawHtml = rawHtml.replace(/class="bg-white\/90 text-black p-6 rounded-lg border-4 shadow-\[8px_8px_0px_0px_rgba\(0,0,0,1\)\]" style="border-color: (.*?);"/g, 'class="p-6 rounded-lg border-4" style="background-color: rgba(255,255,255,0.9); color: black; border-color: $1; box-shadow: 8px 8px 0px 0px rgba(0,0,0,1);"');
+                                   rawHtml = rawHtml.replace(/border-4 shadow-\[4px_4px_0px_0px_rgba\(255,255,255,0\.5\)\]"/g, 'border-4" style="box-shadow: 4px 4px 0px 0px rgba(255,255,255,0.5);"');
+                                   rawHtml = rawHtml.replace(/rounded shadow-\[4px_4px_0px_0px_rgba\(255,255,255,0\.5\)\]"/g, 'rounded" style="box-shadow: 4px 4px 0px 0px rgba(255,255,255,0.5);"');
+                                 }
+                                 
+                                 tempDiv.innerHTML = rawHtml;
+                                 document.body.appendChild(tempDiv);
+                                 
+                                 await document.fonts.ready; // Wait for fonts to load
+                                 await new Promise(r => setTimeout(r, 500)); // allow render
+                                 const canvas = await html2canvas(tempDiv, { scale: 1, useCORS: true, allowTaint: true, logging: false });
                                const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
                                document.body.removeChild(tempDiv);
                                
@@ -197,9 +207,18 @@ export function AssetsView({ workspaceId, refreshKey = 0 }: { workspaceId: strin
                              document.body.appendChild(tempDiv);
                              
                              for (let i = 0; i < asset.metadata.slides.length; i++) {
-                               const slideHtml = typeof asset.metadata.slides[i] === "string" ? asset.metadata.slides[i] : asset.metadata.slides[i].html;
+                               let slideHtml = typeof asset.metadata.slides[i] === "string" ? asset.metadata.slides[i] : asset.metadata.slides[i].html;
+                               
+                               // Fix for older generated assets that used Tailwind classes unsupported by html2canvas
+                               if (slideHtml) {
+                                 slideHtml = slideHtml.replace(/class="bg-white\/90 text-black p-6 rounded-lg border-4 shadow-\[8px_8px_0px_0px_rgba\(0,0,0,1\)\]" style="border-color: (.*?);"/g, 'class="p-6 rounded-lg border-4" style="background-color: rgba(255,255,255,0.9); color: black; border-color: $1; box-shadow: 8px 8px 0px 0px rgba(0,0,0,1);"');
+                                 slideHtml = slideHtml.replace(/border-4 shadow-\[4px_4px_0px_0px_rgba\(255,255,255,0\.5\)\]"/g, 'border-4" style="box-shadow: 4px 4px 0px 0px rgba(255,255,255,0.5);"');
+                                 slideHtml = slideHtml.replace(/rounded shadow-\[4px_4px_0px_0px_rgba\(255,255,255,0\.5\)\]"/g, 'rounded" style="box-shadow: 4px 4px 0px 0px rgba(255,255,255,0.5);"');
+                               }
+                               
                                tempDiv.innerHTML = slideHtml;
-                               await new Promise(r => setTimeout(r, 100)); // allow render
+                               await document.fonts.ready; // Wait for fonts to load
+                               await new Promise(r => setTimeout(r, 500)); // allow render
                                const canvas = await html2canvas(tempDiv, { scale: 1, useCORS: true, allowTaint: true, logging: false });
                                const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
                                const base64Data = dataUrl.replace(/^data:image\/(png|jpeg);base64,/, "");
