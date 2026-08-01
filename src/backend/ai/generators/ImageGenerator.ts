@@ -4,6 +4,59 @@ import { determineDesignLanguage, getStyleProfile, getContrastColor, resolveInit
 import { getTemplateForLanguage, TemplateOptions } from "../utils/htmlTemplates";
 import { ModelRegistry } from "../utils/ModelRegistry";
 
+function mapToRealGeminiModel(modelId?: string): string {
+  if (!modelId) return "gemini-1.5-flash";
+  const m = modelId.toLowerCase();
+  if (m.includes("pro")) return "gemini-1.5-pro";
+  if (m.includes("lite") || m.includes("8b")) return "gemini-1.5-flash-8b";
+  if (m.includes("2.0")) return "gemini-2.0-flash-exp";
+  return "gemini-1.5-flash";
+}
+
+function parseImageJsonOutput(jsonOutput: string, defaultTopic: string): { category: string; title: string; content: string; image_prompt?: string } {
+  let cleaned = jsonOutput.trim();
+  const match = cleaned.match(/\{[\s\S]*\}/);
+  if (match) {
+    cleaned = match[0];
+  }
+
+  try {
+    const parsed = JSON.parse(cleaned);
+    const obj = Array.isArray(parsed) ? parsed[0] : parsed;
+    if (obj && (obj.title || obj.content)) {
+      return {
+        category: obj.category || 'INSIGHT',
+        title: obj.title || defaultTopic || 'Brand Insight',
+        content: obj.content || '',
+        image_prompt: obj.image_prompt || ''
+      };
+    }
+  } catch (err) {
+    console.warn("[ImageGenerator] Standard JSON.parse failed, attempting regex extraction", err);
+  }
+
+  const categoryMatch = jsonOutput.match(/"category"\s*:\s*"([^"]+)"/i);
+  const titleMatch = jsonOutput.match(/"title"\s*:\s*"([^"]+)"/i);
+  const contentMatch = jsonOutput.match(/"content"\s*:\s*"([^"]+)"/i);
+  const promptMatch = jsonOutput.match(/"image_prompt"\s*:\s*"([^"]+)"/i);
+
+  if (titleMatch || contentMatch) {
+    return {
+      category: categoryMatch ? categoryMatch[1] : 'INSIGHT',
+      title: titleMatch ? titleMatch[1] : (defaultTopic || 'Marketing Insight'),
+      content: contentMatch ? contentMatch[1] : '',
+      image_prompt: promptMatch ? promptMatch[1] : ''
+    };
+  }
+
+  return {
+    category: 'STRATEGY',
+    title: defaultTopic || 'Future-Proof Tech, Built to Last.',
+    content: 'Transform your business with high-impact modern strategies.',
+    image_prompt: ''
+  };
+}
+
 export class ImageGenerator implements IGenerationModule {
   jobType = 'generate_post';
 
@@ -105,7 +158,7 @@ Return the result STRICTLY as a JSON object with the following structure. DO NOT
     }
     
     const genAI = new GoogleGenerativeAI(apiKey);
-    const targetModel = context.inputParams?.targetModel || "gemini-3.5-flash";
+    const targetModel = mapToRealGeminiModel(context.inputParams?.targetModel);
     const model = genAI.getGenerativeModel({ model: targetModel });
 
     await updateProgress(40, 'generating_content');
@@ -116,23 +169,9 @@ Return the result STRICTLY as a JSON object with the following structure. DO NOT
         generationConfig: { responseMimeType: "application/json" }
       });
       
-      let jsonOutput = result.response.text();
-      // Clean up potential markdown wrapper
-      jsonOutput = jsonOutput.replace(/^```(json)?\n?/i, '').replace(/\n?```$/i, '').trim();
-      let parsed: any = {};
-      try {
-        parsed = JSON.parse(jsonOutput);
-        if (Array.isArray(parsed)) {
-          parsed = parsed[0] || {};
-        }
-      } catch (err) {
-        console.error("Failed to parse image post JSON", err, "RAW:", jsonOutput);
-        parsed = {
-          category: 'BRAND',
-          title: 'Brand Update',
-          content: jsonOutput.substring(0, 100)
-        };
-      }
+      const jsonOutput = result.response.text();
+      const topic = context.inputParams?.topic || context.inputParams?.prompt || "";
+      const parsed = parseImageJsonOutput(jsonOutput, topic);
 
       await updateProgress(90, 'rendering_html');
 
