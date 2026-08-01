@@ -170,10 +170,13 @@ export class LinkedInPublisherService {
   /**
    * Publishes a post to LinkedIn on behalf of the member URN
    */
+  /**
+   * Publishes a post with optional image to LinkedIn on behalf of the member URN
+   */
   public static async publishPost(
     workspaceId: string,
     caption: string,
-    imageUrl?: string
+    imageBase64?: string
   ): Promise<PublishResult> {
     const connection = await this.getConnection(workspaceId);
 
@@ -186,8 +189,69 @@ export class LinkedInPublisherService {
 
     try {
       const authorUrn = connection.linkedinUrn;
-      
-      // Simple text / link post structure via UGC Post API
+      let mediaAssetUrn: string | null = null;
+
+      // Upload image to LinkedIn Digital Media Asset if provided
+      if (imageBase64) {
+        try {
+          const cleanBase64 = imageBase64.replace(/^data:image\/(png|jpeg|jpg);base64,/, "");
+          const imageBuffer = Buffer.from(cleanBase64, 'base64');
+
+          // 1. Register Upload Request
+          const registerRes = await fetch('https://api.linkedin.com/v2/assets?action=registerUpload', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${connection.accessToken}`,
+              'Content-Type': 'application/json',
+              'X-Restli-Protocol-Version': '2.0.0'
+            },
+            body: JSON.stringify({
+              registerUploadRequest: {
+                recipes: ['urn:li:digitalmediaRecipe:feedshare-image'],
+                owner: authorUrn,
+                serviceRelationships: [
+                  {
+                    relationshipType: 'OWNER',
+                    identifier: 'urn:li:userGeneratedContent'
+                  }
+                ]
+              }
+            })
+          });
+
+          const registerData = await registerRes.json();
+          if (registerRes.ok && registerData.value) {
+            const uploadUrl = registerData.value.uploadMechanism['com.linkedin.digitalmedia.uploading.MediaUploadHttpRequest'].uploadUrl;
+            mediaAssetUrn = registerData.value.asset;
+
+            // 2. Upload binary image buffer to LinkedIn upload URL
+            await fetch(uploadUrl, {
+              method: 'PUT',
+              headers: {
+                'Authorization': `Bearer ${connection.accessToken}`,
+                'Content-Type': 'image/jpeg'
+              },
+              body: imageBuffer
+            });
+          }
+        } catch (imgErr) {
+          console.error("[LinkedIn Image Upload Warning]:", imgErr);
+        }
+      }
+
+      // Build UGC Post payload
+      const shareMediaCategory = mediaAssetUrn ? "IMAGE" : "NONE";
+      const media = mediaAssetUrn
+        ? [
+            {
+              status: "READY",
+              description: { text: caption.substring(0, 200) },
+              media: mediaAssetUrn,
+              title: { text: "Generated Visual" }
+            }
+          ]
+        : undefined;
+
       const postBody: any = {
         author: authorUrn,
         lifecycleState: "PUBLISHED",
@@ -196,7 +260,8 @@ export class LinkedInPublisherService {
             shareCommentary: {
               text: caption
             },
-            shareMediaCategory: imageUrl ? "NONE" : "NONE"
+            shareMediaCategory,
+            ...(media ? { media } : {})
           }
         },
         visibility: {

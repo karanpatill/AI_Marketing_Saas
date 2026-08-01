@@ -52,7 +52,7 @@ export async function POST(request: Request) {
       const result = await LinkedInPublisherService.publishPost(
         workspaceId,
         caption,
-        imageUrl
+        body.imageBase64 || body.imageUrl
       );
 
       return NextResponse.json(result);

@@ -247,25 +247,56 @@ export function AssetsView({ workspaceId, refreshKey = 0 }: { workspaceId: strin
                       <button
                         onClick={async (e) => {
                           e.preventDefault();
-                          const caption = prompt(
-                            "Enter LinkedIn Post Caption:",
-                            asset.metadata?.systemPrompt || `Check out our latest ${activeSubTab} created with Automarc AI!`
-                          );
+                          const defaultCaption = asset.metadata?.title || asset.metadata?.topic || asset.name || "Check out our latest update!";
+                          const caption = prompt("Enter LinkedIn Post Caption:", defaultCaption);
                           if (!caption) return;
                           
                           try {
+                            const html2canvas = (await import('html2canvas')).default;
+                            let imageBase64 = "";
+
+                            let rawHtml = asset.metadata?.html || asset.metadata?.html_content;
+                            if (!rawHtml && asset.metadata?.slides && asset.metadata.slides.length > 0) {
+                              rawHtml = typeof asset.metadata.slides[0] === 'string' ? asset.metadata.slides[0] : asset.metadata.slides[0].html;
+                            }
+
+                            if (rawHtml) {
+                              const tempDiv = document.createElement('div');
+                              tempDiv.style.position = 'absolute';
+                              tempDiv.style.left = '-9999px';
+                              tempDiv.style.top = '-9999px';
+                              tempDiv.style.width = `${dim.width}px`;
+                              tempDiv.style.height = `${dim.height}px`;
+
+                              rawHtml = rawHtml.replace(/class="bg-white\/90 text-black p-6 rounded-lg border-4 shadow-\[8px_8px_0px_0px_rgba\(0,0,0,1\)\]" style="border-color: (.*?);"/g, 'class="p-6 rounded-lg border-4" style="background-color: rgba(255,255,255,0.9); color: black; border-color: $1; box-shadow: 8px 8px 0px 0px rgba(0,0,0,1);"');
+                              rawHtml = rawHtml.replace(/border-4 shadow-\[4px_4px_0px_0px_rgba\(255,255,255,0\.5\)\]"/g, 'border-4" style="box-shadow: 4px 4px 0px 0px rgba(255,255,255,0.5);"');
+                              rawHtml = rawHtml.replace(/rounded shadow-\[4px_4px_0px_0px_rgba\(255,255,255,0\.5\)\]"/g, 'rounded" style="box-shadow: 4px 4px 0px 0px rgba(255,255,255,0.5);"');
+
+                              tempDiv.innerHTML = rawHtml;
+                              document.body.appendChild(tempDiv);
+
+                              await document.fonts.ready;
+                              await new Promise(r => setTimeout(r, 400));
+                              const canvas = await html2canvas(tempDiv, { scale: 1, useCORS: true, allowTaint: true, logging: false });
+                              imageBase64 = canvas.toDataURL('image/jpeg', 0.95);
+                              document.body.removeChild(tempDiv);
+                            } else if (asset.metadata?.imageUrl) {
+                              imageBase64 = asset.metadata.imageUrl;
+                            }
+
                             const res = await fetch("/api/social/linkedin", {
                               method: "POST",
                               headers: { "Content-Type": "application/json" },
                               body: JSON.stringify({
                                 action: "publish",
                                 workspaceId,
-                                caption
+                                caption,
+                                imageBase64
                               })
                             });
                             const data = await res.json();
                             if (data.success) {
-                              alert("🎉 Successfully published post to your LinkedIn profile!");
+                              alert("🎉 Successfully published post with visual asset to your LinkedIn profile!");
                             } else {
                               alert(`Failed to publish: ${data.error || "Please check your LinkedIn connection"}`);
                             }
