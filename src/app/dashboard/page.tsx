@@ -3549,6 +3549,8 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
 
                           <a
                             href={`/api/social/linkedin/connect?workspaceId=${activeWorkspace?.id || ''}`}
+                            target="_top"
+                            rel="external"
                             className="bg-[#0077B5] hover:bg-[#005E93] text-white font-bold text-xs px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 shadow-lg cursor-pointer"
                           >
                             <Share2 className="w-4 h-4" />
