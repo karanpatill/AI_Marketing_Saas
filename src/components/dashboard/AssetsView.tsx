@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Loader2, Image as ImageIcon, Layers, Download, ExternalLink, Calendar as CalendarIcon, Clock, Share2 } from "lucide-react";
 import { format } from "date-fns";
+import { LinkedInPublishModal } from "./LinkedInPublishModal";
 
 export function AssetsView({ workspaceId, refreshKey = 0 }: { workspaceId: string; refreshKey?: number }) {
   const getDimensionsForRatio = (ratio?: string) => {
@@ -14,6 +15,7 @@ export function AssetsView({ workspaceId, refreshKey = 0 }: { workspaceId: strin
   const [activeSubTab, setActiveSubTab] = useState<"image" | "carousel">("image");
   const [assets, setAssets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [publishModal, setPublishModal] = useState<{ open: boolean; asset: any | null }>({ open: false, asset: null });
 
   useEffect(() => {
     fetchAssets(activeSubTab);
@@ -37,7 +39,51 @@ export function AssetsView({ workspaceId, refreshKey = 0 }: { workspaceId: strin
     }
   };
 
+  const handlePublishToLinkedIn = async (asset: any, caption: string) => {
+    const dim = getDimensionsForRatio(asset.metadata?.aspectRatio);
+    const html2canvas = (await import('html2canvas')).default;
+    let imageBase64 = "";
+
+    const livePreview = document.getElementById(`asset-preview-${asset.id}`);
+    if (livePreview) {
+      const innerEl = livePreview.querySelector('[style*="scale"]') as HTMLElement;
+      const originalTransform = innerEl?.style.transform || '';
+      if (innerEl) innerEl.style.transform = 'scale(1)';
+      await document.fonts.ready;
+      await new Promise(r => setTimeout(r, 300));
+      const canvas = await html2canvas(innerEl || livePreview, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        logging: false,
+        width: dim.width,
+        height: dim.height,
+        backgroundColor: null
+      });
+      if (innerEl) innerEl.style.transform = originalTransform;
+      imageBase64 = canvas.toDataURL('image/jpeg', 0.95);
+    } else if (asset.metadata?.imageUrl) {
+      imageBase64 = asset.metadata.imageUrl;
+    }
+
+    const res = await fetch("/api/social/linkedin", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "publish",
+        workspaceId,
+        caption,
+        imageBase64
+      })
+    });
+    const data = await res.json();
+    if (!data.success) {
+      throw new Error(data.error || "Failed to publish to LinkedIn");
+    }
+  };
+
   return (
+    <>
     <div className="space-y-6 animate-fade-up">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -245,65 +291,9 @@ export function AssetsView({ workspaceId, refreshKey = 0 }: { workspaceId: strin
                     )}
 
                       <button
-                        onClick={async (e) => {
+                        onClick={(e) => {
                           e.preventDefault();
-                          const defaultCaption = asset.metadata?.title || asset.metadata?.topic || asset.name || "Check out our latest update!";
-                          const caption = prompt("Enter LinkedIn Post Caption:", defaultCaption);
-                          if (!caption) return;
-                          
-                          try {
-                            const html2canvas = (await import('html2canvas')).default;
-                            let imageBase64 = "";
-
-                            // Directly capture the already-rendered live preview element
-                            // This avoids black boxes from Tailwind/CSS that html2canvas can't render offscreen
-                            const livePreview = document.getElementById(`asset-preview-${asset.id}`);
-                            
-                            if (livePreview) {
-                              // Temporarily expand the preview to full resolution for a high-quality capture
-                              const innerEl = livePreview.querySelector('[style*="scale"]') as HTMLElement;
-                              const originalTransform = innerEl?.style.transform || '';
-                              if (innerEl) innerEl.style.transform = 'scale(1)';
-                              
-                              await document.fonts.ready;
-                              await new Promise(r => setTimeout(r, 300));
-                              
-                              const canvas = await html2canvas(innerEl || livePreview, {
-                                scale: 2,
-                                useCORS: true,
-                                allowTaint: true,
-                                logging: false,
-                                width: dim.width,
-                                height: dim.height,
-                                backgroundColor: null
-                              });
-                              
-                              if (innerEl) innerEl.style.transform = originalTransform;
-                              imageBase64 = canvas.toDataURL('image/jpeg', 0.95);
-                            } else if (asset.metadata?.imageUrl) {
-                              imageBase64 = asset.metadata.imageUrl;
-                            }
-
-                            const res = await fetch("/api/social/linkedin", {
-                              method: "POST",
-                              headers: { "Content-Type": "application/json" },
-                              body: JSON.stringify({
-                                action: "publish",
-                                workspaceId,
-                                caption,
-                                imageBase64
-                              })
-                            });
-                            const data = await res.json();
-                            if (data.success) {
-                              alert("🎉 Successfully published post with visual asset to your LinkedIn profile!");
-                            } else {
-                              alert(`Failed to publish: ${data.error || "Please check your LinkedIn connection"}`);
-                            }
-                          } catch (err: any) {
-                            console.error(err);
-                            alert("Failed to publish to LinkedIn.");
-                          }
+                          setPublishModal({ open: true, asset });
                         }}
                         className="w-10 h-10 rounded-full bg-[#0077B5] text-white flex items-center justify-center hover:scale-110 transition-transform shadow-lg"
                         title="Publish to LinkedIn"
@@ -383,5 +373,18 @@ export function AssetsView({ workspaceId, refreshKey = 0 }: { workspaceId: strin
         )}
       </div>
     </div>
+
+    {/* LinkedIn Publish Modal */}
+    <LinkedInPublishModal
+      isOpen={publishModal.open}
+      asset={publishModal.asset}
+      workspaceId={workspaceId}
+      onClose={() => setPublishModal({ open: false, asset: null })}
+      onPublish={async (caption) => {
+        if (!publishModal.asset) return;
+        await handlePublishToLinkedIn(publishModal.asset, caption);
+      }}
+    />
+    </>
   );
 }
