@@ -12,7 +12,9 @@ export async function GET(request: Request) {
     }
 
     if (action === 'get_auth_url') {
-      const origin = new URL(request.url).origin;
+      const protocol = request.headers.get('x-forwarded-proto') || (request.url.startsWith('https') ? 'https' : 'http');
+      const host = request.headers.get('host') || 'localhost:3000';
+      const origin = `${protocol}://${host}`;
       const redirectUri = `${origin}/api/social/callback/linkedin`;
       const authUrl = LinkedInPublisherService.getAuthUrl(workspaceId, redirectUri);
       return NextResponse.json({ authUrl });

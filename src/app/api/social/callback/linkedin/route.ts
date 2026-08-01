@@ -2,7 +2,10 @@ import { NextResponse } from 'next/server';
 import { LinkedInPublisherService } from '@/backend/services/social/LinkedInPublisherService';
 
 export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url);
+  const protocol = request.headers.get('x-forwarded-proto') || (request.url.startsWith('https') ? 'https' : 'http');
+  const host = request.headers.get('host') || 'localhost:3000';
+  const origin = `${protocol}://${host}`;
+  const { searchParams } = new URL(request.url);
   const code = searchParams.get('code');
   const workspaceId = searchParams.get('state');
   const error = searchParams.get('error');
