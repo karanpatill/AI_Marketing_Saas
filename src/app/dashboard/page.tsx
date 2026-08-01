@@ -3547,15 +3547,14 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                             </div>
                           </div>
 
-                          <a
-                            href={`https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=77h0joewhxcajg&redirect_uri=${encodeURIComponent(typeof window !== 'undefined' ? `${window.location.origin}/api/social/callback/linkedin` : 'http://localhost:3000/api/social/callback/linkedin')}&state=${encodeURIComponent(activeWorkspace?.id || 'ws_1')}&scope=${encodeURIComponent('openid profile email r_liteprofile w_member_social w_organization_social')}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="bg-[#0077B5] hover:bg-[#005E93] text-white font-bold text-xs px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 shadow-lg cursor-pointer"
+                          <button
+                            onClick={handleConnectLinkedin}
+                            className="bg-[#0077B5] hover:bg-[#005E93] text-white font-bold text-xs px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 shadow-lg cursor-pointer disabled:opacity-50"
+                            disabled={isFetchingLinkedin}
                           >
                             <Share2 className="w-4 h-4" />
-                            {linkedinConn?.isConnected ? "Reconnect LinkedIn" : "Connect LinkedIn Account"}
-                          </a>
+                            {isFetchingLinkedin ? "Connecting..." : linkedinConn?.isConnected ? "Reconnect LinkedIn" : "Connect LinkedIn Account"}
+                          </button>
                         </div>
 
                         {linkedinConn?.isConnected && (
