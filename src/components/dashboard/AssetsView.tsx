@@ -144,11 +144,8 @@ export function AssetsView({ workspaceId, refreshKey = 0 }: { workspaceId: strin
                                  
                                  // Fix for older generated assets that used Tailwind classes unsupported by html2canvas
                                  let rawHtml = asset.metadata.html || asset.metadata.html_content;
-                                 if (rawHtml) {
-                                   rawHtml = rawHtml.replace(/class="bg-white\/90 text-black p-6 rounded-lg border-4 shadow-\[8px_8px_0px_0px_rgba\(0,0,0,1\)\]" style="border-color: (.*?);"/g, 'class="p-6 rounded-lg border-4" style="background-color: rgba(255,255,255,0.9); color: black; border-color: $1; box-shadow: 8px 8px 0px 0px rgba(0,0,0,1);"');
-                                   rawHtml = rawHtml.replace(/border-4 shadow-\[4px_4px_0px_0px_rgba\(255,255,255,0\.5\)\]"/g, 'border-4" style="box-shadow: 4px 4px 0px 0px rgba(255,255,255,0.5);"');
-                                   rawHtml = rawHtml.replace(/rounded shadow-\[4px_4px_0px_0px_rgba\(255,255,255,0\.5\)\]"/g, 'rounded" style="box-shadow: 4px 4px 0px 0px rgba(255,255,255,0.5);"');
-                                 }
+                                 rawHtml = rawHtml.replace(/shadow-\[[^\]]+\]/g, '');
+                                 rawHtml = rawHtml.replace(/backdrop-blur[^\s"]*/g, '');
                                  
                                  tempDiv.innerHTML = rawHtml;
                                  document.body.appendChild(tempDiv);
@@ -268,9 +265,8 @@ export function AssetsView({ workspaceId, refreshKey = 0 }: { workspaceId: strin
                               tempDiv.style.width = `${dim.width}px`;
                               tempDiv.style.height = `${dim.height}px`;
 
-                              rawHtml = rawHtml.replace(/class="bg-white\/90 text-black p-6 rounded-lg border-4 shadow-\[8px_8px_0px_0px_rgba\(0,0,0,1\)\]" style="border-color: (.*?);"/g, 'class="p-6 rounded-lg border-4" style="background-color: rgba(255,255,255,0.9); color: black; border-color: $1; box-shadow: 8px 8px 0px 0px rgba(0,0,0,1);"');
-                              rawHtml = rawHtml.replace(/border-4 shadow-\[4px_4px_0px_0px_rgba\(255,255,255,0\.5\)\]"/g, 'border-4" style="box-shadow: 4px 4px 0px 0px rgba(255,255,255,0.5);"');
-                              rawHtml = rawHtml.replace(/rounded shadow-\[4px_4px_0px_0px_rgba\(255,255,255,0\.5\)\]"/g, 'rounded" style="box-shadow: 4px 4px 0px 0px rgba(255,255,255,0.5);"');
+                              rawHtml = rawHtml.replace(/shadow-\[[^\]]+\]/g, '');
+                              rawHtml = rawHtml.replace(/backdrop-blur[^\s"]*/g, '');
 
                               tempDiv.innerHTML = rawHtml;
                               document.body.appendChild(tempDiv);
