@@ -80,20 +80,43 @@ export class LinkedInPublisherService {
     };
   }
 
+  private static async resolveWorkspaceId(workspaceId?: string): Promise<{ id: string; settings_json: any }> {
+    const supabase = createAdminClient();
+
+    if (workspaceId && workspaceId !== "00000000-0000-0000-0000-000000000000") {
+      const { data: ws } = await supabase
+        .from('workspaces')
+        .select('id, settings_json')
+        .eq('id', workspaceId)
+        .single();
+      
+      if (ws) return ws;
+    }
+
+    // Fallback: get the first workspace available
+    const { data: firstWs } = await supabase
+      .from('workspaces')
+      .select('id, settings_json')
+      .order('created_at', { ascending: true })
+      .limit(1)
+      .single();
+
+    if (firstWs) return firstWs;
+
+    throw new Error("No active workspace found in database.");
+  }
+
   /**
    * Fetches the saved LinkedIn connection for a workspace
    */
-  public static async getConnection(workspaceId: string): Promise<LinkedInConnection | null> {
-    const supabase = createAdminClient();
-
-    const { data: workspace } = await supabase
-      .from('workspaces')
-      .select('settings_json')
-      .eq('id', workspaceId)
-      .single();
-
-    if (workspace?.settings_json?.socials?.linkedin) {
-      return workspace.settings_json.socials.linkedin;
+  public static async getConnection(workspaceId?: string): Promise<LinkedInConnection | null> {
+    try {
+      const ws = await this.resolveWorkspaceId(workspaceId);
+      if (ws.settings_json?.socials?.linkedin) {
+        return ws.settings_json.socials.linkedin;
+      }
+    } catch (err) {
+      console.error("[LinkedInPublisherService.getConnection]:", err);
     }
 
     return null;
@@ -109,14 +132,9 @@ export class LinkedInPublisherService {
     accessToken: string
   ): Promise<LinkedInConnection> {
     const supabase = createAdminClient();
+    const ws = await this.resolveWorkspaceId(workspaceId);
 
-    const { data: workspace } = await supabase
-      .from('workspaces')
-      .select('settings_json')
-      .eq('id', workspaceId)
-      .single();
-
-    const existingSettings = workspace?.settings_json || {};
+    const existingSettings = ws.settings_json || {};
     const existingSocials = existingSettings.socials || {};
 
     const linkedinConfig: LinkedInConnection = {
@@ -135,10 +153,15 @@ export class LinkedInPublisherService {
       }
     };
 
-    await supabase
+    const { error } = await supabase
       .from('workspaces')
       .update({ settings_json: updatedSettings })
-      .eq('id', workspaceId);
+      .eq('id', ws.id);
+
+    if (error) {
+      console.error("[LinkedInPublisherService.saveConnection Error]:", error);
+      throw new Error(`Failed to save LinkedIn connection: ${error.message}`);
+    }
 
     return linkedinConfig;
   }
