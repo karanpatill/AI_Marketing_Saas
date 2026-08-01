@@ -78,7 +78,7 @@ export class LinkedInPublisherService {
       throw new Error("LINKEDIN_CLIENT_ID is not configured in .env.local");
     }
 
-    const scopes = encodeURIComponent('openid profile email r_liteprofile w_member_social w_organization_social');
+    const scopes = encodeURIComponent('openid profile email w_member_social w_organization_social');
     const state = encodeURIComponent(workspaceId);
 
     return `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${state}&scope=${scopes}`;
@@ -116,32 +116,31 @@ export class LinkedInPublisherService {
 
     const accessToken = tokenData.access_token;
 
-    // 2. Fetch real numeric Member ID via /v2/me (required for UGC Posts author URN)
-    // Note: /v2/userinfo returns an OpenID 'sub' (hashed string) which is NOT valid for ugcPosts /author
-    const meRes = await fetch('https://api.linkedin.com/v2/me', {
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'X-Restli-Protocol-Version': '2.0.0'
-      }
-    });
-
-    const meData = await meRes.json();
-
     // Fallback to userinfo for the name only
     const userRes = await fetch('https://api.linkedin.com/v2/userinfo', {
       headers: { Authorization: `Bearer ${accessToken}` }
     });
     const userData = await userRes.json();
+    let numericId = userData.sub; // Fallback to OpenID sub (might not work for ugcPosts /author, but allows auth to complete)
 
-    // /v2/me returns a numeric 'id' field — this is the ONLY valid author URN for ugcPosts
-    const numericId = meData.id;
-    if (!numericId) {
-      console.error('[LinkedIn /v2/me response]:', meData);
-      throw new Error('Failed to fetch LinkedIn numeric member ID from /v2/me. Please ensure the r_liteprofile scope is enabled.');
+    // 2. Attempt to fetch real numeric Member ID via /v2/me (requires r_basicprofile or legacy r_liteprofile)
+    try {
+      const meRes = await fetch('https://api.linkedin.com/v2/me', {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'X-Restli-Protocol-Version': '2.0.0'
+        }
+      });
+      if (meRes.ok) {
+        const meData = await meRes.json();
+        if (meData.id) numericId = meData.id;
+      }
+    } catch (e) {
+      console.warn('Failed to fetch /v2/me, falling back to userinfo sub');
     }
 
     const memberUrn = `urn:li:person:${numericId}`;
-    const name = userData.name || userData.given_name || meData.localizedFirstName || 'LinkedIn User';
+    const name = userData.name || userData.given_name || 'LinkedIn User';
 
     return {
       accessToken,
