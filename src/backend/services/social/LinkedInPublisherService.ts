@@ -2,6 +2,7 @@ import { createAdminClient } from '@/lib/supabaseServer';
 
 export interface LinkedInConnection {
   linkedinUrn: string;
+  organizationUrn?: string;
   accountHandle: string;
   accessToken: string;
   isConnected: boolean;
@@ -26,7 +27,7 @@ export class LinkedInPublisherService {
       throw new Error("LINKEDIN_CLIENT_ID is not configured in .env.local");
     }
 
-    const scopes = encodeURIComponent('openid profile email w_member_social');
+    const scopes = encodeURIComponent('openid profile email w_member_social w_organization_social');
     const state = encodeURIComponent(workspaceId);
 
     return `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${state}&scope=${scopes}`;
@@ -188,7 +189,7 @@ export class LinkedInPublisherService {
     }
 
     try {
-      const authorUrn = connection.linkedinUrn;
+      const authorUrn = connection.organizationUrn || connection.linkedinUrn;
       let mediaAssetUrn: string | null = null;
 
       // Upload image to LinkedIn Digital Media Asset if provided
@@ -298,6 +299,43 @@ export class LinkedInPublisherService {
         success: false,
         error: err.message || "Network error while publishing to LinkedIn."
       };
+    }
+  }
+
+  /**
+   * Sets or clears the LinkedIn Organization / Company Page ID for posting
+   */
+  public static async setOrganizationId(workspaceId: string, orgIdOrUrn: string): Promise<boolean> {
+    const supabase = createAdminClient();
+    const cleanId = orgIdOrUrn.trim().replace(/[^0-9]/g, '');
+    const organizationUrn = cleanId ? `urn:li:organization:${cleanId}` : undefined;
+
+    try {
+      const { data: allWorkspaces } = await supabase.from('workspaces').select('id, settings_json');
+      if (allWorkspaces) {
+        for (const ws of allWorkspaces) {
+          const settings = ws.settings_json || {};
+          const socials = settings.socials || {};
+          const linkedin = socials.linkedin || {};
+
+          const updated = {
+            ...settings,
+            socials: {
+              ...socials,
+              linkedin: {
+                ...linkedin,
+                organizationUrn
+              }
+            }
+          };
+
+          await supabase.from('workspaces').update({ settings_json: updated }).eq('id', ws.id);
+        }
+      }
+      return true;
+    } catch (err) {
+      console.error("[LinkedIn setOrganizationId error]:", err);
+      return false;
     }
   }
 }

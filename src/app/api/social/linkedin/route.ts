@@ -34,6 +34,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing workspaceId' }, { status: 400 });
     }
 
+    if (action === 'set_org_id') {
+      const { organizationId } = body;
+      const success = await LinkedInPublisherService.setOrganizationId(workspaceId, organizationId || '');
+      return NextResponse.json({ success });
+    }
+
     if (action === 'connect_manual') {
       const connection = await LinkedInPublisherService.saveConnection(
         workspaceId,
