@@ -154,12 +154,59 @@ export default function DashboardPage() {
   const [isInviting, setIsInviting] = useState(false);
   const [newWorkspaceName, setNewWorkspaceName] = useState("");
   const [isCreatingWorkspace, setIsCreatingWorkspace] = useState(false);
-  const [settingsTab, setSettingsTab] = useState<"profile" | "workspace" | "team" | "billing">("profile");
+  const [settingsTab, setSettingsTab] = useState<"profile" | "workspace" | "integrations" | "team" | "billing">("profile");
+  const [linkedinConn, setLinkedinConn] = useState<any>(null);
+  const [isFetchingLinkedin, setIsFetchingLinkedin] = useState(false);
   const [userName, setUserName] = useState("");
   const [userAvatar, setUserAvatar] = useState("");
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" | "info" } | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("linkedin_success") === "connected") {
+        setToast({ message: "LinkedIn Account connected successfully!", type: "success" });
+        setSettingsTab("integrations");
+        window.history.replaceState({}, document.title, window.location.pathname);
+      } else if (params.get("linkedin_error")) {
+        setToast({ message: `LinkedIn Connection Error: ${params.get("linkedin_error")}`, type: "error" });
+        setSettingsTab("integrations");
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (activeWorkspace?.id) {
+      fetch(`/api/social/linkedin?workspaceId=${activeWorkspace.id}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.connection) setLinkedinConn(data.connection);
+        })
+        .catch(console.error);
+    }
+  }, [activeWorkspace?.id]);
+
+  const handleConnectLinkedin = async () => {
+    const wsId = activeWorkspace?.id || "00000000-0000-0000-0000-000000000000";
+    setIsFetchingLinkedin(true);
+    try {
+      const res = await fetch(`/api/social/linkedin?action=get_auth_url&workspaceId=${wsId}`);
+      const data = await res.json();
+      if (data.authUrl) {
+        window.location.href = data.authUrl;
+      } else {
+        setToast({ message: data.error || "Failed to generate LinkedIn connection link.", type: "error" });
+      }
+    } catch (err: any) {
+      console.error(err);
+      setToast({ message: "Error connecting to LinkedIn", type: "error" });
+    } finally {
+      setIsFetchingLinkedin(false);
+    }
+  };
 
   // Campaign Generate Studio States
   const [postPrompt, setPostPrompt] = useState("");
@@ -3425,6 +3472,18 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                   </button>
 
                   <button
+                    onClick={() => setSettingsTab("integrations")}
+                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-2xl text-xs font-semibold transition-all text-left
+                      ${settingsTab === "integrations"
+                        ? "bg-black border-none text-[#ffffff] shadow-[0_0_15px_rgba(225,224,204,0.03)]"
+                        : "text-[#828282] hover:text-[#ffffff]/90 hover:bg-[#E1E0CC]/5"
+                      }`}
+                  >
+                    <Globe className="w-3.5 h-3.5" />
+                    <span>Social Integrations</span>
+                  </button>
+
+                  <button
                     onClick={() => setSettingsTab("team")}
                     className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-2xl text-xs font-semibold transition-all text-left
                       ${settingsTab === "team"
@@ -3451,6 +3510,59 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
 
                 {/* Right Sub-Tab Content */}
                 <div className="flex-1 bg-[#1c1e21] border border-[#E1E0CC]/5 hover:border-[#E1E0CC]/15 transition-all/80 rounded-2xl p-6 shadow-[0_4px_20px_rgb(0,0,0,0.01)] min-h-[400px]">
+                  
+                  {/* integrations tab */}
+                  {settingsTab === "integrations" && (
+                    <div className="space-y-6">
+                      <div>
+                        <h4 className="text-sm font-bold text-[#ffffff] mb-1">Connected Social Media Accounts</h4>
+                        <p className="text-[11px] text-[#828282]">Connect your social accounts to enable 1-click automated AI publishing.</p>
+                      </div>
+
+                      {/* LinkedIn Account Card */}
+                      <div className="p-5 bg-[#0D0D0D] border border-white/10 rounded-2xl space-y-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-[#0077B5]/20 border border-[#0077B5]/40 flex items-center justify-center text-[#0077B5]">
+                              <Share2 className="w-5 h-5" />
+                            </div>
+                            <div>
+                              <h5 className="text-sm font-bold text-white flex items-center gap-2">
+                                LinkedIn Profile
+                                {linkedinConn?.isConnected ? (
+                                  <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full text-[10px] font-bold">
+                                    Connected
+                                  </span>
+                                ) : (
+                                  <span className="px-2 py-0.5 bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 rounded-full text-[10px] font-bold">
+                                    Disconnected
+                                  </span>
+                                )}
+                              </h5>
+                              <p className="text-xs text-[#828282] mt-0.5">
+                                {linkedinConn?.isConnected 
+                                  ? `Connected as ${linkedinConn.accountHandle || linkedinConn.linkedinUrn}`
+                                  : "Grant permission to automatically publish posts & carousels."}
+                              </p>
+                            </div>
+                          </div>
+
+                          <button
+                            onClick={handleConnectLinkedin}
+                            disabled={isFetchingLinkedin}
+                            className="bg-[#0077B5] hover:bg-[#005E93] text-white font-bold text-xs px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 shadow-lg disabled:opacity-50"
+                          >
+                            {isFetchingLinkedin ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <Share2 className="w-4 h-4" />
+                            )}
+                            {linkedinConn?.isConnected ? "Reconnect LinkedIn" : "Connect LinkedIn Account"}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   
                   {/* profile tab */}
                   {settingsTab === "profile" && (
