@@ -3596,15 +3596,14 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                                 className="bg-[#111111] border border-[#828282]/30 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-[#DEDBC8] w-full md:w-64 cursor-pointer font-medium"
                               >
                                 <option value="personal">👤 Personal Profile ({linkedinConn.accountHandle})</option>
+                                <option value="urn:li:organization:12788579">🏢 Asenra (Organization Page)</option>
                                 {linkedinConn?.pages && linkedinConn.pages.length > 0 ? (
                                   linkedinConn.pages.map((p: any) => (
-                                    <option key={p.id} value={p.urn}>
-                                      🏢 {p.name}
+                                    <option key={p.organization} value={p.organization}>
+                                      🏢 {p.name || 'Company Page'} ({p.organization})
                                     </option>
                                   ))
-                                ) : (
-                                  <option value="" disabled>No Managed Pages Found (Personal Profile Only)</option>
-                                )}
+                                ) : null}
                               </select>
                             </div>
                           </div>
