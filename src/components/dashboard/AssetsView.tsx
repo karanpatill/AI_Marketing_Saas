@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Loader2, Image as ImageIcon, Layers, Download, ExternalLink, Calendar as CalendarIcon, Clock } from "lucide-react";
+import { Loader2, Image as ImageIcon, Layers, Download, ExternalLink, Calendar as CalendarIcon, Clock, Share2 } from "lucide-react";
 import { format } from "date-fns";
 
 export function AssetsView({ workspaceId, refreshKey = 0 }: { workspaceId: string; refreshKey?: number }) {
@@ -243,6 +243,42 @@ export function AssetsView({ workspaceId, refreshKey = 0 }: { workspaceId: strin
                          <Download className="w-4 h-4" />
                        </button>
                     )}
+
+                      <button
+                        onClick={async (e) => {
+                          e.preventDefault();
+                          const caption = prompt(
+                            "Enter LinkedIn Post Caption:",
+                            asset.metadata?.systemPrompt || `Check out our latest ${activeSubTab} created with Automarc AI!`
+                          );
+                          if (!caption) return;
+                          
+                          try {
+                            const res = await fetch("/api/social/linkedin", {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({
+                                action: "publish",
+                                workspaceId,
+                                caption
+                              })
+                            });
+                            const data = await res.json();
+                            if (data.success) {
+                              alert("🎉 Successfully published post to your LinkedIn profile!");
+                            } else {
+                              alert(`Failed to publish: ${data.error || "Please check your LinkedIn connection"}`);
+                            }
+                          } catch (err: any) {
+                            console.error(err);
+                            alert("Failed to publish to LinkedIn.");
+                          }
+                        }}
+                        className="w-10 h-10 rounded-full bg-[#0077B5] text-white flex items-center justify-center hover:scale-110 transition-transform shadow-lg"
+                        title="Publish to LinkedIn"
+                      >
+                        <Share2 className="w-4 h-4" />
+                      </button>
 
                       <button
                         onClick={async (e) => {
