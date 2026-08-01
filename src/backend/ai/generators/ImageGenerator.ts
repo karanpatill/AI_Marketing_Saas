@@ -5,12 +5,11 @@ import { getTemplateForLanguage, TemplateOptions } from "../utils/htmlTemplates"
 import { ModelRegistry } from "../utils/ModelRegistry";
 
 function mapToRealGeminiModel(modelId?: string): string {
-  if (!modelId) return "gemini-1.5-flash";
+  if (!modelId) return "gemini-2.5-flash";
   const m = modelId.toLowerCase();
-  if (m.includes("pro")) return "gemini-1.5-pro";
-  if (m.includes("lite") || m.includes("8b")) return "gemini-1.5-flash-8b";
-  if (m.includes("2.0")) return "gemini-2.0-flash-exp";
-  return "gemini-1.5-flash";
+  if (m.includes("pro")) return "gemini-2.5-pro";
+  if (m.includes("lite") || m.includes("8b")) return "gemini-2.5-flash";
+  return "gemini-2.5-flash";
 }
 
 function parseImageJsonOutput(jsonOutput: string, defaultTopic: string): { category: string; title: string; content: string; image_prompt?: string } {
