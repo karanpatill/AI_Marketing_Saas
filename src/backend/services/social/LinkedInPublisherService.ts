@@ -1,5 +1,11 @@
 import { createAdminClient } from '@/lib/supabaseServer';
 
+export interface LinkedInPage {
+  id: string;
+  name: string;
+  urn: string;
+}
+
 export interface LinkedInConnection {
   linkedinUrn: string;
   organizationUrn?: string;
@@ -7,6 +13,7 @@ export interface LinkedInConnection {
   accessToken: string;
   isConnected: boolean;
   connectedAt?: string;
+  pages?: LinkedInPage[];
 }
 
 export interface PublishResult {
@@ -19,6 +26,50 @@ export interface PublishResult {
 
 export class LinkedInPublisherService {
   /**
+   * Automatically fetches managed LinkedIn Organization/Company Pages
+   */
+  public static async fetchUserPages(accessToken: string): Promise<LinkedInPage[]> {
+    try {
+      const res = await fetch('https://api.linkedin.com/v2/organizationalEntityAcls?q=roleAssignee&role=ADMINISTRATOR&state=APPROVED', {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'X-Restli-Protocol-Version': '2.0.0'
+        }
+      });
+
+      const data = await res.json();
+      if (data.elements && Array.isArray(data.elements)) {
+        const pages: LinkedInPage[] = [];
+        for (const elem of data.elements) {
+          const urn = elem.organizationalTarget;
+          if (urn && urn.includes('organization')) {
+            const orgId = urn.split(':').pop() || '';
+            let name = `Company Page (${orgId})`;
+            try {
+              const orgRes = await fetch(`https://api.linkedin.com/v2/organizations/${orgId}`, {
+                headers: {
+                  'Authorization': `Bearer ${accessToken}`,
+                  'X-Restli-Protocol-Version': '2.0.0'
+                }
+              });
+              const orgData = await orgRes.json();
+              if (orgData.localizedName) {
+                name = orgData.localizedName;
+              }
+            } catch (e) {}
+
+            pages.push({ id: orgId, name, urn });
+          }
+        }
+        return pages;
+      }
+    } catch (err) {
+      console.error('[LinkedIn fetchUserPages error]:', err);
+    }
+    return [];
+  }
+
+  /**
    * Generates LinkedIn OAuth Authorization URL
    */
   public static getAuthUrl(workspaceId: string, redirectUri: string): string {
@@ -27,7 +78,7 @@ export class LinkedInPublisherService {
       throw new Error("LINKEDIN_CLIENT_ID is not configured in .env.local");
     }
 
-    const scopes = encodeURIComponent('openid profile email w_member_social w_organization_social');
+    const scopes = encodeURIComponent('openid profile email w_member_social w_organization_social r_organization_admin');
     const state = encodeURIComponent(workspaceId);
 
     return `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${state}&scope=${scopes}`;
@@ -137,12 +188,18 @@ export class LinkedInPublisherService {
   ): Promise<LinkedInConnection> {
     const supabase = createAdminClient();
 
+    // Auto-fetch user's managed company pages!
+    const pages = await this.fetchUserPages(accessToken);
+    const defaultOrgUrn = pages.length > 0 ? pages[0].urn : undefined;
+
     const linkedinConfig: LinkedInConnection = {
       linkedinUrn,
+      organizationUrn: defaultOrgUrn,
       accountHandle: accountHandle.startsWith('@') ? accountHandle : `@${accountHandle}`,
       accessToken,
       isConnected: true,
-      connectedAt: new Date().toISOString()
+      connectedAt: new Date().toISOString(),
+      pages
     };
 
     try {

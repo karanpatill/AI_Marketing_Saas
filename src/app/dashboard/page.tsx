@@ -3559,24 +3559,23 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                         </div>
 
                         {linkedinConn?.isConnected && (
-                          <div className="mt-4 pt-4 border-t border-[#828282]/20 flex flex-col md:flex-row items-center justify-between gap-3">
+                          <div className="mt-4 pt-4 border-t border-[#828282]/20 flex flex-col md:flex-row items-center justify-between gap-4">
                             <div className="flex-1 w-full">
-                              <label className="text-xs font-bold text-white mb-1 block">Publish to Company Page (Optional)</label>
-                              <p className="text-[11px] text-[#828282]">Enter your Organization Page ID (e.g. 10492837 from your LinkedIn admin URL) to post to your Company Page instead of personal profile.</p>
+                              <label className="text-xs font-bold text-white mb-1 flex items-center gap-2">
+                                <span>Publishing Target Destination</span>
+                                <span className="bg-[#DEDBC8]/20 text-[#DEDBC8] text-[10px] px-2 py-0.5 rounded-full font-normal">Auto-Detected</span>
+                              </label>
+                              <p className="text-[11px] text-[#828282]">
+                                Select whether posts are published to your Personal LinkedIn Profile or one of your Managed Company Pages.
+                              </p>
                             </div>
-                            <div className="flex items-center gap-2 w-full md:w-auto">
-                              <input
-                                type="text"
-                                placeholder="e.g. 10492837"
-                                defaultValue={linkedinConn?.organizationUrn?.replace(/[^0-9]/g, '') || ''}
-                                id="linkedin-org-id-input"
-                                className="bg-[#111111] border border-[#828282]/30 rounded-xl px-3 py-2 text-xs text-white placeholder-[#828282] focus:outline-none focus:border-[#DEDBC8] w-36"
-                              />
-                              <button
-                                type="button"
-                                onClick={async (e) => {
-                                  e.preventDefault();
-                                  const input = (document.getElementById('linkedin-org-id-input') as HTMLInputElement)?.value;
+
+                            <div className="w-full md:w-auto">
+                              <select
+                                value={linkedinConn?.organizationUrn || 'personal'}
+                                onChange={async (e) => {
+                                  const val = e.target.value;
+                                  const targetId = val === 'personal' ? '' : val;
                                   try {
                                     const res = await fetch('/api/social/linkedin', {
                                       method: 'POST',
@@ -3584,22 +3583,30 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                                       body: JSON.stringify({
                                         action: 'set_org_id',
                                         workspaceId: activeWorkspace?.id,
-                                        organizationId: input
+                                        organizationId: targetId
                                       })
                                     });
                                     const data = await res.json();
                                     if (data.success) {
-                                      alert(input ? `Target set to Company Page ID: ${input}!` : 'Target reset to Personal Profile!');
+                                      setLinkedinConn((prev: any) => ({ ...prev, organizationUrn: targetId || undefined }));
                                     }
                                   } catch (err) {
                                     console.error(err);
-                                    alert('Failed to save Company Page ID');
                                   }
                                 }}
-                                className="bg-[#ffffff]/10 hover:bg-[#ffffff]/20 text-white font-bold text-xs px-3 py-2 rounded-xl transition-all cursor-pointer whitespace-nowrap"
+                                className="bg-[#111111] border border-[#828282]/30 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-[#DEDBC8] w-full md:w-64 cursor-pointer font-medium"
                               >
-                                Save Target
-                              </button>
+                                <option value="personal">👤 Personal Profile ({linkedinConn.accountHandle})</option>
+                                {linkedinConn?.pages && linkedinConn.pages.length > 0 ? (
+                                  linkedinConn.pages.map((p: any) => (
+                                    <option key={p.id} value={p.urn}>
+                                      🏢 {p.name}
+                                    </option>
+                                  ))
+                                ) : (
+                                  <option value="" disabled>No Managed Pages Found (Personal Profile Only)</option>
+                                )}
+                              </select>
                             </div>
                           </div>
                         )}
