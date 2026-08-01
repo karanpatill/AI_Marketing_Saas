@@ -3547,22 +3547,13 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                             </div>
                           </div>
 
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              handleConnectLinkedin();
-                            }}
-                            disabled={isFetchingLinkedin}
-                            className="bg-[#0077B5] hover:bg-[#005E93] text-white font-bold text-xs px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 shadow-lg disabled:opacity-50 cursor-pointer"
+                          <a
+                            href={`/api/social/linkedin/connect?workspaceId=${activeWorkspace?.id || ''}`}
+                            className="bg-[#0077B5] hover:bg-[#005E93] text-white font-bold text-xs px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 shadow-lg cursor-pointer"
                           >
-                            {isFetchingLinkedin ? (
-                              <Loader2 className="w-4 h-4 animate-spin" />
-                            ) : (
-                              <Share2 className="w-4 h-4" />
-                            )}
+                            <Share2 className="w-4 h-4" />
                             {linkedinConn?.isConnected ? "Reconnect LinkedIn" : "Connect LinkedIn Account"}
-                          </button>
+                          </a>
                         </div>
                       </div>
                     </div>
