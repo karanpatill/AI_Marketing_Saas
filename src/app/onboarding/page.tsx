@@ -825,6 +825,12 @@ export default function OnboardingPage() {
         }
       }
 
+      if (!workspaceId) {
+        alert("Failed to initialize workspace. Please ensure you belong to an organization.");
+        setIsSubmitting(false);
+        return;
+      }
+
       // TRANSACTION STEP 1: Insert Brand DNA profile (Via Backend API to ensure AI design language assignment)
       let dnaResult;
       try {
