@@ -41,7 +41,7 @@ export async function POST(request: Request) {
 
     const page = await browser.newPage();
     await page.setViewport({ width, height, deviceScaleFactor: 1 });
-    await page.setContent(fullHtml, { waitUntil: "networkidle0", timeout: 15000 });
+    await page.setContent(fullHtml, { waitUntil: "load", timeout: 15000 });
 
     // Wait for fonts and images to fully load
     await page.evaluate(() => document.fonts.ready);
