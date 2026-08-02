@@ -39,29 +39,25 @@ export function AssetsView({ workspaceId, refreshKey = 0 }: { workspaceId: strin
     }
   };
 
+  // Shared helper: render HTML to base64 JPEG via server-side Puppeteer
+  const renderHtmlToImage = async (html: string, width: number, height: number): Promise<string> => {
+    const res = await fetch("/api/render-image", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ html, width, height }),
+    });
+    const data = await res.json();
+    if (!res.ok || data.error) throw new Error(data.error || "Render failed");
+    return data.imageBase64;
+  };
+
   const handlePublishToLinkedIn = async (asset: any, caption: string) => {
     const dim = getDimensionsForRatio(asset.metadata?.aspectRatio);
-    const html2canvas = (await import('html2canvas')).default;
     let imageBase64 = "";
 
-    const livePreview = document.getElementById(`asset-preview-${asset.id}`);
-    if (livePreview) {
-      const innerEl = livePreview.querySelector('[style*="scale"]') as HTMLElement;
-      const originalTransform = innerEl?.style.transform || '';
-      if (innerEl) innerEl.style.transform = 'scale(1)';
-      await document.fonts.ready;
-      await new Promise(r => setTimeout(r, 300));
-      const canvas = await html2canvas(innerEl || livePreview, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        logging: false,
-        width: dim.width,
-        height: dim.height,
-        backgroundColor: null
-      });
-      if (innerEl) innerEl.style.transform = originalTransform;
-      imageBase64 = canvas.toDataURL('image/jpeg', 0.95);
+    const html = asset.metadata?.html || asset.metadata?.html_content;
+    if (html) {
+      imageBase64 = await renderHtmlToImage(html, dim.width, dim.height);
     } else if (asset.metadata?.imageUrl) {
       imageBase64 = asset.metadata.imageUrl;
     }
@@ -180,32 +176,9 @@ export function AssetsView({ workspaceId, refreshKey = 0 }: { workspaceId: strin
                            e.preventDefault();
                            try {
                              if (asset.metadata?.html || asset.metadata?.html_content) {
-                               const html2canvas = (await import('html2canvas')).default;
-                               const tempDiv = document.createElement('div');
-                               tempDiv.style.position = 'absolute';
-                               tempDiv.style.left = '-9999px';
-                               tempDiv.style.top = '-9999px';
-                               tempDiv.style.width = `${dim.width}px`;
-                               tempDiv.style.height = `${dim.height}px`;
-                                 
-                                 // Fix for older generated assets that used Tailwind classes unsupported by html2canvas
-                                 let rawHtml = asset.metadata.html || asset.metadata.html_content;
-                                 if (rawHtml) {
-                                   rawHtml = rawHtml.replace(/class="bg-white\/90 text-black p-6 rounded-lg border-4 shadow-\[8px_8px_0px_0px_rgba\(0,0,0,1\)\]" style="border-color: (.*?);"/g, 'class="p-6 rounded-lg border-4" style="background-color: rgba(255,255,255,0.9); color: black; border-color: $1; box-shadow: 8px 8px 0px 0px rgba(0,0,0,1);"');
-                                   rawHtml = rawHtml.replace(/border-4 shadow-\[4px_4px_0px_0px_rgba\(255,255,255,0\.5\)\]"/g, 'border-4" style="box-shadow: 4px 4px 0px 0px rgba(255,255,255,0.5);"');
-                                   rawHtml = rawHtml.replace(/rounded shadow-\[4px_4px_0px_0px_rgba\(255,255,255,0\.5\)\]"/g, 'rounded" style="box-shadow: 4px 4px 0px 0px rgba(255,255,255,0.5);"');
-                                 }
-                                 
-                                 tempDiv.innerHTML = rawHtml;
-                                 document.body.appendChild(tempDiv);
-                                 
-                                 await document.fonts.ready; // Wait for fonts to load
-                                 await new Promise(r => setTimeout(r, 500)); // allow render
-                                 const canvas = await html2canvas(tempDiv, { scale: 1, useCORS: true, allowTaint: true, logging: false });
-                               const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
-                               document.body.removeChild(tempDiv);
-                               
-                               const resData = await fetch(dataUrl);
+                               const rawHtml = asset.metadata.html || asset.metadata.html_content;
+                               const imageBase64 = await renderHtmlToImage(rawHtml, dim.width, dim.height);
+                               const resData = await fetch(imageBase64);
                                const blob = await resData.blob();
                                const objectUrl = URL.createObjectURL(blob);
                                const link = document.createElement('a');
@@ -242,36 +215,15 @@ export function AssetsView({ workspaceId, refreshKey = 0 }: { workspaceId: strin
                            try {
                              const JSZip = (await import('jszip')).default;
                              const zip = new JSZip();
-                             const html2canvas = (await import('html2canvas')).default;
-                             
-                             const tempDiv = document.createElement('div');
-                             tempDiv.style.position = 'absolute';
-                             tempDiv.style.left = '-9999px';
-                             tempDiv.style.top = '-9999px';
-                             tempDiv.style.width = `${dim.width}px`;
-                             tempDiv.style.height = `${dim.height}px`;
-                             document.body.appendChild(tempDiv);
                              
                              for (let i = 0; i < asset.metadata.slides.length; i++) {
-                               let slideHtml = typeof asset.metadata.slides[i] === "string" ? asset.metadata.slides[i] : asset.metadata.slides[i].html;
-                               
-                               // Fix for older generated assets that used Tailwind classes unsupported by html2canvas
+                               const slideHtml = typeof asset.metadata.slides[i] === "string" ? asset.metadata.slides[i] : asset.metadata.slides[i].html;
                                if (slideHtml) {
-                                 slideHtml = slideHtml.replace(/class="bg-white\/90 text-black p-6 rounded-lg border-4 shadow-\[8px_8px_0px_0px_rgba\(0,0,0,1\)\]" style="border-color: (.*?);"/g, 'class="p-6 rounded-lg border-4" style="background-color: rgba(255,255,255,0.9); color: black; border-color: $1; box-shadow: 8px 8px 0px 0px rgba(0,0,0,1);"');
-                                 slideHtml = slideHtml.replace(/border-4 shadow-\[4px_4px_0px_0px_rgba\(255,255,255,0\.5\)\]"/g, 'border-4" style="box-shadow: 4px 4px 0px 0px rgba(255,255,255,0.5);"');
-                                 slideHtml = slideHtml.replace(/rounded shadow-\[4px_4px_0px_0px_rgba\(255,255,255,0\.5\)\]"/g, 'rounded" style="box-shadow: 4px 4px 0px 0px rgba(255,255,255,0.5);"');
+                                 const imageBase64 = await renderHtmlToImage(slideHtml, dim.width, dim.height);
+                                 const base64Data = imageBase64.replace(/^data:image\/(png|jpeg);base64,/, "");
+                                 zip.file(`slide-${i + 1}.jpeg`, base64Data, { base64: true });
                                }
-                               
-                               tempDiv.innerHTML = slideHtml;
-                               await document.fonts.ready; // Wait for fonts to load
-                               await new Promise(r => setTimeout(r, 500)); // allow render
-                               const canvas = await html2canvas(tempDiv, { scale: 1, useCORS: true, allowTaint: true, logging: false });
-                               const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
-                               const base64Data = dataUrl.replace(/^data:image\/(png|jpeg);base64,/, "");
-                               zip.file(`slide-${i + 1}.jpeg`, base64Data, { base64: true });
                              }
-                             
-                             document.body.removeChild(tempDiv);
                              
                              const blob = await zip.generateAsync({ type: "blob" });
                              const link = document.createElement('a');

@@ -13,6 +13,5 @@ export function formatAiError(error: any): string {
     return "The AI system is not properly configured. Please contact support.";
   }
 
-  // Generic fallback if we don't want to expose raw stack traces
-  return "An unexpected error occurred during generation. Please try again.";
+  return "Error: " + msg;
 }

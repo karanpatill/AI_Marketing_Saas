@@ -73,16 +73,16 @@ interface StrategyPayload {
     dayTemplate: {
       tuesday: string; // e.g. "Educational carousel"
       thursday: string; // e.g. "Social proof static post"
-      saturday: string; // e.g. "Cinematic value video reel"
+      saturday: string; // e.g. "Industry insight static post"
     };
   };
   dailyCalendar: Array<{
-    dayOffset: number; // 1 to 30
-    postType: "static" | "carousel" | "video";
+    dayOffset: number; // 1 to 30 (Strictly generate exactly ONE item per day, no duplicates)
+    postType: "static" | "carousel";
     title: string; // Catchy internal title/concept name
-    conceptBrief: string; // 1-2 sentence brief describing visual layout, copy angles, hooks, and context
+    conceptBrief: string; // 1-2 sentence brief describing visual layout, copy angles, hooks, and context. (This asset will be published commonly across both LinkedIn and Instagram)
     cta: string; // Target action (e.g., "Visit link in bio", "Book a demo")
-  }>; // Generate EXACTLY 30 items representing consecutive days.
+  }>; // Generate EXACTLY 30 items representing consecutive days. One item per day strictly.
 }`;
 
   const responseText = await callLLM(prompt, { maxTokens: 4000 });

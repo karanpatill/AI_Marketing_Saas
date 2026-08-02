@@ -43,7 +43,7 @@ export function LinkedInPublishModal({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          title: asset.metadata?.title || asset.metadata?.topic || asset.name,
+          title: asset.metadata?.title || asset.metadata?.topic || asset.name || "Professional Brand Post",
           contentType: asset.type || "image",
           brandName: asset.metadata?.brandName || "",
           industry: asset.metadata?.industry || "",
@@ -51,12 +51,16 @@ export function LinkedInPublishModal({
         }),
       });
       const data = await res.json();
-      if (data.caption) {
+      if (!res.ok || data.error) {
+        setError(data.error || "Failed to generate caption.");
+        setCaption("");
+      } else if (data.caption) {
         setCaption(data.caption);
       } else {
         setCaption("");
       }
-    } catch (err) {
+    } catch (err: any) {
+      setError(err.message || "Failed to generate caption.");
       setCaption("");
     } finally {
       setIsGenerating(false);
