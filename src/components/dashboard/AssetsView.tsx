@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useEffect, useState } from "react";
 import { Loader2, Image as ImageIcon, Layers, Download, ExternalLink, Calendar as CalendarIcon, Clock, Share2 } from "lucide-react";
 import { format } from "date-fns";
 import { LinkedInPublishModal } from "./LinkedInPublishModal";
