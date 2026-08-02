@@ -99,7 +99,7 @@ export class InstagramPublisherService {
     }
 
     // If real access token and account ID exist, call Meta Graph API
-    if (connection.accessToken && connection.instagramAccountId && !connection.accessToken.startsWith('sandbox_')) {
+    if (connection.accessToken && connection.instagramAccountId && !connection.accessToken.startsWith('sandbox_') && !connection.accessToken.startsWith('ig_managed_')) {
       try {
         // Step 1: Create Container
         const containerRes = await fetch(

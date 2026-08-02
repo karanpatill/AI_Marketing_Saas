@@ -1,9 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Loader2, Image as ImageIcon, Layers, Download, ExternalLink, Calendar as CalendarIcon, Clock, Share2 } from "lucide-react";
+import { Loader2, Image as ImageIcon, Layers, Download, ExternalLink, Calendar as CalendarIcon, Clock, Share2, Facebook } from "lucide-react";
 import { format } from "date-fns";
 import { LinkedInPublishModal } from "./LinkedInPublishModal";
+import { FacebookPublishModal } from "./FacebookPublishModal";
+import { InstagramPublishModal } from "./InstagramPublishModal";
+import { Instagram } from "lucide-react";
 
 export function AssetsView({ workspaceId, refreshKey = 0 }: { workspaceId: string; refreshKey?: number }) {
   const getDimensionsForRatio = (ratio?: string) => {
@@ -16,6 +19,8 @@ export function AssetsView({ workspaceId, refreshKey = 0 }: { workspaceId: strin
   const [assets, setAssets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [publishModal, setPublishModal] = useState<{ open: boolean; asset: any | null }>({ open: false, asset: null });
+  const [fbPublishModal, setFbPublishModal] = useState<{ open: boolean; asset: any | null }>({ open: false, asset: null });
+  const [igPublishModal, setIgPublishModal] = useState<{ open: boolean; asset: any | null }>({ open: false, asset: null });
 
   useEffect(() => {
     fetchAssets(activeSubTab);
@@ -75,6 +80,60 @@ export function AssetsView({ workspaceId, refreshKey = 0 }: { workspaceId: strin
     const data = await res.json();
     if (!data.success) {
       throw new Error(data.error || "Failed to publish to LinkedIn");
+    }
+  };
+
+  const handlePublishToFacebook = async (asset: any, caption: string) => {
+    const dim = getDimensionsForRatio(asset.metadata?.aspectRatio);
+    let imageBase64 = "";
+
+    const html = asset.metadata?.html || asset.metadata?.html_content;
+    if (html) {
+      imageBase64 = await renderHtmlToImage(html, dim.width, dim.height);
+    } else if (asset.metadata?.imageUrl) {
+      imageBase64 = asset.metadata.imageUrl;
+    }
+
+    const res = await fetch("/api/social/facebook", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "publish",
+        workspaceId,
+        caption,
+        imageBase64
+      })
+    });
+    const data = await res.json();
+    if (!data.success) {
+      throw new Error(data.error || "Failed to publish to Facebook");
+    }
+  };
+
+  const handlePublishToInstagram = async (asset: any, caption: string) => {
+    const dim = getDimensionsForRatio(asset.metadata?.aspectRatio);
+    let imageBase64 = "";
+
+    const html = asset.metadata?.html || asset.metadata?.html_content;
+    if (html) {
+      imageBase64 = await renderHtmlToImage(html, dim.width, dim.height);
+    } else if (asset.metadata?.imageUrl) {
+      imageBase64 = asset.metadata.imageUrl;
+    }
+
+    const res = await fetch("/api/social/instagram", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "publish",
+        workspaceId,
+        caption,
+        imageUrl: imageBase64
+      })
+    });
+    const data = await res.json();
+    if (!data.success) {
+      throw new Error(data.error || "Failed to publish to Instagram");
     }
   };
 
@@ -254,6 +313,28 @@ export function AssetsView({ workspaceId, refreshKey = 0 }: { workspaceId: strin
                       </button>
 
                       <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setFbPublishModal({ open: true, asset });
+                        }}
+                        className="w-10 h-10 rounded-full bg-[#1877F2] text-white flex items-center justify-center hover:scale-110 transition-transform shadow-lg"
+                        title="Publish to Facebook"
+                      >
+                        <Facebook className="w-4 h-4" />
+                      </button>
+
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setIgPublishModal({ open: true, asset });
+                        }}
+                        className="w-10 h-10 rounded-full bg-gradient-to-br from-[#833AB4] via-[#FD1D1D] to-[#F56040] text-white flex items-center justify-center hover:scale-110 transition-transform shadow-lg"
+                        title="Publish to Instagram"
+                      >
+                        <Instagram className="w-4 h-4" />
+                      </button>
+
+                      <button
                         onClick={async (e) => {
                           e.preventDefault();
                           if (confirm("Are you sure you want to delete this asset?")) {
@@ -335,6 +416,30 @@ export function AssetsView({ workspaceId, refreshKey = 0 }: { workspaceId: strin
       onPublish={async (caption) => {
         if (!publishModal.asset) return;
         await handlePublishToLinkedIn(publishModal.asset, caption);
+      }}
+    />
+
+    {/* Facebook Publish Modal */}
+    <FacebookPublishModal
+      isOpen={fbPublishModal.open}
+      asset={fbPublishModal.asset}
+      workspaceId={workspaceId}
+      onClose={() => setFbPublishModal({ open: false, asset: null })}
+      onPublish={async (caption) => {
+        if (!fbPublishModal.asset) return;
+        await handlePublishToFacebook(fbPublishModal.asset, caption);
+      }}
+    />
+
+    {/* Instagram Publish Modal */}
+    <InstagramPublishModal
+      isOpen={igPublishModal.open}
+      asset={igPublishModal.asset}
+      workspaceId={workspaceId}
+      onClose={() => setIgPublishModal({ open: false, asset: null })}
+      onPublish={async (caption) => {
+        if (!igPublishModal.asset) return;
+        await handlePublishToInstagram(igPublishModal.asset, caption);
       }}
     />
     </>
