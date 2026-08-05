@@ -796,6 +796,7 @@ export default function OnboardingPage() {
       let orgIdForWs = null;
 
       if (user) {
+        // Step 1: Ensure the user belongs to an org. If not, auto-create one.
         try {
           const wsRes = await fetch("/api/workspace");
           if (wsRes.ok) {
@@ -808,6 +809,23 @@ export default function OnboardingPage() {
           console.error("Failed to fetch workspaces from API", err);
         }
 
+        // No org found — auto-create one for this new user
+        if (!orgIdForWs) {
+          try {
+            const initRes = await fetch("/api/workspace/init", { method: "POST" });
+            if (initRes.ok) {
+              const initData = await initRes.json();
+              orgIdForWs = initData.orgId;
+            } else {
+              const errText = await initRes.text();
+              console.error("Failed to initialize organization:", errText);
+            }
+          } catch (err) {
+            console.error("Failed to call /api/workspace/init", err);
+          }
+        }
+
+        // Step 2: Create a workspace inside that org
         if (orgIdForWs) {
           try {
             const createWsRes = await fetch("/api/workspace", {
