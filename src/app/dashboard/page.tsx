@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
+import { createBrowserClient } from "@supabase/ssr";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -157,6 +158,10 @@ export default function DashboardPage() {
   const [settingsTab, setSettingsTab] = useState<"profile" | "workspace" | "integrations" | "team" | "billing">("profile");
   const [linkedinConn, setLinkedinConn] = useState<any>(null);
   const [isFetchingLinkedin, setIsFetchingLinkedin] = useState(false);
+  const [facebookConn, setFacebookConn] = useState<any>(null);
+  const [isFetchingFacebook, setIsFetchingFacebook] = useState(false);
+  const [facebookPages, setFacebookPages] = useState<any[]>([]);
+  const [facebookUserToken, setFacebookUserToken] = useState("");
   const [userName, setUserName] = useState("");
   const [userAvatar, setUserAvatar] = useState("");
   const [isSavingProfile, setIsSavingProfile] = useState(false);
@@ -166,13 +171,41 @@ export default function DashboardPage() {
   useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
+      let needsCleanup = false;
+
+      // LinkedIn
       if (params.get("linkedin_success") === "connected") {
         setToast({ message: "LinkedIn Account connected successfully!", type: "success" });
         setSettingsTab("integrations");
-        window.history.replaceState({}, document.title, window.location.pathname);
+        needsCleanup = true;
       } else if (params.get("linkedin_error")) {
         setToast({ message: `LinkedIn Connection Error: ${params.get("linkedin_error")}`, type: "error" });
         setSettingsTab("integrations");
+        needsCleanup = true;
+      }
+
+      // Facebook
+      if (params.get("facebook_success") === "connected") {
+        setToast({ message: "Facebook Page connected successfully!", type: "success" });
+        setSettingsTab("integrations");
+        needsCleanup = true;
+      } else if (params.get("facebook_error")) {
+        setToast({ message: `Facebook Connection Error: ${params.get("facebook_error")}`, type: "error" });
+        setSettingsTab("integrations");
+        needsCleanup = true;
+      } else if (params.get("facebook_pages")) {
+        try {
+          const pages = JSON.parse(decodeURIComponent(params.get("facebook_pages") || "[]"));
+          setFacebookPages(pages);
+          setFacebookUserToken(params.get("facebook_user_token") || "");
+          setSettingsTab("integrations");
+          needsCleanup = true;
+        } catch (e) {
+          console.error(e);
+        }
+      }
+
+      if (needsCleanup) {
         window.history.replaceState({}, document.title, window.location.pathname);
       }
     }
@@ -180,10 +213,19 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (activeWorkspace?.id) {
+      // Fetch LinkedIn
       fetch(`/api/social/linkedin?workspaceId=${activeWorkspace.id}`)
         .then(res => res.json())
         .then(data => {
           if (data.connection) setLinkedinConn(data.connection);
+        })
+        .catch(console.error);
+        
+      // Fetch Facebook
+      fetch(`/api/social/facebook?workspaceId=${activeWorkspace.id}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.connection) setFacebookConn(data.connection);
         })
         .catch(console.error);
     }
@@ -414,17 +456,17 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
     return active ? active.subtitles : timings[0]?.subtitles || "";
   };
 
-  // Helper to trigger refetches of dynamic tables
+  // Helper to trigger refetches of dynamic tables — runs all 3 fetches in parallel
   const reloadDynamicData = async (dnaId: string) => {
     try {
       const ts = Date.now();
-      const campaignsRes = await fetch(`/api/campaigns?brandDnaId=${dnaId}&t=${ts}`, { cache: 'no-store' });
+      const [campaignsRes, calendarRes, mixRes] = await Promise.all([
+        fetch(`/api/campaigns?brandDnaId=${dnaId}&t=${ts}`, { cache: 'no-store' }),
+        fetch(`/api/strategy?brandDnaId=${dnaId}&t=${ts}`, { cache: 'no-store' }),
+        fetch(`/api/content-mix?brandDnaId=${dnaId}&t=${ts}`, { cache: 'no-store' }),
+      ]);
       if (campaignsRes.ok) setCampaigns(await campaignsRes.json());
-
-      const calendarRes = await fetch(`/api/strategy?brandDnaId=${dnaId}&t=${ts}`, { cache: 'no-store' });
       if (calendarRes.ok) setCalendar(await calendarRes.json());
-
-      const mixRes = await fetch(`/api/content-mix?brandDnaId=${dnaId}&t=${ts}`, { cache: 'no-store' });
       if (mixRes.ok) setContentMix(await mixRes.json());
     } catch (err) {
       console.error("Failed to reload strategy details", err);
@@ -695,13 +737,15 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
     }
   };
 
-  // --- SaaS Initializer mount useEffect ───
+  // --- OPTIMIZED: Single unified dashboard init — replaces 7+ sequential fetches ---
   useEffect(() => {
-    async function loadSaaSData() {
+    async function loadDashboard() {
       try {
-        const { supabase } = await import("@/lib/supabase");
-        
-        // 1. Get current auth user
+        // Check auth first using the browser Supabase client (no dynamic import overhead)
+        const supabase = createBrowserClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+        );
         const { data: { user }, error: authError } = await supabase.auth.getUser();
         if (authError || !user) {
           router.push("/auth");
@@ -709,173 +753,96 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
         }
         setCurrentUser(user);
 
-        // 2. Fetch User Profile
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", user.id)
-          .maybeSingle();
-        if (profile) {
-          setUserName(profile.name || "");
-          setUserAvatar(profile.avatar_url || "");
-        } else {
-          setUserName(user.user_metadata?.name || user.email?.split("@")[0] || "");
-        }
+        // Check for URL-specified brandDnaId (direct link to a specific brand)
+        const params = new URLSearchParams(window.location.search);
+        const queryBrandId = params.get("id") || params.get("brandDnaId");
 
-        // 3. Fetch Organizations & Workspaces
-        const res = await fetch("/api/workspace");
-        if (res.ok) {
-          const workspaceData = await res.json();
-          setOrganizations(workspaceData.organizations || []);
-          setWorkspaces(workspaceData.workspaces || []);
+        // ONE network call — all data fetched in parallel server-side
+        const res = await fetch("/api/dashboard/init");
 
-          if (workspaceData.organizations?.length > 0) {
-            const defaultOrg = workspaceData.organizations[0];
-            setActiveOrg(defaultOrg);
-
-            const orgWorkspaces = workspaceData.workspaces?.filter((w: any) => w.org_id === defaultOrg.id) || [];
-            if (orgWorkspaces.length > 0) {
-              setActiveWorkspace(orgWorkspaces[0]);
-            }
-          }
-        } else if (res.status === 401) {
-          // If API returns 401, session might be invalid or unsynced, force login
+        if (res.status === 401) {
           await supabase.auth.signOut();
           router.push("/auth");
           return;
         }
 
-        // 4. Fetch Notifications
-        const { data: notifyList } = await supabase
-          .from("notifications")
-          .select("*")
-          .eq("user_id", user.id)
-          .order("created_at", { ascending: false })
-          .limit(10);
-        setNotifications(notifyList || []);
-
-      } catch (err) {
-        console.error("Failed to initialize SaaS data:", err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadSaaSData();
-  }, []);
-
-  // --- Load org details when activeOrg changes ───
-  useEffect(() => {
-    if (activeOrg) {
-      loadOrgDetails(activeOrg.id);
-    }
-  }, [activeOrg]);
-
-  const loadOrgDetails = async (orgId: string) => {
-    try {
-      const teamRes = await fetch(`/api/team?orgId=${orgId}`);
-      if (teamRes.ok) {
-        const teamData = await teamRes.json();
-        setTeamMembers(teamData);
-      }
-
-      const inviteRes = await fetch(`/api/invitations?orgId=${orgId}`);
-      if (inviteRes.ok) {
-        const inviteData = await inviteRes.json();
-        setPendingInvitations(inviteData);
-      }
-
-      const billingRes = await fetch(`/api/billing?orgId=${orgId}`);
-      if (billingRes.ok) {
-        const billingData = await billingRes.json();
-        setBillingStatus(billingData.billingStatus);
-      }
-
-      // Skip fetching activity_logs for now to prevent 500 errors if table is missing
-      // const { data: logs } = await supabase
-      //   .from("activity_logs")
-      //   .select("*")
-      //   .eq("org_id", orgId)
-      //   .order("created_at", { ascending: false })
-      //   .limit(10);
-      setActivityLogs([]);
-    } catch (err) {
-      console.error("Failed to load org details:", err);
-    }
-  };
-
-  // --- Fetch Brand DNA & Assets scoped by activeWorkspace ───
-  useEffect(() => {
-    async function fetchWorkspaceData() {
-      if (!activeWorkspace) {
-        setLoading(false);
-        return;
-      }
-      setLoading(true);
-      try {
-        const { supabase } = await import("@/lib/supabase");
-        
-        const params = new URLSearchParams(window.location.search);
-        const queryId = params.get("id") || params.get("brandDnaId");
-
-        let dnaData = null;
-        let dnaError = null;
-
-        if (queryId) {
-          const res = await supabase
-            .from("brand_dna")
-            .select("*")
-            .eq("id", queryId)
-            .maybeSingle();
-          dnaData = res.data;
-          dnaError = res.error;
-        } else {
-          const res = await supabase
-            .from("brand_dna")
-            .select("*")
-            .eq("workspace_id", activeWorkspace.id)
-            .maybeSingle();
-          dnaData = res.data;
-          dnaError = res.error;
-        }
-
-        if (dnaError) {
-          console.error("Error fetching brand DNA:", dnaError);
-          setDna(null);
-          setAssets(null);
+        if (!res.ok) {
+          console.error("Dashboard init failed:", res.status);
+          setLoading(false);
           return;
         }
 
-        if (dnaData) {
-          setDna(dnaData);
+        const d = await res.json();
 
-          // Fetch assets linked to this DNA profile
-          const { data: assetsData, error: assetsError } = await supabase
-            .from("brand_assets")
-            .select("*")
-            .eq("brand_dna_id", dnaData.id)
-            .maybeSingle();
+        // Profile
+        setUserName(d.profile?.name || user.user_metadata?.full_name || user.email?.split("@")[0] || "");
+        setUserAvatar(d.profile?.avatar_url || "");
 
-          if (assetsError) {
-            console.error("Error fetching brand assets:", assetsError);
-          } else if (assetsData) {
-            setAssets(assetsData);
-          }
+        // Orgs & Workspaces
+        setOrganizations(d.organizations || []);
+        setWorkspaces(d.workspaces || []);
 
-          // Trigger content and campaign fetches
-          await reloadDynamicData(dnaData.id);
-        } else {
-          setDna(null);
-          setAssets(null);
+        const defaultOrg = d.organizations?.[0] ?? null;
+        setActiveOrg(defaultOrg);
+
+        const defaultWorkspace = d.workspaces?.find((w: any) => w.org_id === defaultOrg?.orgId) ?? null;
+        setActiveWorkspace(defaultWorkspace);
+
+        // Team, billing, notifications
+        setTeamMembers(d.team || []);
+        setBillingStatus(d.billing ?? null);
+        setNotifications(d.notifications || []);
+        setActivityLogs([]);
+
+        // Brand DNA — use URL override if present
+        let resolvedDna = d.brandDna;
+        let resolvedAssets = d.brandAssets;
+
+        if (queryBrandId && queryBrandId !== d.brandDna?.id) {
+          // Fetch the specific brand requested via URL param
+          const [dnaRes, assetRes] = await Promise.all([
+            supabase.from("brand_dna").select("*").eq("id", queryBrandId).maybeSingle(),
+            supabase.from("brand_assets").select("*").eq("brand_dna_id", queryBrandId).maybeSingle(),
+          ]);
+          resolvedDna = dnaRes.data ?? d.brandDna;
+          resolvedAssets = assetRes.data ?? d.brandAssets;
         }
+
+        setDna(resolvedDna);
+        setAssets(resolvedAssets);
+
+        // Calendar & content mix (already fetched server-side in parallel)
+        setCalendar(d.calendar || []);
+        setContentMix(d.contentMix || []);
+
       } catch (err) {
-        console.error("Initialization error:", err);
+        console.error("Dashboard initialization error:", err);
       } finally {
         setLoading(false);
       }
     }
+    loadDashboard();
+  }, []);
 
-    fetchWorkspaceData();
-  }, [activeWorkspace]);
+  // Kept for manual refresh after team/billing changes (invites, workspace creation, etc.)
+  const loadOrgDetails = useCallback(async (orgId: string) => {
+    try {
+      const [teamRes, inviteRes, billingRes] = await Promise.all([
+        fetch(`/api/team?orgId=${orgId}`),
+        fetch(`/api/invitations?orgId=${orgId}`),
+        fetch(`/api/billing?orgId=${orgId}`),
+      ]);
+      if (teamRes.ok) setTeamMembers(await teamRes.json());
+      if (inviteRes.ok) setPendingInvitations(await inviteRes.json());
+      if (billingRes.ok) {
+        const bd = await billingRes.json();
+        setBillingStatus(bd.billingStatus);
+      }
+      setActivityLogs([]);
+    } catch (err) {
+      console.error("Failed to reload org details:", err);
+    }
+  }, []);
 
   // --- SaaS Action Handlers ───
   const handleInvite = async (e: React.FormEvent) => {
@@ -3516,10 +3483,10 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                     <div className="space-y-6">
                       <div>
                         <h4 className="text-sm font-bold text-[#ffffff] mb-1">Connected Social Media Accounts</h4>
-                        <p className="text-[11px] text-[#828282]">Connect your social accounts to enable 1-click automated AI publishing.</p>
+                        <p className="text-[11px] text-[#828282]">Connect your social accounts to enable 1-click automated AI publishing. Each workspace has its own connections.</p>
                       </div>
 
-                      {/* LinkedIn Account Card */}
+                      {/* ── LinkedIn Card ── */}
                       <div className="p-5 bg-[#0D0D0D] border border-white/10 rounded-2xl space-y-4">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
@@ -3528,47 +3495,59 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                             </div>
                             <div>
                               <h5 className="text-sm font-bold text-white flex items-center gap-2">
-                                LinkedIn Profile
+                                LinkedIn
                                 {linkedinConn?.isConnected ? (
-                                  <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full text-[10px] font-bold">
-                                    Connected
-                                  </span>
+                                  <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full text-[10px] font-bold">Connected</span>
                                 ) : (
-                                  <span className="px-2 py-0.5 bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 rounded-full text-[10px] font-bold">
-                                    Disconnected
-                                  </span>
+                                  <span className="px-2 py-0.5 bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 rounded-full text-[10px] font-bold">Disconnected</span>
                                 )}
                               </h5>
                               <p className="text-xs text-[#828282] mt-0.5">
-                                {linkedinConn?.isConnected 
+                                {linkedinConn?.isConnected
                                   ? `Connected as ${linkedinConn.accountHandle || linkedinConn.linkedinUrn}`
-                                  : "Grant permission to automatically publish posts & carousels."}
+                                  : "Connect to automatically publish posts & carousels to LinkedIn."}
                               </p>
                             </div>
                           </div>
 
-                          <button
-                            onClick={handleConnectLinkedin}
-                            className="bg-[#0077B5] hover:bg-[#005E93] text-white font-bold text-xs px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 shadow-lg cursor-pointer disabled:opacity-50"
-                            disabled={isFetchingLinkedin}
-                          >
-                            <Share2 className="w-4 h-4" />
-                            {isFetchingLinkedin ? "Connecting..." : linkedinConn?.isConnected ? "Reconnect LinkedIn" : "Connect LinkedIn Account"}
-                          </button>
+                          <div className="flex items-center gap-2">
+                            {linkedinConn?.isConnected && (
+                              <button
+                                onClick={async () => {
+                                  if (!activeWorkspace?.id) return;
+                                  await fetch('/api/social/linkedin', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ action: 'disconnect', workspaceId: activeWorkspace.id })
+                                  });
+                                  setLinkedinConn(null);
+                                  setToast({ message: "LinkedIn disconnected.", type: "info" });
+                                }}
+                                className="bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 font-bold text-xs px-3 py-2 rounded-xl transition-all cursor-pointer"
+                              >
+                                Disconnect
+                              </button>
+                            )}
+                            <button
+                              onClick={handleConnectLinkedin}
+                              className="bg-[#0077B5] hover:bg-[#005E93] text-white font-bold text-xs px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 shadow-lg cursor-pointer disabled:opacity-50"
+                              disabled={isFetchingLinkedin}
+                            >
+                              <Share2 className="w-4 h-4" />
+                              {isFetchingLinkedin ? "Connecting..." : linkedinConn?.isConnected ? "Reconnect" : "Connect LinkedIn"}
+                            </button>
+                          </div>
                         </div>
 
                         {linkedinConn?.isConnected && (
                           <div className="mt-4 pt-4 border-t border-[#828282]/20 flex flex-col md:flex-row items-center justify-between gap-4">
                             <div className="flex-1 w-full">
                               <label className="text-xs font-bold text-white mb-1 flex items-center gap-2">
-                                <span>Publishing Target Destination</span>
+                                <span>Publishing Target</span>
                                 <span className="bg-[#DEDBC8]/20 text-[#DEDBC8] text-[10px] px-2 py-0.5 rounded-full font-normal">Auto-Detected</span>
                               </label>
-                              <p className="text-[11px] text-[#828282]">
-                                Select whether posts are published to your Personal LinkedIn Profile or one of your Managed Company Pages.
-                              </p>
+                              <p className="text-[11px] text-[#828282]">Choose Personal Profile or a Managed Company Page.</p>
                             </div>
-
                             <div className="w-full md:w-auto">
                               <select
                                 value={linkedinConn?.organizationUrn || 'personal'}
@@ -3579,39 +3558,149 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                                     const res = await fetch('/api/social/linkedin', {
                                       method: 'POST',
                                       headers: { 'Content-Type': 'application/json' },
-                                      body: JSON.stringify({
-                                        action: 'set_org_id',
-                                        workspaceId: activeWorkspace?.id,
-                                        organizationId: targetId
-                                      })
+                                      body: JSON.stringify({ action: 'set_org_id', workspaceId: activeWorkspace?.id, organizationId: targetId })
                                     });
                                     const data = await res.json();
-                                    if (data.success) {
-                                      setLinkedinConn((prev: any) => ({ ...prev, organizationUrn: targetId || undefined }));
-                                    }
-                                  } catch (err) {
-                                    console.error(err);
-                                  }
+                                    if (data.success) setLinkedinConn((prev: any) => ({ ...prev, organizationUrn: targetId || undefined }));
+                                  } catch (err) { console.error(err); }
                                 }}
                                 className="bg-[#111111] border border-[#828282]/30 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-[#DEDBC8] w-full md:w-64 cursor-pointer font-medium"
                               >
                                 <option value="personal">👤 Personal Profile ({linkedinConn.accountHandle})</option>
                                 {linkedinConn?.pages && linkedinConn.pages.length > 0 ? (
                                   linkedinConn.pages.map((p: any) => (
-                                    <option key={p.id} value={p.urn}>
-                                      🏢 {p.name}
-                                    </option>
+                                    <option key={p.id} value={p.urn}>🏢 {p.name}</option>
                                   ))
                                 ) : (
-                                  <option value="" disabled>No Managed Pages Found (Personal Profile Only)</option>
+                                  <option value="" disabled>No Managed Pages Found</option>
                                 )}
                               </select>
                             </div>
                           </div>
                         )}
                       </div>
+
+                      {/* ── Facebook Card ── */}
+                      <div className="p-5 bg-[#0D0D0D] border border-white/10 rounded-2xl space-y-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-[#1877F2]/20 border border-[#1877F2]/40 flex items-center justify-center text-[#1877F2] font-bold text-lg">
+                              f
+                            </div>
+                            <div>
+                              <h5 className="text-sm font-bold text-white flex items-center gap-2">
+                                Facebook Page
+                                {facebookConn?.isConnected ? (
+                                  <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full text-[10px] font-bold">Connected</span>
+                                ) : (
+                                  <span className="px-2 py-0.5 bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 rounded-full text-[10px] font-bold">Disconnected</span>
+                                )}
+                              </h5>
+                              <p className="text-xs text-[#828282] mt-0.5">
+                                {facebookConn?.isConnected
+                                  ? `Connected to: ${facebookConn.pageName} (${facebookConn.pageCategory || 'Page'})`
+                                  : "Connect your Facebook Page to publish posts automatically."}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            {facebookConn?.isConnected && (
+                              <button
+                                onClick={async () => {
+                                  if (!activeWorkspace?.id) return;
+                                  await fetch('/api/social/facebook', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ action: 'disconnect', workspaceId: activeWorkspace.id })
+                                  });
+                                  setFacebookConn(null);
+                                  setToast({ message: "Facebook Page disconnected.", type: "info" });
+                                }}
+                                className="bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 font-bold text-xs px-3 py-2 rounded-xl transition-all cursor-pointer"
+                              >
+                                Disconnect
+                              </button>
+                            )}
+                            <button
+                              onClick={async () => {
+                                if (!activeWorkspace?.id) return;
+                                setIsFetchingFacebook(true);
+                                try {
+                                  const res = await fetch(`/api/social/facebook?action=get_auth_url&workspaceId=${activeWorkspace.id}`);
+                                  const data = await res.json();
+                                  if (data.authUrl) {
+                                    window.location.href = data.authUrl;
+                                  } else {
+                                    setToast({ message: data.error || "Failed to generate Facebook connection link.", type: "error" });
+                                  }
+                                } catch (err: any) {
+                                  setToast({ message: "Error connecting to Facebook.", type: "error" });
+                                } finally {
+                                  setIsFetchingFacebook(false);
+                                }
+                              }}
+                              className="bg-[#1877F2] hover:bg-[#1565D8] text-white font-bold text-xs px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 shadow-lg cursor-pointer disabled:opacity-50"
+                              disabled={isFetchingFacebook}
+                            >
+                              <Globe className="w-4 h-4" />
+                              {isFetchingFacebook ? "Connecting..." : facebookConn?.isConnected ? "Reconnect" : "Connect Facebook Page"}
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Facebook page picker — shows when OAuth returns multiple pages */}
+                        {facebookPages && facebookPages.length > 0 && !facebookConn?.isConnected && (
+                          <div className="mt-4 pt-4 border-t border-[#828282]/20">
+                            <p className="text-xs text-[#DEDBC8] font-bold mb-3">Select which Facebook Page to connect:</p>
+                            <div className="space-y-2">
+                              {facebookPages.map((page: any) => (
+                                <button
+                                  key={page.id}
+                                  onClick={async () => {
+                                    if (!activeWorkspace?.id) return;
+                                    try {
+                                      const res = await fetch('/api/social/facebook', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({
+                                          action: 'connect_page',
+                                          workspaceId: activeWorkspace.id,
+                                          pageId: page.id,
+                                          pageName: page.name,
+                                          pageCategory: page.category,
+                                          accessToken: page.access_token,
+                                          userAccessToken: facebookUserToken
+                                        })
+                                      });
+                                      const data = await res.json();
+                                      if (data.success) {
+                                        setFacebookConn(data.connection);
+                                        setFacebookPages([]);
+                                        setToast({ message: `Facebook Page "${page.name}" connected!`, type: "success" });
+                                      }
+                                    } catch (err: any) {
+                                      setToast({ message: "Failed to connect page", type: "error" });
+                                    }
+                                  }}
+                                  className="w-full flex items-center gap-3 p-3 bg-[#1877F2]/10 hover:bg-[#1877F2]/20 border border-[#1877F2]/20 rounded-xl transition-all text-left"
+                                >
+                                  <div className="w-8 h-8 rounded-lg bg-[#1877F2]/30 flex items-center justify-center text-[#1877F2] font-bold">f</div>
+                                  <div>
+                                    <p className="text-xs font-bold text-white">{page.name}</p>
+                                    <p className="text-[10px] text-[#828282]">{page.category}</p>
+                                  </div>
+                                  <ArrowRight className="w-4 h-4 text-[#828282] ml-auto" />
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
+
+
                   
                   {/* profile tab */}
                   {settingsTab === "profile" && (

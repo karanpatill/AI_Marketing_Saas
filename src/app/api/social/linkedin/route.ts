@@ -30,10 +30,15 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { action, workspaceId, caption, imageUrl, accountHandle, memberUrn, accessToken } = body;
+    const { action, workspaceId, accountHandle, memberUrn, accessToken } = body;
 
     if (!workspaceId) {
       return NextResponse.json({ error: 'Missing workspaceId' }, { status: 400 });
+    }
+
+    if (action === 'disconnect') {
+      await LinkedInPublisherService.disconnect(workspaceId);
+      return NextResponse.json({ success: true });
     }
 
     if (action === 'set_org_id') {
@@ -53,16 +58,15 @@ export async function POST(request: Request) {
     }
 
     if (action === 'publish') {
+      const { caption } = body;
       if (!caption) {
         return NextResponse.json({ error: 'Missing caption for publishing' }, { status: 400 });
       }
-
       const result = await LinkedInPublisherService.publishPost(
         workspaceId,
         caption,
         body.imageBase64 || body.imageUrl
       );
-
       return NextResponse.json(result);
     }
 

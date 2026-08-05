@@ -95,7 +95,6 @@ export class LinkedInPublisherService {
       throw new Error("LinkedIn Client credentials are missing in environment.");
     }
 
-    // 1. Token Exchange
     const params = new URLSearchParams();
     params.append('grant_type', 'authorization_code');
     params.append('code', code);
@@ -116,14 +115,12 @@ export class LinkedInPublisherService {
 
     const accessToken = tokenData.access_token;
 
-    // Fallback to userinfo for the name only
     const userRes = await fetch('https://api.linkedin.com/v2/userinfo', {
       headers: { Authorization: `Bearer ${accessToken}` }
     });
     const userData = await userRes.json();
-    let numericId = userData.sub; // Fallback to OpenID sub (might not work for ugcPosts /author, but allows auth to complete)
+    let numericId = userData.sub;
 
-    // 2. Attempt to fetch real numeric Member ID via /v2/me (requires r_basicprofile or legacy r_liteprofile)
     try {
       const meRes = await fetch('https://api.linkedin.com/v2/me', {
         headers: {
@@ -142,50 +139,30 @@ export class LinkedInPublisherService {
     const memberUrn = `urn:li:person:${numericId}`;
     const name = userData.name || userData.given_name || 'LinkedIn User';
 
-    return {
-      accessToken,
-      memberUrn,
-      name
-    };
+    return { accessToken, memberUrn, name };
   }
 
   /**
-   * Fetches the saved LinkedIn connection for a workspace (with fallback to latest workspace)
+   * Fetches the saved LinkedIn connection for a SPECIFIC workspace only.
+   * NO cross-workspace fallback — each user gets their own connection.
    */
   public static async getConnection(workspaceId?: string): Promise<LinkedInConnection | null> {
+    if (!workspaceId || workspaceId === "00000000-0000-0000-0000-000000000000") {
+      return null;
+    }
+
     const supabase = createAdminClient();
 
     try {
-      if (workspaceId && workspaceId !== "00000000-0000-0000-0000-000000000000") {
-        const { data: ws } = await supabase
-          .from('workspaces')
-          .select('settings_json')
-          .eq('id', workspaceId)
-          .single();
-
-        if (ws?.settings_json?.socials?.linkedin) {
-          return ws.settings_json.socials.linkedin;
-        }
-      }
-
-      const { data: latestWs } = await supabase
+      const { data: ws } = await supabase
         .from('workspaces')
         .select('settings_json')
-        .order('created_at', { ascending: false })
-        .limit(1)
+        .eq('id', workspaceId)
         .single();
 
-      if (latestWs?.settings_json?.socials?.linkedin) {
-        return latestWs.settings_json.socials.linkedin;
-      }
-
-      const { data: anyWs } = await supabase.from('workspaces').select('settings_json');
-      if (anyWs) {
-        for (const w of anyWs) {
-          if (w.settings_json?.socials?.linkedin?.isConnected) {
-            return w.settings_json.socials.linkedin;
-          }
-        }
+      const conn = ws?.settings_json?.socials?.linkedin;
+      if (conn?.isConnected) {
+        return conn as LinkedInConnection;
       }
     } catch (err) {
       console.error("[LinkedInPublisherService.getConnection]:", err);
@@ -195,7 +172,8 @@ export class LinkedInPublisherService {
   }
 
   /**
-   * Saves or updates LinkedIn connection credentials across workspace settings
+   * Saves LinkedIn connection credentials ONLY to the specified workspace.
+   * Never touches other users' workspaces.
    */
   public static async saveConnection(
     workspaceId: string,
@@ -205,7 +183,6 @@ export class LinkedInPublisherService {
   ): Promise<LinkedInConnection> {
     const supabase = createAdminClient();
 
-    // Auto-fetch user's managed company pages!
     const pages = await this.fetchUserPages(accessToken);
     const defaultOrgUrn = pages.length > 0 ? pages[0].urn : undefined;
 
@@ -220,21 +197,25 @@ export class LinkedInPublisherService {
     };
 
     try {
-      const { data: allWorkspaces } = await supabase.from('workspaces').select('id, settings_json');
-      if (allWorkspaces && allWorkspaces.length > 0) {
-        for (const wsItem of allWorkspaces) {
-          const existingSettings = wsItem.settings_json || {};
-          const existingSocials = existingSettings.socials || {};
-          const updatedSettings = {
-            ...existingSettings,
-            socials: {
-              ...existingSocials,
-              linkedin: linkedinConfig
-            }
-          };
-          await supabase.from('workspaces').update({ settings_json: updatedSettings }).eq('id', wsItem.id);
+      const { data: ws } = await supabase
+        .from('workspaces')
+        .select('settings_json')
+        .eq('id', workspaceId)
+        .single();
+
+      const existingSettings = ws?.settings_json || {};
+      const updatedSettings = {
+        ...existingSettings,
+        socials: {
+          ...(existingSettings.socials || {}),
+          linkedin: linkedinConfig
         }
-      }
+      };
+
+      await supabase
+        .from('workspaces')
+        .update({ settings_json: updatedSettings })
+        .eq('id', workspaceId);
     } catch (err) {
       console.error("[LinkedInPublisherService.saveConnection Error]:", err);
     }
@@ -243,8 +224,31 @@ export class LinkedInPublisherService {
   }
 
   /**
-   * Publishes a post to LinkedIn on behalf of the member URN
+   * Disconnects LinkedIn from a specific workspace only.
    */
+  public static async disconnect(workspaceId: string): Promise<void> {
+    const supabase = createAdminClient();
+    try {
+      const { data: ws } = await supabase
+        .from('workspaces')
+        .select('settings_json')
+        .eq('id', workspaceId)
+        .single();
+
+      const existingSettings = ws?.settings_json || {};
+      const updatedSettings = {
+        ...existingSettings,
+        socials: {
+          ...(existingSettings.socials || {}),
+          linkedin: { isConnected: false }
+        }
+      };
+      await supabase.from('workspaces').update({ settings_json: updatedSettings }).eq('id', workspaceId);
+    } catch (err) {
+      console.error("[LinkedIn disconnect error]:", err);
+    }
+  }
+
   /**
    * Publishes a post with optional image to LinkedIn on behalf of the member URN
    */
@@ -266,13 +270,11 @@ export class LinkedInPublisherService {
       const authorUrn = connection.organizationUrn || connection.linkedinUrn;
       let mediaAssetUrn: string | null = null;
 
-      // Upload image to LinkedIn Digital Media Asset if provided
       if (imageBase64) {
         try {
           const cleanBase64 = imageBase64.replace(/^data:image\/(png|jpeg|jpg);base64,/, "");
           const imageBuffer = Buffer.from(cleanBase64, 'base64');
 
-          // 1. Register Upload Request
           const registerRes = await fetch('https://api.linkedin.com/v2/assets?action=registerUpload', {
             method: 'POST',
             headers: {
@@ -284,12 +286,7 @@ export class LinkedInPublisherService {
               registerUploadRequest: {
                 recipes: ['urn:li:digitalmediaRecipe:feedshare-image'],
                 owner: authorUrn,
-                serviceRelationships: [
-                  {
-                    relationshipType: 'OWNER',
-                    identifier: 'urn:li:userGeneratedContent'
-                  }
-                ]
+                serviceRelationships: [{ relationshipType: 'OWNER', identifier: 'urn:li:userGeneratedContent' }]
               }
             })
           });
@@ -299,13 +296,9 @@ export class LinkedInPublisherService {
             const uploadUrl = registerData.value.uploadMechanism['com.linkedin.digitalmedia.uploading.MediaUploadHttpRequest'].uploadUrl;
             mediaAssetUrn = registerData.value.asset;
 
-            // 2. Upload binary image buffer to LinkedIn upload URL
             await fetch(uploadUrl, {
               method: 'PUT',
-              headers: {
-                'Authorization': `Bearer ${connection.accessToken}`,
-                'Content-Type': 'image/jpeg'
-              },
+              headers: { 'Authorization': `Bearer ${connection.accessToken}`, 'Content-Type': 'image/jpeg' },
               body: imageBuffer
             });
           }
@@ -314,17 +307,9 @@ export class LinkedInPublisherService {
         }
       }
 
-      // Build UGC Post payload
       const shareMediaCategory = mediaAssetUrn ? "IMAGE" : "NONE";
       const media = mediaAssetUrn
-        ? [
-            {
-              status: "READY",
-              description: { text: caption.substring(0, 200) },
-              media: mediaAssetUrn,
-              title: { text: "Generated Visual" }
-            }
-          ]
+        ? [{ status: "READY", description: { text: caption.substring(0, 200) }, media: mediaAssetUrn, title: { text: "Generated Visual" } }]
         : undefined;
 
       const postBody: any = {
@@ -332,16 +317,12 @@ export class LinkedInPublisherService {
         lifecycleState: "PUBLISHED",
         specificContent: {
           "com.linkedin.ugc.ShareContent": {
-            shareCommentary: {
-              text: caption
-            },
+            shareCommentary: { text: caption },
             shareMediaCategory,
             ...(media ? { media } : {})
           }
         },
-        visibility: {
-          "com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC"
-        }
+        visibility: { "com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC" }
       };
 
       const res = await fetch('https://api.linkedin.com/v2/ugcPosts', {
@@ -355,12 +336,8 @@ export class LinkedInPublisherService {
       });
 
       const data = await res.json();
-
       if (!res.ok) {
-        return {
-          success: false,
-          error: data.message || "Failed to publish post to LinkedIn."
-        };
+        return { success: false, error: data.message || "Failed to publish post to LinkedIn." };
       }
 
       return {
@@ -369,15 +346,12 @@ export class LinkedInPublisherService {
         permalink: `https://www.linkedin.com/feed/update/${data.id}`
       };
     } catch (err: any) {
-      return {
-        success: false,
-        error: err.message || "Network error while publishing to LinkedIn."
-      };
+      return { success: false, error: err.message || "Network error while publishing to LinkedIn." };
     }
   }
 
   /**
-   * Sets or clears the LinkedIn Organization / Company Page ID for posting
+   * Sets or clears the LinkedIn Organization / Company Page ID for a specific workspace
    */
   public static async setOrganizationId(workspaceId: string, orgIdOrUrn: string): Promise<boolean> {
     const supabase = createAdminClient();
@@ -385,27 +359,23 @@ export class LinkedInPublisherService {
     const organizationUrn = cleanId ? `urn:li:organization:${cleanId}` : undefined;
 
     try {
-      const { data: allWorkspaces } = await supabase.from('workspaces').select('id, settings_json');
-      if (allWorkspaces) {
-        for (const ws of allWorkspaces) {
-          const settings = ws.settings_json || {};
-          const socials = settings.socials || {};
-          const linkedin = socials.linkedin || {};
+      const { data: ws } = await supabase
+        .from('workspaces')
+        .select('settings_json')
+        .eq('id', workspaceId)
+        .single();
 
-          const updated = {
-            ...settings,
-            socials: {
-              ...socials,
-              linkedin: {
-                ...linkedin,
-                organizationUrn
-              }
-            }
-          };
+      const settings = ws?.settings_json || {};
+      const socials = settings.socials || {};
+      const linkedin = socials.linkedin || {};
 
-          await supabase.from('workspaces').update({ settings_json: updated }).eq('id', ws.id);
+      await supabase.from('workspaces').update({
+        settings_json: {
+          ...settings,
+          socials: { ...socials, linkedin: { ...linkedin, organizationUrn } }
         }
-      }
+      }).eq('id', workspaceId);
+
       return true;
     } catch (err) {
       console.error("[LinkedIn setOrganizationId error]:", err);

@@ -6,7 +6,8 @@
     "dev": "next dev --webpack",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "postinstall": "npx puppeteer browsers install chrome"
   },
   "dependencies": {
     "@fal-ai/client": "^1.10.1",

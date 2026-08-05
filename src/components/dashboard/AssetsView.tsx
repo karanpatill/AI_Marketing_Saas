@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { toJpeg } from "html-to-image";
 import { Loader2, Image as ImageIcon, Layers, Download, ExternalLink, Calendar as CalendarIcon, Clock, Share2 } from "lucide-react";
 import { format } from "date-fns";
 import { LinkedInPublishModal } from "./LinkedInPublishModal";
@@ -55,16 +56,66 @@ export function AssetsView({ workspaceId, refreshKey = 0 }: { workspaceId: strin
     }
   };
 
-  // Shared helper: render HTML to base64 JPEG via server-side Puppeteer
+  // Shared helper: render HTML to base64 JPEG via client-side html-to-image
   const renderHtmlToImage = async (html: string, width: number, height: number): Promise<string> => {
-    const res = await fetch("/api/render-image", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ html, width, height }),
+    return new Promise((resolve, reject) => {
+      const container = document.createElement('div');
+      container.style.position = 'absolute';
+      container.style.top = '-9999px';
+      container.style.left = '-9999px';
+      container.style.width = `${width}px`;
+      container.style.height = `${height}px`;
+      container.style.overflow = 'hidden';
+      container.style.zIndex = '-9999';
+      container.style.pointerEvents = 'none';
+
+      const iframe = document.createElement('iframe');
+      iframe.style.width = `${width}px`;
+      iframe.style.height = `${height}px`;
+      iframe.style.border = 'none';
+      
+      container.appendChild(iframe);
+      document.body.appendChild(container);
+
+      const fullHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { margin: 0; padding: 0; width: ${width}px; height: ${height}px; overflow: hidden; background: white; }
+  </style>
+</head>
+<body>
+  <div style="width: ${width}px; height: ${height}px; overflow: hidden; position: relative; background: white;">
+    ${html}
+  </div>
+</body>
+</html>`;
+
+      // Wait until iframe is ready
+      iframe.onload = async () => {
+        try {
+          // Wait for Tailwind CDN and fonts to finish applying
+          await new Promise(r => setTimeout(r, 1500));
+          const body = iframe.contentWindow?.document.body;
+          if (!body) throw new Error("Failed to get iframe body");
+
+          const dataUrl = await toJpeg(body, { quality: 0.95, width, height, canvasWidth: width, canvasHeight: height });
+          document.body.removeChild(container);
+          resolve(dataUrl);
+        } catch (err) {
+          document.body.removeChild(container);
+          reject(err);
+        }
+      };
+
+      iframe.contentWindow?.document.open();
+      iframe.contentWindow?.document.write(fullHtml);
+      iframe.contentWindow?.document.close();
     });
-    const data = await res.json();
-    if (!res.ok || data.error) throw new Error(data.error || "Render failed");
-    return data.imageBase64;
   };
 
   const handlePublishToLinkedIn = async (asset: any, caption: string) => {
