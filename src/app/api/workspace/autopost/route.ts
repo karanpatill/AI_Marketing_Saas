@@ -19,11 +19,22 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Workspace ID is required' }, { status: 400 });
     }
 
-    // Verify user belongs to workspace
+    // Fetch existing workspace settings to check for an old schedule and get org_id
+    const { data: workspace, error: wsError } = await supabase
+      .from('workspaces')
+      .select('org_id, auto_post_schedule_id')
+      .eq('id', workspaceId)
+      .single();
+
+    if (wsError || !workspace) {
+      return NextResponse.json({ error: 'Workspace not found' }, { status: 404 });
+    }
+
+    // Verify user belongs to the organization that owns this workspace
     const { data: member, error: memberError } = await supabase
-      .from('workspace_members')
+      .from('organization_members')
       .select('*')
-      .eq('workspace_id', workspaceId)
+      .eq('org_id', workspace.org_id)
       .eq('user_id', user.id)
       .single();
 
@@ -32,17 +43,6 @@ export async function POST(req: Request) {
     }
 
     const scheduler = new AutoPostScheduler();
-
-    // Fetch existing workspace settings to check for an old schedule
-    const { data: workspace, error: wsError } = await supabase
-      .from('workspaces')
-      .select('auto_post_schedule_id')
-      .eq('id', workspaceId)
-      .single();
-
-    if (wsError) {
-      return NextResponse.json({ error: 'Workspace not found' }, { status: 404 });
-    }
 
     let scheduleId = workspace.auto_post_schedule_id;
 
