@@ -217,7 +217,7 @@ export function InstagramPublishModal({
             <button
               onClick={handlePublish}
               disabled={isPublishing || isGenerating || !caption.trim() || isOverLimit}
-              className="flex items-center gap-2 px-5 py-2 text-xs font-bold bg-[#1877F2] hover:bg-[#0c59c2] disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl transition-all shadow-lg"
+              className="flex items-center gap-2 px-5 py-2 text-xs font-bold bg-[#E1306C] hover:bg-[#C13584] disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl transition-all shadow-lg"
             >
               {published ? (
                 <>

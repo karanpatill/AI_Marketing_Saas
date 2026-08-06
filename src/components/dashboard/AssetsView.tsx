@@ -390,7 +390,7 @@ export function AssetsView({ workspaceId, refreshKey = 0 }: { workspaceId: strin
                           e.preventDefault();
                           setIgPublishModal({ open: true, asset });
                         }}
-                        className="w-10 h-10 rounded-full bg-gradient-to-br from-[#833AB4] via-[#FD1D1D] to-[#F56040] text-white flex items-center justify-center hover:scale-110 transition-transform shadow-lg"
+                        className="w-10 h-10 rounded-full bg-[#E1306C] text-white flex items-center justify-center hover:scale-110 transition-transform shadow-lg"
                         title="Publish to Instagram"
                       >
                         <InstagramIcon className="w-4 h-4" />

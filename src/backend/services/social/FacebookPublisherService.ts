@@ -24,6 +24,14 @@ export interface FacebookPage {
   access_token: string;
 }
 
+export interface InstagramAccount {
+  id: string;
+  handle: string;
+  pageId: string;
+  pageName: string;
+  accessToken: string;
+}
+
 export class FacebookPublisherService {
   /**
    * Generates Facebook OAuth Authorization URL
@@ -35,6 +43,21 @@ export class FacebookPublisherService {
     }
 
     const scopes = 'pages_show_list,pages_read_engagement,pages_manage_posts';
+    const state = encodeURIComponent(workspaceId);
+
+    return `https://www.facebook.com/v19.0/dialog/oauth?client_id=${appId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scopes}&state=${state}&response_type=code`;
+  }
+
+  /**
+   * Generates Instagram OAuth Authorization URL (requests additional IG scopes)
+   */
+  public static getInstagramAuthUrl(workspaceId: string, redirectUri: string): string {
+    const appId = process.env.FACEBOOK_APP_ID;
+    if (!appId) {
+      throw new Error("FACEBOOK_APP_ID is not configured in .env.local");
+    }
+
+    const scopes = 'pages_show_list,pages_read_engagement,pages_manage_posts,instagram_basic,instagram_content_publish';
     const state = encodeURIComponent(workspaceId);
 
     return `https://www.facebook.com/v19.0/dialog/oauth?client_id=${appId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scopes}&state=${state}&response_type=code`;
@@ -87,6 +110,51 @@ export class FacebookPublisherService {
       }
     } catch (err) {
       console.error('[Facebook fetchUserPages error]:', err);
+    }
+    return [];
+  }
+
+  /**
+   * Fetches all Instagram accounts linked to the user's managed Facebook Pages
+   */
+  public static async fetchInstagramAccounts(userAccessToken: string): Promise<InstagramAccount[]> {
+    try {
+      const res = await fetch(
+        `https://graph.facebook.com/v19.0/me/accounts?fields=id,name,category,access_token,instagram_business_account&access_token=${userAccessToken}`
+      );
+      const data = await res.json();
+      
+      const igAccounts: InstagramAccount[] = [];
+      
+      if (data.data && Array.isArray(data.data)) {
+        for (const page of data.data) {
+          if (page.instagram_business_account && page.instagram_business_account.id) {
+            let handle = page.name;
+            try {
+              const igRes = await fetch(
+                `https://graph.facebook.com/v19.0/${page.instagram_business_account.id}?fields=username&access_token=${page.access_token}`
+              );
+              const igData = await igRes.json();
+              if (igData.username) {
+                handle = igData.username;
+              }
+            } catch (err) {
+              console.error('[IG Username fetch error]:', err);
+            }
+            
+            igAccounts.push({
+              id: page.instagram_business_account.id,
+              handle: handle,
+              pageId: page.id,
+              pageName: page.name,
+              accessToken: page.access_token
+            });
+          }
+        }
+      }
+      return igAccounts;
+    } catch (err) {
+      console.error('[Facebook fetchInstagramAccounts error]:', err);
     }
     return [];
   }

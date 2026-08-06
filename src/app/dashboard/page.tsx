@@ -13,7 +13,7 @@ import {
   Building, Image, FileText, Video, Plus,
   Settings, Bell, Search, Activity, Trash2, Archive,
   Shield, CreditCard, Mail, User, AlertCircle,
-  X, Check, Lock, ChevronDown, RefreshCw, Globe, Clock, Paintbrush, Save
+  X, Check, Lock, ChevronDown, RefreshCw, Globe, Clock, Paintbrush, Save, Camera
 } from "lucide-react";
 
 
@@ -205,6 +205,27 @@ export default function DashboardPage() {
         }
       }
 
+      // Instagram
+      if (params.get("instagram_success") === "connected") {
+        setToast({ message: "Instagram Account connected successfully!", type: "success" });
+        setSettingsTab("integrations");
+        needsCleanup = true;
+      } else if (params.get("instagram_error")) {
+        setToast({ message: `Instagram Connection Error: ${params.get("instagram_error")}`, type: "error" });
+        setSettingsTab("integrations");
+        needsCleanup = true;
+      } else if (params.get("instagram_accounts")) {
+        try {
+          const accs = JSON.parse(decodeURIComponent(params.get("instagram_accounts") || "[]"));
+          setInstagramAccounts(accs);
+          setInstagramUserToken(params.get("instagram_user_token") || "");
+          setSettingsTab("integrations");
+          needsCleanup = true;
+        } catch (e) {
+          console.error(e);
+        }
+      }
+
       if (needsCleanup) {
         window.history.replaceState({}, document.title, window.location.pathname);
       }
@@ -226,6 +247,14 @@ export default function DashboardPage() {
         .then(res => res.json())
         .then(data => {
           if (data.connection) setFacebookConn(data.connection);
+        })
+        .catch(console.error);
+
+      // Fetch Instagram
+      fetch(`/api/social/instagram?workspaceId=${activeWorkspace.id}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.connection) setInstagramConn(data.connection);
         })
         .catch(console.error);
     }
@@ -301,16 +330,20 @@ export default function DashboardPage() {
   const [calendarFilterType, setCalendarFilterType] = useState<string>("all");
 
   // Instagram Auto-Posting Integration States
-  const [isInstagramModalOpen, setIsInstagramModalOpen] = useState(false);
-  const [instagramHandle, setInstagramHandle] = useState("@brand_official");
-  const [instagramAccountId, setInstagramAccountId] = useState("");
-  const [instagramAccessToken, setInstagramAccessToken] = useState("");
-  const [isInstagramConnected, setIsInstagramConnected] = useState(true);
+  const [instagramConn, setInstagramConn] = useState<any>(null);
+  const [isFetchingInstagram, setIsFetchingInstagram] = useState(false);
+  const [instagramAccounts, setInstagramAccounts] = useState<any[]>([]);
+  const [instagramUserToken, setInstagramUserToken] = useState("");
   const [isSavingInstagram, setIsSavingInstagram] = useState(false);
   const [publishingInstagramId, setPublishingInstagramId] = useState<string | null>(null);
   const [publishedPostLink, setPublishedPostLink] = useState<{ id: string; url: string } | null>(null);
 
-  const handleSaveInstagram = async () => {
+  const handleConnectInstagram = async () => {
+    const wsId = activeWorkspace?.id || "00000000-0000-0000-0000-000000000000";
+    window.location.href = `/api/social/instagram/auth?workspaceId=${wsId}`;
+  };
+
+  const handleSelectInstagramAccount = async (account: any) => {
     setIsSavingInstagram(true);
     try {
       const res = await fetch("/api/social/instagram", {
@@ -319,15 +352,21 @@ export default function DashboardPage() {
         body: JSON.stringify({
           action: "connect",
           workspaceId: activeWorkspace?.id || "default_workspace",
-          accountHandle: instagramHandle,
-          instagramAccountId,
-          accessToken: instagramAccessToken
+          accountHandle: account.handle,
+          instagramAccountId: account.id,
+          accessToken: account.access_token
         })
       });
       if (res.ok) {
-        setIsInstagramConnected(true);
-        setIsInstagramModalOpen(false);
+        setInstagramConn({
+          isConnected: true,
+          accountHandle: account.handle
+        });
+        setInstagramAccounts([]);
         setToast({ message: "Instagram Business Account connected successfully!", type: "success" });
+      } else {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to connect Instagram");
       }
     } catch (e: any) {
       setToast({ message: e.message || "Failed to save Instagram connection", type: "error" });
@@ -2211,10 +2250,11 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                         Connected Publishing Target (Instagram Active)
                       </span>
                       <button
-                        onClick={() => setIsInstagramModalOpen(true)}
-                        className="text-sm font-sans tracking-normal font-bold text-[#ffffff] hover:underline cursor-pointer"
+                        onClick={handleConnectInstagram}
+                        disabled={isFetchingInstagram}
+                        className="text-sm font-sans tracking-normal font-bold text-[#ffffff] hover:underline cursor-pointer disabled:opacity-50"
                       >
-                        + Configure Instagram Connection
+                        {isFetchingInstagram ? "Connecting..." : instagramConn?.isConnected ? "Reconnect Instagram" : "+ Configure Instagram Connection"}
                       </button>
                     </div>
                     
@@ -2222,13 +2262,17 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
                           <span className="text-xs font-bold uppercase text-[#ffffff] tracking-wider">Instagram Business</span>
-                          <span className="text-xs font-sans tracking-normal font-bold px-2 py-0.5 rounded bg-[#E1E0CC]/10/10 text-[#828282] border-none/20 flex items-center gap-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-[#E1E0CC]/10 animate-pulse" />
-                            PRIMARY & EXCLUSIVE PLATFORM
-                          </span>
+                          {instagramConn?.isConnected && (
+                            <span className="text-xs font-sans tracking-normal font-bold px-2 py-0.5 rounded bg-[#E1E0CC]/10 text-[#828282] border-none flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#E1E0CC]/50 animate-pulse" />
+                              PRIMARY & EXCLUSIVE PLATFORM
+                            </span>
+                          )}
                         </div>
                         <p className="text-xs font-sans tracking-normal text-[#ffffff]">
-                          Connected Account: <span className="text-[#ffffff] font-bold">{instagramHandle}</span>
+                          {instagramConn?.isConnected 
+                            ? <>Connected Account: <span className="text-[#ffffff] font-bold">{instagramConn.accountHandle}</span></>
+                            : "No Instagram account connected yet."}
                         </p>
                       </div>
 
@@ -2242,10 +2286,11 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                           </span>
                         </div>
                         <button
-                          onClick={() => setIsInstagramModalOpen(true)}
-                          className="px-3.5 py-2 bg-primary hover:bg-[#E1E0CC] text-black font-medium text-sm rounded-full transition-all cursor-pointer"
+                          onClick={handleConnectInstagram}
+                          disabled={isFetchingInstagram}
+                          className="px-3.5 py-2 bg-primary hover:bg-[#E1E0CC] text-black font-medium text-sm rounded-full transition-all cursor-pointer disabled:opacity-50"
                         >
-                          Settings
+                          {instagramConn?.isConnected ? "Settings" : "Connect"}
                         </button>
                       </div>
                     </div>
@@ -2455,7 +2500,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                                 <span>Publishing Target:</span>
                                 <div className="flex items-center gap-1.5">
                                   <span className="bg-[#E1E0CC] text-[#101010] px-2.5 py-0.5 rounded text-xs font-sans tracking-normal font-bold uppercase border-none">
-                                    Instagram ({instagramHandle})
+                                    Instagram {instagramConn?.isConnected ? `(${instagramConn.accountHandle})` : ''}
                                   </span>
                                 </div>
                               </div>
@@ -3697,6 +3742,65 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                           </div>
                         )}
                       </div>
+                      
+                      {/* 📸 Instagram Card 📸 */}
+                      <div className="p-5 bg-[#0D0D0D] border border-white/10 rounded-2xl space-y-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-[#E1306C]/20 border border-[#E1306C]/40 flex items-center justify-center text-[#E1306C] font-bold text-lg">
+                              <Camera className="w-5 h-5" />
+                            </div>
+                            <div>
+                              <h5 className="text-sm font-bold text-white flex items-center gap-2">
+                                Instagram Business
+                                {instagramConn?.isConnected ? (
+                                  <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full text-[10px] font-bold">Connected</span>
+                                ) : (
+                                  <span className="px-2 py-0.5 bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 rounded-full text-[10px] font-bold">Disconnected</span>
+                                )}
+                              </h5>
+                              <p className="text-xs text-[#828282] mt-0.5">
+                                {instagramConn?.isConnected
+                                  ? `Connected to: ${instagramConn.accountHandle}`
+                                  : "Connect your Instagram Business account to publish posts automatically."}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            {instagramConn?.isConnected && (
+                              <button
+                                onClick={async () => {
+                                  if (!activeWorkspace?.id) return;
+                                  try {
+                                    await fetch('/api/social/instagram', {
+                                      method: 'POST',
+                                      headers: { 'Content-Type': 'application/json' },
+                                      body: JSON.stringify({ action: 'disconnect', workspaceId: activeWorkspace.id })
+                                    });
+                                    setInstagramConn(null);
+                                    setToast({ message: "Instagram Account disconnected.", type: "info" });
+                                  } catch (e: any) {
+                                    setToast({ message: "Failed to disconnect", type: "error" });
+                                  }
+                                }}
+                                className="bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 font-bold text-xs px-3 py-2 rounded-xl transition-all cursor-pointer"
+                              >
+                                Disconnect
+                              </button>
+                            )}
+
+                            <button
+                              onClick={handleConnectInstagram}
+                              className="bg-[#E1306C] hover:bg-[#C13584] text-white font-bold text-xs px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 shadow-lg cursor-pointer disabled:opacity-50"
+                              disabled={isFetchingInstagram}
+                            >
+                              <Camera className="w-4 h-4" />
+                              {isFetchingInstagram ? "Connecting..." : instagramConn?.isConnected ? "Reconnect" : "Connect Instagram"}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   )}
 
@@ -4490,99 +4594,52 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
           </div>
         )}
 
-        {/* Instagram Business Connection Modal */}
-        {isInstagramModalOpen && (
+        {/* Instagram Accounts Picker Modal */}
+        {instagramAccounts && instagramAccounts.length > 0 && (
           <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
             <div className="bg-[#1c1e21] bg-gradient-to-br from-[#1C1C1C] to-black border border-[#E1E0CC]/5 hover:border-[#E1E0CC]/15 transition-all shadow-[0_0_30px_rgba(225,224,204,0.02)] rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-5">
               <div className="flex justify-between items-center border-b border-[#828282]/20 pb-3">
                 <div>
-                  <span className="text-xs font-sans tracking-normal font-bold text-[#ffffff] uppercase tracking-[0.2em] font-bold text-[#ffffff]">Zero-Friction Social Integration</span>
-                  <h3 className="text-base font-bold text-[#ffffff]">Connect Instagram Account</h3>
+                  <h3 className="text-base font-bold text-[#ffffff]">Select Instagram Account</h3>
                 </div>
                 <button
-                  onClick={() => setIsInstagramModalOpen(false)}
+                  onClick={() => setInstagramAccounts([])}
                   className="w-7 h-7 rounded-full bg-black border-none hover:bg-[#E1E0CC]/10 flex items-center justify-center font-bold text-[#828282] hover:text-[#ffffff]/80 cursor-pointer"
                 >
                   &times;
                 </button>
               </div>
 
-              <div className="space-y-4 text-xs">
-                
-                {/* Managed 1-Click Banner */}
-                <div className="p-3 bg-[#E1E0CC]/10 border-none rounded-2xl space-y-1">
-                  <span className="font-bold text-[#ffffff] text-sm uppercase block flex items-center gap-1">
-                    <Sparkles className="w-3 h-3 text-[#ffffff]" />
-                    Managed SaaS Meta API (1-Click Connect)
-                  </span>
-                  <p className="text-sm text-[#828282] leading-relaxed">
-                    Simply enter your Instagram username below. Our platform automatically manages all Meta Graph API tokens, OAuth handshakes, and container publishing on your behalf!
-                  </p>
+              <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+                <p className="text-sm text-[#828282] leading-relaxed">
+                  We found multiple Instagram Business accounts linked to your Facebook Page. Please select the one you want to connect to this workspace:
+                </p>
+                <div className="space-y-2">
+                  {instagramAccounts.map((account: any) => (
+                    <button
+                      key={account.id}
+                      onClick={() => handleSelectInstagramAccount(account)}
+                      disabled={isSavingInstagram}
+                      className="w-full flex items-center justify-between p-3 rounded-xl border border-[#E1E0CC]/10 hover:border-[#E1E0CC]/30 hover:bg-[#E1E0CC]/5 transition-all text-left group disabled:opacity-50 cursor-pointer"
+                    >
+                      <div>
+                        <div className="font-bold text-[#ffffff] text-sm group-hover:text-[#E1E0CC] transition-colors">{account.handle}</div>
+                        <div className="text-xs text-[#828282]">Account ID: {account.id}</div>
+                      </div>
+                      <div className="text-[#E1E0CC] opacity-0 group-hover:opacity-100 transition-opacity">
+                        <ArrowRight className="w-4 h-4" />
+                      </div>
+                    </button>
+                  ))}
                 </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-[#ffffff]/80 font-bold uppercase tracking-[0.2em] font-bold text-[#ffffff] text-sm block">
-                    Instagram Account Handle / Username
-                  </label>
-                  <input
-                    type="text"
-                    value={instagramHandle}
-                    onChange={(e) => setInstagramHandle(e.target.value)}
-                    placeholder="e.g. @yourbrand_official"
-                    className="w-full px-3.5 py-2.5 rounded-2xl border-none focus:border-[#DEDBC8] text-xs outline-none bg-[#1c1e21] border border-[#E1E0CC]/5 hover:border-[#E1E0CC]/15 transition-all text-[#ffffff] font-semibold"
-                  />
-                  <p className="text-xs font-sans tracking-normal text-[#828282]">
-                    No technical Developer Tokens or Facebook App setup required by you.
-                  </p>
-                </div>
-
-                {/* Collapsible Custom Developer Tokens */}
-                <details className="text-sm text-[#ffffff]/60 border-t border-[#828282]/20 pt-2 cursor-pointer">
-                  <summary className="font-bold uppercase tracking-[0.2em] font-bold text-[#ffffff] hover:text-[#ffffff]">
-                    + Advanced Custom Meta App Developer Keys (Optional)
-                  </summary>
-                  <div className="space-y-3 pt-3">
-                    <div className="space-y-1">
-                      <label className="text-[#828282] font-bold uppercase tracking-[0.2em] font-bold text-[#ffffff] text-xs block">
-                        Custom Instagram Business Account ID
-                      </label>
-                      <input
-                        type="text"
-                        value={instagramAccountId}
-                        onChange={(e) => setInstagramAccountId(e.target.value)}
-                        placeholder="e.g. 17841400000000000"
-                        className="w-full px-3 py-2 rounded-lg border-none text-xs font-sans tracking-normal bg-[#1c1e21] border border-[#E1E0CC]/5 hover:border-[#E1E0CC]/15 transition-all text-[#ffffff]"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-[#828282] font-bold uppercase tracking-[0.2em] font-bold text-[#ffffff] text-xs block">
-                        Custom Page Access Token
-                      </label>
-                      <input
-                        type="password"
-                        value={instagramAccessToken}
-                        onChange={(e) => setInstagramAccessToken(e.target.value)}
-                        placeholder="EAAB..."
-                        className="w-full px-3 py-2 rounded-lg border-none text-xs font-sans tracking-normal bg-[#1c1e21] border border-[#E1E0CC]/5 hover:border-[#E1E0CC]/15 transition-all text-[#ffffff]"
-                      />
-                    </div>
-                  </div>
-                </details>
               </div>
 
               <div className="flex gap-2 pt-2 border-t border-[#828282]/20">
                 <button
-                  onClick={() => setIsInstagramModalOpen(false)}
-                  className="flex-1 py-2.5 rounded-2xl border-none text-[#828282] font-bold text-xs uppercase hover:bg-black"
+                  onClick={() => setInstagramAccounts([])}
+                  className="flex-1 py-2.5 rounded-2xl border-none text-[#828282] font-bold text-xs uppercase hover:bg-black cursor-pointer"
                 >
                   Cancel
-                </button>
-                <button
-                  onClick={handleSaveInstagram}
-                  disabled={isSavingInstagram || !instagramHandle.trim()}
-                  className="flex-1 py-2 rounded-full bg-primary text-black font-medium text-sm transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 cursor-pointer hover:bg-[#E1E0CC] hover:scale-[1.02]"
-                >
-                  {isSavingInstagram ? "Connecting Account..." : "Connect Instagram (1-Click)"}
                 </button>
               </div>
             </div>

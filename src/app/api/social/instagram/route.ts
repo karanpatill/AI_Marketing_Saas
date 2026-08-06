@@ -27,24 +27,23 @@ export async function POST(request: Request) {
     }
 
     if (action === 'connect') {
-      if (!accountHandle) {
-        return NextResponse.json({ error: 'Missing accountHandle' }, { status: 400 });
+      if (!accountHandle || !instagramAccountId || !accessToken) {
+        return NextResponse.json({ error: 'Missing account credentials' }, { status: 400 });
       }
 
       const formattedHandle = accountHandle.startsWith('@') ? accountHandle : `@${accountHandle}`;
       
-      // Automatic Managed Instagram Connection
       const connection = await InstagramPublisherService.saveConnection(
         workspaceId,
         formattedHandle,
-        instagramAccountId || `ig_managed_${Date.now()}`,
-        accessToken || `ig_managed_token_${Date.now()}`
+        instagramAccountId,
+        accessToken
       );
 
       return NextResponse.json({ 
         success: true, 
         connection,
-        message: `Successfully connected ${formattedHandle} via Managed Instagram OAuth Pipeline`
+        message: `Successfully connected ${formattedHandle} via Meta OAuth`
       });
     }
 
