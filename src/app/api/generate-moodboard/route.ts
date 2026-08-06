@@ -21,10 +21,6 @@ export async function POST(req: Request) {
     const primaryColor   = String(body.primaryColor   || "#1A0A00");
     const secondaryColor = String(body.secondaryColor || "#C9A84C");
 
-    const falApiKey = process.env.FAL_API_KEY;
-    if (!falApiKey) {
-      return NextResponse.json({ error: "FAL_API_KEY is not configured" }, { status: 500 });
-    }
 
     const geminiApiKey = process.env.GEMINI_API_KEY;
     let moodboardPrompt = "";
@@ -227,45 +223,12 @@ OUTPUT RULES:
       moodboardPrompt = `A premium professional brand marketing and social media strategy moodboard presentation board for ${brandName}, a ${industry} brand with ${brandPersonality} personality. Dark warm obsidian black background with thin hairline gold dividers separating 20 distinct labeled sections arranged in a dense multi-row editorial grid layout. Top-left: gold monogram crest logo mark for ${brandName} with tagline "${tagline || usp}" in ivory serif. Top-center: Brand Personality section with two-column grid of uppercase luxury words. Top-right: Visual Identity photography direction with three dramatic cinematic ${industry} editorial photographs in moody golden lighting. Left column: Photography direction DO/DON'T checklist in cream text. Center: Instagram feed mock grid with 9 square content tiles mixing editorial photos, gold quote cards, and reel covers. Right: 10 post categories with icons. Second row left: Carousel style mockup showing 5 slides numbered 01-05. Center: Reel direction storyboard with 6 video frame thumbnails and music style tags. Third row: Typography system with giant serif "THE WORLD BEYOND ORDINARY" display heading and body text specimens. Social templates section showing 9 platform card mockups. Copywriting tone comparison table. Fourth row: Iconography icons, Motion direction tags, Content pillars donut chart in gold, Campaign concept cards. Bottom row: Color swatches (${primaryColor} 85%, ${secondaryColor} 10%, cream 5%), Brand voice WE ARE/NOT table, Content ratio bar chart, Mood summary manifesto paragraph. Full footer in gold: "${brandName} — ${tagline || usp}". Ultra-detailed 8K resolution, photorealistic photography inserts, luxury editorial design, $50000 branding agency quality presentation.`;
     }
 
-    // ── Call fal.ai Flux Schnell to render the board ──
-    let imageUrl: string | null = null;
-    let genError: string | null = null;
+    // ── Use Unsplash fallback directly until Wan 2.2 is integrated ──
+    console.log("Using dynamic Unsplash fallback for moodboard (Fal.ai removed)...");
+    const imageUrl = await getUnsplashFallbackImage(`${brandName} ${industry} brand identity moodboard strategy presentation board`, "landscape");
+    const genError = null;
 
-    try {
-      const res = await fetch("https://fal.run/fal-ai/flux/schnell", {
-        method: "POST",
-        headers: {
-          Authorization: `Key ${falApiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          prompt: moodboardPrompt,
-          image_size: "landscape_16_9",
-          num_inference_steps: 4,
-          num_images: 1,
-          enable_safety_checker: true,
-          output_format: "png",
-        }),
-      });
 
-      if (!res.ok) {
-        const errText = await res.text();
-        console.error("Fal moodboard generation failed:", errText);
-        genError = `fal.ai returned status ${res.status}`;
-      } else {
-        const result = await res.json();
-        imageUrl = result?.images?.[0]?.url || null;
-      }
-    } catch (e: any) {
-      console.error("Fal moodboard generation exception:", e.message);
-      genError = e.message;
-    }
-
-    if (!imageUrl) {
-      console.log("Using dynamic Unsplash fallback for moodboard...");
-      imageUrl = await getUnsplashFallbackImage(`${brandName} ${industry} brand identity moodboard strategy presentation board`, "landscape");
-      genError = null; // Clear error since we recovered with fallback
-    }
 
     const singleMood = {
       id: "option_1",

@@ -11,45 +11,7 @@ export interface GeneratedContentPayload {
   hashtags: string[];
 }
 
-async function generateImageWithFal(prompt: string): Promise<string> {
-  const falKey = process.env.FAL_API_KEY || process.env.FAL_KEY;
-  let imageUrl: string | null = null;
 
-  if (falKey) {
-    try {
-      console.log("Triggering Fal.ai Image Generation (SD 3.5 Large) for prompt:", prompt);
-      const response = await fetch("https://fal.run/fal-ai/stable-diffusion-v35-large", {
-        method: "POST",
-        headers: {
-          "Authorization": `Key ${falKey}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          prompt: prompt,
-          image_size: "square_hd",
-          num_inference_steps: 28,
-          enable_safety_checker: true
-        })
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        imageUrl = data.images?.[0]?.url || null;
-      } else {
-        console.warn("Fal.ai API failed (using Unsplash fallback):", await response.text());
-      }
-    } catch (err) {
-      console.error("Fal.ai fetch error (using Unsplash fallback):", err);
-    }
-  }
-
-  if (!imageUrl) {
-    console.log("Using dynamic Unsplash fallback for calendar post asset image...");
-    imageUrl = await getUnsplashFallbackImage(prompt || "business workspace technology graphic", "squarish");
-  }
-
-  return imageUrl;
-}
 
 /**
  * Generates marketing post copy, hooks, CTAs, hashtags, and visual prompts for a scheduled calendar cell.
@@ -161,22 +123,22 @@ interface GeneratedContentPayload {
   }
   const generated = JSON.parse(jsonText) as GeneratedContentPayload;
 
-  // === LIVE FAL.AI MEDIA GENERATION INTEGRATION ===
+  // === IMAGE GENERATION (Using Unsplash fallback until Wan 2.2 is ready) ===
   if (item.post_type === "static" && generated.visualPrompt) {
-    const imageUrl = await generateImageWithFal(generated.visualPrompt);
+    const imageUrl = await getUnsplashFallbackImage(generated.visualPrompt, "squarish");
     if (imageUrl) {
       generated.generatedAssets = { imageUrl };
     }
   } else if (item.post_type === "carousel" && generated.generatedAssets?.slides?.[0]) {
     // Generate a cover image for the first slide of the carousel
     const coverPrompt = generated.generatedAssets.slides[0].visualDescription || generated.visualPrompt;
-    const imageUrl = await generateImageWithFal(coverPrompt);
+    const imageUrl = await getUnsplashFallbackImage(coverPrompt, "squarish");
     if (imageUrl) {
       generated.generatedAssets.coverUrl = imageUrl;
     }
   } else if (item.post_type === "video" && generated.visualPrompt) {
     // Generate a visual storyboard/thumbnail frame for the video
-    const thumbUrl = await generateImageWithFal(generated.visualPrompt);
+    const thumbUrl = await getUnsplashFallbackImage(generated.visualPrompt, "squarish");
     if (thumbUrl) {
       generated.generatedAssets.thumbnailUrl = thumbUrl;
     }

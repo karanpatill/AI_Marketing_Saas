@@ -17,13 +17,9 @@ export async function POST(req: Request) {
     const userSecondaryColor: string | null = body.userSecondaryColor || null;
 
     const geminiApiKey = process.env.GEMINI_API_KEY;
-    const falApiKey = process.env.FAL_API_KEY;
-
+    
     if (!geminiApiKey) {
       return NextResponse.json({ error: "Gemini API key is not configured." }, { status: 500 });
-    }
-    if (!falApiKey) {
-      return NextResponse.json({ error: "FAL_API_KEY is not configured." }, { status: 500 });
     }
 
     const promptText = `You are a world-class brand strategist and creative director of a top-tier design agency.
@@ -143,40 +139,9 @@ You must respond with a single, valid JSON object containing exactly these field
 
     const fluxPrompt = String(kitData.fluxPrompt || `A premium professional logo icon/symbol mark for ${brandName}, a ${industry} brand. Standalone symbol mark, clean vector design, solid background, modern tech-forward shape, rich color scheme, no text, no letters.`);
 
-    // ── STEP 2: Call fal.ai Flux Schnell to generate the high-quality logo image ──
-    let imageUrl: string | null = null;
-    try {
-      const falResponse = await fetch("https://fal.run/fal-ai/flux/schnell", {
-        method: "POST",
-        headers: {
-          Authorization: `Key ${falApiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          prompt: fluxPrompt,
-          image_size: "square",
-          num_inference_steps: 4,
-          num_images: 1,
-          enable_safety_checker: true,
-          output_format: "png",
-        }),
-      });
-
-      if (!falResponse.ok) {
-        const errText = await falResponse.text();
-        console.warn("Fal Logo generation failed (will use Unsplash fallback):", errText);
-      } else {
-        const falResJson = await falResponse.ok ? await falResponse.json() : null;
-        imageUrl = falResJson?.images?.[0]?.url || null;
-      }
-    } catch (e: any) {
-      console.warn("Fal Logo generation exception (will use Unsplash fallback):", e.message);
-    }
-
-    if (!imageUrl) {
-      console.log("Using dynamic Unsplash fallback for logo...");
-      imageUrl = await getUnsplashFallbackImage(`${brandName} abstract minimal geometric logo icon`, "squarish");
-    }
+    // ── STEP 2: Use Unsplash fallback directly until Wan 2.2 is integrated ──
+    console.log("Using dynamic Unsplash fallback for logo (Fal.ai removed)...");
+    const imageUrl = await getUnsplashFallbackImage(`${brandName} abstract minimal geometric logo icon`, "squarish");
 
     // Build the logos[] array the page expects
     const logos = [

@@ -34,7 +34,7 @@ export class FacebookPublisherService {
       throw new Error("FACEBOOK_APP_ID is not configured in .env.local");
     }
 
-    const scopes = 'pages_show_list,pages_read_engagement,pages_manage_posts,publish_to_groups';
+    const scopes = 'pages_show_list,pages_read_engagement,pages_manage_posts';
     const state = encodeURIComponent(workspaceId);
 
     return `https://www.facebook.com/v19.0/dialog/oauth?client_id=${appId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scopes}&state=${state}&response_type=code`;

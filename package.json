@@ -10,7 +10,6 @@
     "postinstall": "npx puppeteer browsers install chrome"
   },
   "dependencies": {
-    "@fal-ai/client": "^1.10.1",
     "@google/generative-ai": "^0.24.1",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.6.1",

@@ -2104,7 +2104,7 @@ export default function OnboardingPage() {
                           <div className="bg-[#0A0A0A] border border-[#828282]/20 rounded-2xl p-6 text-center space-y-2">
                             <Loader2 className="w-8 h-8 text-white animate-spin mx-auto" />
                             <h4 className="text-sm font-bold text-white">Generating 6 Brand Logos in Parallel...</h4>
-                            <p className="text-xs text-[#E1E0CC]/60">Calling fal.ai Flux Dev API. Please wait up to 10 seconds.</p>
+                            <p className="text-xs text-[#E1E0CC]/60">Generating premium brand logo. Please wait...</p>
                           </div>
                           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                             {Array.from({ length: 6 }).map((_, i) => (
