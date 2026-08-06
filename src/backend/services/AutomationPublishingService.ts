@@ -53,4 +53,77 @@ export class AutomationPublishingService {
       throw new Error(result.error || "Unknown Instagram publishing error");
     }
   }
+
+  async publishToConnectedAccounts(workspaceId: string, outputReference: any) {
+    logger.info({ workspaceId, outputReference }, "Publishing asset to connected accounts");
+    
+    try {
+      let base64Images: string[] = [];
+
+      // Check if we have HTML to render from AI generation
+      if (outputReference.type === 'carousel' && outputReference.slides && outputReference.slides.length > 0) {
+        const { ImageRenderingService } = await import('./ImageRenderingService');
+        for (const slide of outputReference.slides) {
+          if (slide.html) {
+             const b64 = await ImageRenderingService.renderHtmlToBase64(slide.html, 1080, 1350);
+             base64Images.push(b64);
+          }
+        }
+      } else if (outputReference.html_content || outputReference.html) {
+        const { ImageRenderingService } = await import('./ImageRenderingService');
+        const htmlToRender = outputReference.html_content || outputReference.html;
+        const b64 = await ImageRenderingService.renderHtmlToBase64(htmlToRender, 1080, 1350);
+        base64Images.push(b64);
+      } else {
+        // Fallback: Use image URLs
+        let imageUrls: string[] = [];
+        if (outputReference.urls && outputReference.urls.length > 0) {
+          imageUrls = outputReference.urls;
+        } else if (outputReference.imageUrl) {
+          imageUrls = [outputReference.imageUrl];
+        } else if (outputReference.image_url) {
+          imageUrls = [outputReference.image_url];
+        }
+
+        if (imageUrls.length > 0) {
+          const imageUrl = imageUrls[0];
+          const imageResponse = await fetch(imageUrl);
+          const arrayBuffer = await imageResponse.arrayBuffer();
+          base64Images.push(Buffer.from(arrayBuffer).toString('base64'));
+        }
+      }
+
+      if (base64Images.length === 0) {
+        throw new Error("No images or HTML generated for this asset yet");
+      }
+
+      const caption = outputReference.caption || "Automated generated content #AI";
+      
+      const imageBase64 = base64Images[0]; // For now, we take the first image (or slide)
+      
+      const { FacebookPublisherService } = await import('./social/FacebookPublisherService');
+      const { LinkedInPublisherService } = await import('./social/LinkedInPublisherService');
+
+      logger.info({ workspaceId }, 'Attempting to publish to Facebook...');
+      let fbResult = await FacebookPublisherService.publishPost(workspaceId, caption, imageBase64);
+      if (fbResult.success) {
+        logger.info(`Successfully published asset to Facebook: ${fbResult.postId}`);
+      } else {
+        logger.warn(`Failed to publish to Facebook: ${fbResult.error}`);
+      }
+
+      logger.info({ workspaceId }, 'Attempting to publish to LinkedIn...');
+      let inResult = await LinkedInPublisherService.publishPost(workspaceId, caption, imageBase64);
+      if (inResult.success) {
+        logger.info(`Successfully published asset to LinkedIn`);
+      } else {
+        logger.warn(`Failed to publish to LinkedIn: ${inResult.error}`);
+      }
+
+      return { success: true, fbResult, inResult };
+    } catch (err: any) {
+      logger.error({ err, workspaceId }, "Failed to publish asset");
+      throw err;
+    }
+  }
 }

@@ -48,7 +48,7 @@ export class AutomationRepository {
   // ----------------------------------------------------
   async createCalendarEntry(entry: any) {
     const { data, error } = await this.supabase
-      .from("content_calendar")
+      .from("brand_calendar")
       .insert(entry)
       .select()
       .single();
@@ -57,20 +57,50 @@ export class AutomationRepository {
   }
 
   async getCalendarForWorkspace(workspaceId: string, limit = 30) {
+    const { data: dnaData } = await this.supabase
+      .from('brand_dna')
+      .select('id')
+      .eq('workspace_id', workspaceId)
+      .single();
+    if (!dnaData) return [];
+
     const { data, error } = await this.supabase
-      .from("content_calendar")
+      .from("brand_calendar")
       .select("*")
-      .eq("workspace_id", workspaceId)
-      .order("scheduled_time", { ascending: true })
+      .eq("brand_dna_id", dnaData.id)
+      .order("date", { ascending: true })
       .limit(limit);
+
     if (error) throw error;
     return data;
   }
 
+  async getNextPlannedPost(workspaceId: string) {
+    const { data: dnaData } = await this.supabase
+      .from('brand_dna')
+      .select('id')
+      .eq('workspace_id', workspaceId)
+      .single();
+    if (!dnaData) return null;
+
+    const { data, error } = await this.supabase
+      .from("brand_calendar")
+      .select("*")
+      .eq("brand_dna_id", dnaData.id)
+      .eq("status", "planned")
+      .order("date", { ascending: true })
+      .limit(1)
+      .single();
+
+    if (error && error.code !== "PGRST116") throw error;
+    if (data) data.topic = data.title; // map title to topic for backward compatibility
+    return data || null;
+  }
+
   async updateCalendarEntry(id: string, updates: any) {
     const { data, error } = await this.supabase
-      .from("content_calendar")
-      .update({ ...updates, updated_at: new Date().toISOString() })
+      .from("brand_calendar")
+      .update(updates)
       .eq("id", id)
       .select()
       .single();
@@ -98,23 +128,36 @@ export class AutomationRepository {
   async getPostsNeedingGeneration() {
     const next48Hours = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
     const { data, error } = await this.supabase
-      .from("content_calendar")
-      .select("*, workspaces(org_id)")
+      .from("brand_calendar")
+      .select("*, brand_dna(workspace_id)")
       .eq("status", "planned")
-      .lte("scheduled_time", next48Hours);
+      .lte("date", next48Hours);
     if (error) throw error;
-    return data || [];
+    
+    // Map it to backward compatible format
+    return (data || []).map((post: any) => ({
+      ...post,
+      workspace_id: post.brand_dna?.workspace_id,
+      topic: post.title,
+      scheduled_time: post.date
+    }));
   }
 
   // Get posts that need to be published (scheduled, time is <= now)
   async getPostsNeedingPublishing() {
     const now = new Date().toISOString();
     const { data, error } = await this.supabase
-      .from("content_calendar")
-      .select("*")
+      .from("brand_calendar")
+      .select("*, brand_dna(workspace_id)")
       .eq("status", "scheduled")
-      .lte("scheduled_time", now);
+      .lte("date", now);
     if (error) throw error;
-    return data || [];
+
+    return (data || []).map((post: any) => ({
+      ...post,
+      workspace_id: post.brand_dna?.workspace_id,
+      topic: post.title,
+      scheduled_time: post.date
+    }));
   }
 }

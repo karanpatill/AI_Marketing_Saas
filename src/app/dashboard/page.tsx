@@ -11,7 +11,7 @@ import {
   Loader2, LogOut, ArrowRight, ShieldCheck,
   Tag, Compass, HelpCircle, Users, Eye, Flag,
   Building, Image, FileText, Video, Plus,
-  Settings, Bell, Search, Activity, Trash2, Archive,
+  Settings, Settings2, Bell, Search, Activity, Trash2, Archive,
   Shield, CreditCard, Mail, User, AlertCircle,
   X, Check, Lock, ChevronDown, RefreshCw, Globe, Clock, Paintbrush, Save, Camera
 } from "lucide-react";
@@ -155,7 +155,7 @@ export default function DashboardPage() {
   const [isInviting, setIsInviting] = useState(false);
   const [newWorkspaceName, setNewWorkspaceName] = useState("");
   const [isCreatingWorkspace, setIsCreatingWorkspace] = useState(false);
-  const [settingsTab, setSettingsTab] = useState<"profile" | "workspace" | "integrations" | "team" | "billing">("profile");
+  const [settingsTab, setSettingsTab] = useState<"profile" | "workspace" | "integrations" | "team" | "autopilot" | "billing">("profile");
   const [linkedinConn, setLinkedinConn] = useState<any>(null);
   const [isFetchingLinkedin, setIsFetchingLinkedin] = useState(false);
   const [facebookConn, setFacebookConn] = useState<any>(null);
@@ -3508,6 +3508,18 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                   </button>
 
                   <button
+                    onClick={() => setSettingsTab("autopilot")}
+                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-2xl text-xs font-semibold transition-all text-left
+                      ${settingsTab === "autopilot"
+                        ? "bg-black border-none text-[#ffffff] shadow-[0_0_15px_rgba(225,224,204,0.03)]"
+                        : "text-[#828282] hover:text-[#ffffff]/90 hover:bg-[#E1E0CC]/5"
+                      }`}
+                  >
+                    <Settings2 className="w-3.5 h-3.5" />
+                    <span>Autopilot (Beta)</span>
+                  </button>
+
+                  <button
                     onClick={() => setSettingsTab("billing")}
                     className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-2xl text-xs font-semibold transition-all text-left
                       ${settingsTab === "billing"
@@ -4065,6 +4077,95 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                         </div>
                       </div>
 
+                    </div>
+                  )}
+
+                  {/* autopilot tab */}
+                  {settingsTab === "autopilot" && (
+                    <div className="space-y-6">
+                      <div>
+                        <h4 className="text-sm font-bold text-[#ffffff] mb-1">Daily Autopilot</h4>
+                        <p className="text-[11px] text-[#828282]">Configure the AI to automatically generate and publish content to your connected social accounts every day.</p>
+                      </div>
+
+                      <div className="bg-black border border-white/5 p-6 rounded-3xl flex flex-col gap-6">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h5 className="text-sm font-bold text-white">Enable Auto-Posting</h5>
+                            <p className="text-[11px] text-[#828282]">When enabled, we'll generate and post content daily.</p>
+                          </div>
+                          <button
+                            onClick={async () => {
+                              const newEnabled = !activeOrg?.auto_post_enabled;
+                              const res = await fetch('/api/workspace/autopost', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                  workspaceId: activeOrg?.id,
+                                  enabled: newEnabled,
+                                  time: activeOrg?.auto_post_time || "09:00",
+                                  type: activeOrg?.auto_post_type || "carousel"
+                                })
+                              });
+                              if (res.ok) {
+                                alert(newEnabled ? "Autopilot Enabled" : "Autopilot Disabled");
+                                window.location.reload();
+                              }
+                            }}
+                            className={`w-12 h-6 rounded-full transition-colors ${activeOrg?.auto_post_enabled ? 'bg-[#DEDBC8]' : 'bg-white/10'} relative`}
+                          >
+                            <div className={`w-4 h-4 rounded-full bg-black absolute top-1 transition-all ${activeOrg?.auto_post_enabled ? 'left-7' : 'left-1'}`} />
+                          </button>
+                        </div>
+
+                        {activeOrg?.auto_post_enabled && (
+                          <>
+                            <div className="space-y-3">
+                              <label className="text-xs font-bold text-[#828282]">Post Time (UTC)</label>
+                              <input 
+                                type="time"
+                                defaultValue={activeOrg?.auto_post_time || "09:00"}
+                                onChange={async (e) => {
+                                  await fetch('/api/workspace/autopost', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                      workspaceId: activeOrg?.id,
+                                      enabled: true,
+                                      time: e.target.value,
+                                      type: activeOrg?.auto_post_type || "carousel"
+                                    })
+                                  });
+                                }}
+                                className="w-full bg-[#111111] border border-white/5 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-[#DEDBC8]/30 transition-all"
+                              />
+                            </div>
+                            <div className="space-y-3">
+                              <label className="text-xs font-bold text-[#828282]">Content Type</label>
+                              <select 
+                                defaultValue={activeOrg?.auto_post_type || "carousel"}
+                                onChange={async (e) => {
+                                  await fetch('/api/workspace/autopost', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                      workspaceId: activeOrg?.id,
+                                      enabled: true,
+                                      time: activeOrg?.auto_post_time || "09:00",
+                                      type: e.target.value
+                                    })
+                                  });
+                                }}
+                                className="w-full bg-[#111111] border border-white/5 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-[#DEDBC8]/30 transition-all appearance-none"
+                              >
+                                <option value="carousel">Carousel</option>
+                                <option value="post">Single Image Post</option>
+                                <option value="video">Short Video</option>
+                              </select>
+                            </div>
+                          </>
+                        )}
+                      </div>
                     </div>
                   )}
 

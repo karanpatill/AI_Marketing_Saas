@@ -3,6 +3,7 @@ import { Receiver } from '@upstash/qstash';
 import { logger } from '@/backend/utils/logger';
 import { createAdminClient } from '@/lib/supabaseServer';
 import { AIGenerationService } from '@/backend/services/AIGenerationService';
+import { AutomationRepository } from '@/backend/repositories/AutomationRepository';
 
 // Ensure QSTASH_CURRENT_SIGNING_KEY and QSTASH_NEXT_SIGNING_KEY are in env.
 const receiver = new Receiver({
@@ -39,6 +40,52 @@ export async function POST(req: NextRequest) {
       case 'ai-generations':
         const aiService = new AIGenerationService(supabaseAdmin);
         await aiService.processJob(payload.jobId, payload.jobType, payload.payload);
+        break;
+      case 'auto-post-trigger':
+        logger.info({ workspaceId: payload.workspaceId }, 'Received auto-post trigger. Enqueuing AI generation job.');
+        const triggerAiService = new AIGenerationService(supabaseAdmin);
+        const autoRepo = new AutomationRepository(supabaseAdmin);
+        
+        // Fetch the planned post for today from the content calendar
+        const nextPost = await autoRepo.getNextPlannedPost(payload.workspaceId);
+        let promptTopic = 'AI Marketing Strategies'; // Fallback
+        let calendarId = undefined;
+        let postType = payload.type || 'carousel';
+
+        if (nextPost) {
+          promptTopic = nextPost.topic;
+          calendarId = nextPost.id;
+          postType = nextPost.post_type || postType;
+        }
+        
+        // Map user type (carousel, post, video) to the corresponding generator module job_type
+        const typeMap: Record<string, string> = {
+          'carousel': 'generate_carousel',
+          'post': 'generate_post',
+          'video': 'generate_video'
+        };
+        const jobType = typeMap[postType] || 'generate_carousel';
+        
+        // We push a job to the ai-generations queue to be processed asynchronously
+        const job = await triggerAiService.enqueueJob({
+          userId: '00000000-0000-0000-0000-000000000000',
+          workspaceId: payload.workspaceId,
+          jobType: jobType,
+          payload: {
+            type: postType,
+            topic: promptTopic,
+            auto_published: true,
+            calendar_id: calendarId
+          }
+        });
+
+        // Mark the calendar entry as generating if we found one
+        if (calendarId) {
+          await autoRepo.updateCalendarEntry(calendarId, {
+            status: "generating",
+            job_id: job.id
+          });
+        }
         break;
       default:
         logger.warn({ queueName }, 'No handler found for queue');

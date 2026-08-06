@@ -13,8 +13,10 @@ export class AIGenerationService {
   private jobRepo: GenerationJobRepository;
   private queueProvider: UpstashQueueProvider;
   private generationManager: GenerationManager;
+  private supabase: SupabaseClient;
 
   constructor(supabaseAdmin: SupabaseClient) {
+    this.supabase = supabaseAdmin;
     this.jobRepo = new GenerationJobRepository(supabaseAdmin);
     this.queueProvider = new UpstashQueueProvider();
     
@@ -45,5 +47,37 @@ export class AIGenerationService {
   async processJob(jobId: string, jobType: string, payload: any): Promise<void> {
     logger.info({ jobId, jobType }, 'Processing job in Universal Engine');
     await this.generationManager.processJob(jobId);
+
+    // After generation is complete, check if we need to auto-publish
+    if (payload?.auto_published) {
+      try {
+        const { data: job } = await this.supabase
+          .from('jobs')
+          .select('status, output_reference, workspace_id')
+          .eq('id', jobId)
+          .single();
+
+        if (job && job.status === 'completed' && job.output_reference) {
+          logger.info({ jobId }, 'Auto-publishing generated asset to social platforms');
+          
+          // Import here to avoid circular dependencies if any
+          const { AutomationPublishingService } = await import('./AutomationPublishingService');
+          const publisher = new AutomationPublishingService(this.supabase);
+          
+          await publisher.publishToConnectedAccounts(job.workspace_id, job.output_reference);
+
+          if (payload?.calendar_id) {
+            const { AutomationRepository } = await import('../repositories/AutomationRepository');
+            const autoRepo = new AutomationRepository(this.supabase);
+            await autoRepo.updateCalendarEntry(payload.calendar_id, {
+              status: "published"
+            });
+            logger.info({ calendarId: payload.calendar_id }, 'Marked calendar entry as published');
+          }
+        }
+      } catch (err) {
+        logger.error({ err, jobId }, 'Failed to auto-publish generated campaign');
+      }
+    }
   }
 }
