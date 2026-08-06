@@ -4110,6 +4110,9 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                               if (res.ok) {
                                 alert(newEnabled ? "Autopilot Enabled" : "Autopilot Disabled");
                                 window.location.reload();
+                              } else {
+                                const errData = await res.json();
+                                alert("Failed to update Autopilot: " + (errData.error || "Unknown error"));
                               }
                             }}
                             className={`w-12 h-6 rounded-full transition-colors ${activeWorkspace?.auto_post_enabled ? 'bg-[#DEDBC8]' : 'bg-white/10'} relative`}
