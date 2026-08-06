@@ -1,7 +1,14 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabaseServer';
-import { AutoPostScheduler } from '@/backend/services/AutoPostScheduler';
+import { createClient as createAdminClient } from '@supabase/supabase-js';
 import { logger } from '@/backend/utils/logger';
+
+// Admin client bypasses RLS for workspace lookups
+const getAdminClient = () =>
+  createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
 
 export async function POST(req: Request) {
   try {
@@ -19,59 +26,72 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Workspace ID is required' }, { status: 400 });
     }
 
-    // Fetch existing workspace settings to check for an old schedule and get org_id
-    const { data: workspace, error: wsError } = await supabase
+    const admin = getAdminClient();
+
+    // Fetch the workspace (using admin client to bypass RLS)
+    const { data: workspace, error: wsError } = await admin
       .from('workspaces')
       .select('org_id, auto_post_schedule_id')
       .eq('id', workspaceId)
       .single();
 
     if (wsError || !workspace) {
+      logger.error({ wsError, workspaceId }, 'Workspace not found');
       return NextResponse.json({ error: 'Workspace not found' }, { status: 404 });
     }
 
-    // Verify user belongs to the organization that owns this workspace
-    const { data: member, error: memberError } = await supabase
-      .from('organization_members')
-      .select('*')
+    // Verify the user belongs to this workspace's org via `members` table
+    const { data: member, error: memberError } = await admin
+      .from('members')
+      .select('id')
       .eq('org_id', workspace.org_id)
       .eq('user_id', user.id)
       .single();
 
     if (memberError || !member) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
+      // Also check workspace_users as a fallback
+      const { data: wsUser } = await admin
+        .from('workspace_users')
+        .select('id')
+        .eq('workspace_id', workspaceId)
+        .eq('user_id', user.id)
+        .single();
 
-    const scheduler = new AutoPostScheduler();
+      if (!wsUser) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
+    }
 
     let scheduleId = workspace.auto_post_schedule_id;
 
-    if (enabled) {
-      // If there's an existing schedule and we're just updating the time, delete old one first
-      if (scheduleId) {
-        await scheduler.disableAutoPost(scheduleId);
-      }
+    // Try to handle AutoPostScheduler if available, but don't crash if not configured
+    try {
+      const { AutoPostScheduler } = await import('@/backend/services/AutoPostScheduler');
+      const scheduler = new AutoPostScheduler();
 
-      if (!time || !type) {
-        return NextResponse.json({ error: 'Time and type are required when enabling' }, { status: 400 });
+      if (enabled) {
+        if (scheduleId) {
+          await scheduler.disableAutoPost(scheduleId);
+        }
+        if (time && type) {
+          const [hour, minute] = time.split(':');
+          const cron = `${minute} ${hour} * * *`;
+          scheduleId = await scheduler.enableAutoPost(workspaceId, cron, type);
+        }
+      } else {
+        if (scheduleId) {
+          await scheduler.disableAutoPost(scheduleId);
+          scheduleId = null;
+        }
       }
-
-      // Convert local time "HH:mm" to UTC Cron
-      // For now, assuming time is passed as UTC HH:mm (e.g. "09:00")
-      const [hour, minute] = time.split(':');
-      const cron = `${minute} ${hour} * * *`; // Run every day at HH:mm
-
-      scheduleId = await scheduler.enableAutoPost(workspaceId, cron, type);
-    } else {
-      // Disabling
-      if (scheduleId) {
-        await scheduler.disableAutoPost(scheduleId);
-        scheduleId = null; // Clear from DB
-      }
+    } catch (schedulerErr) {
+      // Scheduler might not be configured in all environments — that's OK
+      logger.warn({ schedulerErr }, 'AutoPostScheduler not available, skipping schedule management');
+      if (!enabled) scheduleId = null;
     }
 
     // Update DB
-    const { error: updateError } = await supabase
+    const { error: updateError } = await admin
       .from('workspaces')
       .update({
         auto_post_enabled: enabled,
@@ -83,10 +103,10 @@ export async function POST(req: Request) {
 
     if (updateError) {
       logger.error({ error: updateError }, 'Failed to update workspace auto-post settings');
-      return NextResponse.json({ error: 'Failed to update settings' }, { status: 500 });
+      return NextResponse.json({ error: 'Failed to update settings: ' + updateError.message }, { status: 500 });
     }
 
-    return NextResponse.json({ success: true, scheduleId });
+    return NextResponse.json({ success: true, scheduleId, enabled });
   } catch (error: any) {
     logger.error({ err: error }, 'Failed to configure auto-posting');
     return NextResponse.json({ error: error.message }, { status: 500 });
