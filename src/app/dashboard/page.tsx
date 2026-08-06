@@ -4096,15 +4096,15 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                           </div>
                           <button
                             onClick={async () => {
-                              const newEnabled = !activeOrg?.auto_post_enabled;
+                              const newEnabled = !activeWorkspace?.auto_post_enabled;
                               const res = await fetch('/api/workspace/autopost', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({
-                                  workspaceId: activeOrg?.id,
+                                  workspaceId: activeWorkspace?.id,
                                   enabled: newEnabled,
-                                  time: activeOrg?.auto_post_time || "09:00",
-                                  type: activeOrg?.auto_post_type || "carousel"
+                                  time: activeWorkspace?.auto_post_time || "09:00",
+                                  type: activeWorkspace?.auto_post_type || "carousel"
                                 })
                               });
                               if (res.ok) {
@@ -4112,28 +4112,28 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                                 window.location.reload();
                               }
                             }}
-                            className={`w-12 h-6 rounded-full transition-colors ${activeOrg?.auto_post_enabled ? 'bg-[#DEDBC8]' : 'bg-white/10'} relative`}
+                            className={`w-12 h-6 rounded-full transition-colors ${activeWorkspace?.auto_post_enabled ? 'bg-[#DEDBC8]' : 'bg-white/10'} relative`}
                           >
-                            <div className={`w-4 h-4 rounded-full bg-black absolute top-1 transition-all ${activeOrg?.auto_post_enabled ? 'left-7' : 'left-1'}`} />
+                            <div className={`w-4 h-4 rounded-full bg-black absolute top-1 transition-all ${activeWorkspace?.auto_post_enabled ? 'left-7' : 'left-1'}`} />
                           </button>
                         </div>
 
-                        {activeOrg?.auto_post_enabled && (
+                        {activeWorkspace?.auto_post_enabled && (
                           <>
                             <div className="space-y-3">
                               <label className="text-xs font-bold text-[#828282]">Post Time (UTC)</label>
                               <input 
                                 type="time"
-                                defaultValue={activeOrg?.auto_post_time || "09:00"}
+                                defaultValue={activeWorkspace?.auto_post_time || "09:00"}
                                 onChange={async (e) => {
                                   await fetch('/api/workspace/autopost', {
                                     method: 'POST',
                                     headers: { 'Content-Type': 'application/json' },
                                     body: JSON.stringify({
-                                      workspaceId: activeOrg?.id,
+                                      workspaceId: activeWorkspace?.id,
                                       enabled: true,
                                       time: e.target.value,
-                                      type: activeOrg?.auto_post_type || "carousel"
+                                      type: activeWorkspace?.auto_post_type || "carousel"
                                     })
                                   });
                                 }}
@@ -4143,15 +4143,15 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                             <div className="space-y-3">
                               <label className="text-xs font-bold text-[#828282]">Content Type</label>
                               <select 
-                                defaultValue={activeOrg?.auto_post_type || "carousel"}
+                                defaultValue={activeWorkspace?.auto_post_type || "carousel"}
                                 onChange={async (e) => {
                                   await fetch('/api/workspace/autopost', {
                                     method: 'POST',
                                     headers: { 'Content-Type': 'application/json' },
                                     body: JSON.stringify({
-                                      workspaceId: activeOrg?.id,
+                                      workspaceId: activeWorkspace?.id,
                                       enabled: true,
-                                      time: activeOrg?.auto_post_time || "09:00",
+                                      time: activeWorkspace?.auto_post_time || "09:00",
                                       type: e.target.value
                                     })
                                   });
