@@ -120,14 +120,24 @@ export function AssetsView({ workspaceId, refreshKey = 0 }: { workspaceId: strin
 
   const handlePublishToLinkedIn = async (asset: any, caption: string) => {
     const dim = getDimensionsForRatio(asset.metadata?.aspectRatio);
-    let imageBase64 = "";
+    let imageBase64: string | string[] = "";
     let videoUrl = "";
 
     if (activeSubTab === "video") {
       videoUrl = asset.metadata?.videoUrl || asset.file_url;
+    } else if (activeSubTab === "carousel" && asset.metadata?.slides) {
+      const b64Array = [];
+      for (let i = 0; i < asset.metadata.slides.length; i++) {
+        const slideHtml = typeof asset.metadata.slides[i] === "string" ? asset.metadata.slides[i] : asset.metadata.slides[i].html;
+        if (slideHtml) {
+          const b64 = await renderHtmlToImage(slideHtml, dim.width, dim.height);
+          b64Array.push(b64);
+        }
+      }
+      imageBase64 = b64Array;
     } else {
       const html = asset.metadata?.html || asset.metadata?.html_content;
-      if (html) {
+      if (html && html !== "Generated Carousel") {
         imageBase64 = await renderHtmlToImage(html, dim.width, dim.height);
       } else if (asset.metadata?.imageUrl) {
         imageBase64 = asset.metadata.imageUrl;
@@ -152,14 +162,24 @@ export function AssetsView({ workspaceId, refreshKey = 0 }: { workspaceId: strin
 
   const handlePublishToFacebook = async (asset: any, caption: string) => {
     const dim = getDimensionsForRatio(asset.metadata?.aspectRatio);
-    let imageBase64 = "";
+    let imageBase64: string | string[] = "";
     let videoUrl = "";
 
     if (activeSubTab === "video") {
       videoUrl = asset.metadata?.videoUrl || asset.file_url;
+    } else if (activeSubTab === "carousel" && asset.metadata?.slides) {
+      const b64Array = [];
+      for (let i = 0; i < asset.metadata.slides.length; i++) {
+        const slideHtml = typeof asset.metadata.slides[i] === "string" ? asset.metadata.slides[i] : asset.metadata.slides[i].html;
+        if (slideHtml) {
+          const b64 = await renderHtmlToImage(slideHtml, dim.width, dim.height);
+          b64Array.push(b64);
+        }
+      }
+      imageBase64 = b64Array;
     } else {
       const html = asset.metadata?.html || asset.metadata?.html_content;
-      if (html) {
+      if (html && html !== "Generated Carousel") {
         imageBase64 = await renderHtmlToImage(html, dim.width, dim.height);
       } else if (asset.metadata?.imageUrl) {
         imageBase64 = asset.metadata.imageUrl;
@@ -184,14 +204,24 @@ export function AssetsView({ workspaceId, refreshKey = 0 }: { workspaceId: strin
 
   const handlePublishToInstagram = async (asset: any, caption: string) => {
     const dim = getDimensionsForRatio(asset.metadata?.aspectRatio);
-    let imageBase64 = "";
+    let imageBase64: string | string[] = "";
     let videoUrl = "";
 
     if (activeSubTab === "video") {
       videoUrl = asset.metadata?.videoUrl || asset.file_url;
+    } else if (activeSubTab === "carousel" && asset.metadata?.slides) {
+      const b64Array = [];
+      for (let i = 0; i < asset.metadata.slides.length; i++) {
+        const slideHtml = typeof asset.metadata.slides[i] === "string" ? asset.metadata.slides[i] : asset.metadata.slides[i].html;
+        if (slideHtml) {
+          const b64 = await renderHtmlToImage(slideHtml, dim.width, dim.height);
+          b64Array.push(b64);
+        }
+      }
+      imageBase64 = b64Array;
     } else {
       const html = asset.metadata?.html || asset.metadata?.html_content;
-      if (html) {
+      if (html && html !== "Generated Carousel") {
         imageBase64 = await renderHtmlToImage(html, dim.width, dim.height);
       } else if (asset.metadata?.imageUrl) {
         imageBase64 = asset.metadata.imageUrl;

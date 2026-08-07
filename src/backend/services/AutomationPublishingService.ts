@@ -30,9 +30,27 @@ export class AutomationPublishingService {
   private async publishPost(post: any) {
     logger.info(`Publishing post ${post.id}`);
 
-    // Verify it has generated images
+    // Modern posts (carousel, video, smart assets) store output inside generated_assets
+    if (post.generated_assets && Object.keys(post.generated_assets).length > 0) {
+      if (post.caption) {
+        post.generated_assets.caption = post.caption; // Override with final caption if present
+      }
+      
+      const result = await this.publishToConnectedAccounts(post.workspace_id, post.generated_assets);
+      if (result.success) {
+        logger.info(`Successfully auto-published modern post ${post.id}`);
+        await this.autoRepo.updateCalendarEntry(post.id, {
+          status: "published"
+        });
+        return;
+      } else {
+        throw new Error("Failed to auto-publish modern post to all platforms");
+      }
+    }
+
+    // Fallback legacy verification
     if (!post.image_urls || post.image_urls.length === 0) {
-      throw new Error("No images generated for this post yet");
+      throw new Error("No images or generated assets available for this post yet");
     }
 
     const imageUrl = post.image_urls[0]; // Take the first image for now
@@ -45,7 +63,7 @@ export class AutomationPublishingService {
     );
 
     if (result.success) {
-      logger.info(`Successfully published post ${post.id} to Instagram: ${result.permalink}`);
+      logger.info(`Successfully published legacy post ${post.id} to Instagram: ${result.permalink}`);
       await this.autoRepo.updateCalendarEntry(post.id, {
         status: "published"
       });
