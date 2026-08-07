@@ -31,11 +31,26 @@ export class AIGenerationService {
     try {
       const job = await this.jobRepo.createJob(input);
       
-      // Force local background execution to avoid QStash dummy token errors
-      logger.warn('Forcing local background execution for AI job.');
-      this.processJob(job.id, job.job_type, job.input_payload).catch(err => {
-        logger.error({ err, jobId: job.id }, 'Background execution failed');
-      });
+      const hasQStash = process.env.QSTASH_TOKEN && 
+                        process.env.QSTASH_TOKEN !== 'MISSING_QSTASH_TOKEN' && 
+                        process.env.QSTASH_TOKEN !== 'dummy_token_for_local_dev';
+
+      if (hasQStash) {
+        logger.info({ jobId: job.id }, 'Enqueuing job to Upstash QStash for background execution');
+        const { UpstashQueueProvider } = await import('../providers/UpstashQueueProvider');
+        const queueProvider = new UpstashQueueProvider();
+        await queueProvider.enqueue('ai-generations', {
+          jobId: job.id,
+          jobType: job.job_type,
+          payload: job.input_payload
+        });
+      } else {
+        // Force local background execution to avoid QStash dummy token errors
+        logger.warn('Forcing local background execution for AI job.');
+        this.processJob(job.id, job.job_type, job.input_payload).catch(err => {
+          logger.error({ err, jobId: job.id }, 'Background execution failed');
+        });
+      }
       
       return job;
     } catch (error: any) {

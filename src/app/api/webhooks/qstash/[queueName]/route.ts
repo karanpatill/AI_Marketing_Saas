@@ -82,8 +82,7 @@ export async function POST(req: NextRequest) {
         // Mark the calendar entry as generating if we found one
         if (calendarId) {
           await autoRepo.updateCalendarEntry(calendarId, {
-            status: "generating",
-            job_id: job.id
+            status: "generating"
           });
         }
         break;

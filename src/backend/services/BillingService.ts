@@ -68,9 +68,11 @@ export class BillingService {
     }
   }
 
-  async deductTokensForGeneration(orgId: string, type: 'static_post' | 'carousel') {
+  async deductTokensForGeneration(orgId: string, type: 'static_post' | 'carousel' | 'video' | string) {
     try {
-      const cost = type === 'carousel' ? 3 : 1;
+      let cost = 1;
+      if (type === 'carousel') cost = 3;
+      if (type === 'video') cost = 5;
       const newBalance = await this.repository.deductTokens(orgId, cost, `${type}_generation`);
       return newBalance;
     } catch (error: any) {
