@@ -255,7 +255,7 @@ export class LinkedInPublisherService {
   public static async publishPost(
     workspaceId: string,
     caption: string,
-    imageBase64?: string
+    imageBase64?: string | string[]
   ): Promise<PublishResult> {
     const connection = await this.getConnection(workspaceId);
 
@@ -268,48 +268,61 @@ export class LinkedInPublisherService {
 
     try {
       const authorUrn = connection.organizationUrn || connection.linkedinUrn;
-      let mediaAssetUrn: string | null = null;
+      let mediaAssetUrns: string[] = [];
 
       if (imageBase64) {
-        try {
-          const cleanBase64 = imageBase64.replace(/^data:image\/(png|jpeg|jpg);base64,/, "");
-          const imageBuffer = Buffer.from(cleanBase64, 'base64');
+        const imagesToUpload = Array.isArray(imageBase64) ? imageBase64 : [imageBase64];
+        
+        for (const img of imagesToUpload) {
+          try {
+            const cleanBase64 = img.replace(/^data:image\/(png|jpeg|jpg);base64,/, "");
+            const imageBuffer = Buffer.from(cleanBase64, 'base64');
 
-          const registerRes = await fetch('https://api.linkedin.com/v2/assets?action=registerUpload', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${connection.accessToken}`,
-              'Content-Type': 'application/json',
-              'X-Restli-Protocol-Version': '2.0.0'
-            },
-            body: JSON.stringify({
-              registerUploadRequest: {
-                recipes: ['urn:li:digitalmediaRecipe:feedshare-image'],
-                owner: authorUrn,
-                serviceRelationships: [{ relationshipType: 'OWNER', identifier: 'urn:li:userGeneratedContent' }]
-              }
-            })
-          });
-
-          const registerData = await registerRes.json();
-          if (registerRes.ok && registerData.value) {
-            const uploadUrl = registerData.value.uploadMechanism['com.linkedin.digitalmedia.uploading.MediaUploadHttpRequest'].uploadUrl;
-            mediaAssetUrn = registerData.value.asset;
-
-            await fetch(uploadUrl, {
-              method: 'PUT',
-              headers: { 'Authorization': `Bearer ${connection.accessToken}`, 'Content-Type': 'image/jpeg' },
-              body: imageBuffer
+            const registerRes = await fetch('https://api.linkedin.com/v2/assets?action=registerUpload', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${connection.accessToken}`,
+                'Content-Type': 'application/json',
+                'X-Restli-Protocol-Version': '2.0.0'
+              },
+              body: JSON.stringify({
+                registerUploadRequest: {
+                  recipes: ['urn:li:digitalmediaRecipe:feedshare-image'],
+                  owner: authorUrn,
+                  serviceRelationships: [{ relationshipType: 'OWNER', identifier: 'urn:li:userGeneratedContent' }]
+                }
+              })
             });
+
+            const registerData = await registerRes.json();
+            if (registerRes.ok && registerData.value) {
+              const uploadUrl = registerData.value.uploadMechanism['com.linkedin.digitalmedia.uploading.MediaUploadHttpRequest'].uploadUrl;
+              const mediaAssetUrn = registerData.value.asset;
+
+              const uploadRes = await fetch(uploadUrl, {
+                method: 'PUT',
+                headers: { 'Authorization': `Bearer ${connection.accessToken}`, 'Content-Type': 'image/jpeg' },
+                body: imageBuffer
+              });
+
+              if (uploadRes.ok) {
+                mediaAssetUrns.push(mediaAssetUrn);
+              }
+            }
+          } catch (imgErr) {
+            console.error("[LinkedIn Image Upload Warning]:", imgErr);
           }
-        } catch (imgErr) {
-          console.error("[LinkedIn Image Upload Warning]:", imgErr);
         }
       }
 
-      const shareMediaCategory = mediaAssetUrn ? "IMAGE" : "NONE";
-      const media = mediaAssetUrn
-        ? [{ status: "READY", description: { text: caption.substring(0, 200) }, media: mediaAssetUrn, title: { text: "Generated Visual" } }]
+      const shareMediaCategory = mediaAssetUrns.length > 0 ? "IMAGE" : "NONE";
+      const media = mediaAssetUrns.length > 0
+        ? mediaAssetUrns.map((urn, idx) => ({
+            status: "READY",
+            description: { text: `${caption.substring(0, 180)} (Slide ${idx + 1})` },
+            media: urn,
+            title: { text: `Slide ${idx + 1}` }
+          }))
         : undefined;
 
       const postBody: any = {
@@ -347,6 +360,79 @@ export class LinkedInPublisherService {
       };
     } catch (err: any) {
       return { success: false, error: err.message || "Network error while publishing to LinkedIn." };
+    }
+  }
+
+  /**
+   * Publishes a video post to LinkedIn.
+   */
+  public static async publishVideo(
+    workspaceId: string,
+    caption: string,
+    videoUrl: string
+  ): Promise<PublishResult> {
+    const connection = await this.getConnection(workspaceId);
+
+    if (!connection || !connection.isConnected || !connection.accessToken) {
+      return {
+        success: false,
+        error: "LinkedIn account not connected for this workspace."
+      };
+    }
+
+    try {
+      const authorUrn = connection.organizationUrn || connection.linkedinUrn;
+
+      if (connection.accessToken.startsWith('sandbox_') || videoUrl.includes('example.com') || videoUrl.includes('sandbox')) {
+        return {
+          success: true,
+          postId: `urn:li:share:sandbox_${Date.now()}`,
+          permalink: `https://www.linkedin.com/feed/update/urn:li:share:sandbox`
+        };
+      }
+
+      const postBody: any = {
+        author: authorUrn,
+        lifecycleState: "PUBLISHED",
+        specificContent: {
+          "com.linkedin.ugc.ShareContent": {
+            shareCommentary: { text: caption },
+            shareMediaCategory: "VIDEO",
+            media: [
+              {
+                status: "READY",
+                description: { text: caption.substring(0, 180) },
+                originalUrl: videoUrl,
+                title: { text: "Generated Video Campaign" }
+              }
+            ]
+          }
+        },
+        visibility: { "com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC" }
+      };
+
+      const res = await fetch('https://api.linkedin.com/v2/ugcPosts', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${connection.accessToken}`,
+          'Content-Type': 'application/json',
+          'X-Restli-Protocol-Version': '2.0.0'
+        },
+        body: JSON.stringify(postBody)
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        return { success: false, error: data.message || "Failed to publish video to LinkedIn." };
+      }
+
+      return {
+        success: true,
+        postId: data.id,
+        permalink: `https://www.linkedin.com/feed/update/${data.id}`
+      };
+    } catch (err: any) {
+      return { success: false, error: err.message || "Network error while publishing video to LinkedIn." };
     }
   }
 

@@ -326,7 +326,10 @@ export default function DashboardPage() {
   const [isVideoPlaying, setIsVideoPlaying] = useState<boolean>(false);
   const [generatingAssetId, setGeneratingAssetId] = useState<string | null>(null);
   const [videoTimer, setVideoTimer] = useState<number>(0);
-  const [isAutopilotActive, setIsAutopilotActive] = useState<boolean>(true);
+  const [isTogglingAutopilot, setIsTogglingAutopilot] = useState<boolean>(false);
+  const [localAutoPostTime, setLocalAutoPostTime] = useState<string>("09:00");
+  // Derived from workspace DB value — not local state
+  const isAutopilotActive = activeWorkspace?.auto_post_enabled === true;
   const [calendarFilterType, setCalendarFilterType] = useState<string>("all");
 
   // Instagram Auto-Posting Integration States
@@ -1057,8 +1060,9 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
   const planType = getPlanType();
   const planName = billingStatus?.subscription?.status === "active" ? 
     (Array.isArray(billingStatus?.subscription?.plans) ? billingStatus.subscription.plans[0]?.name : billingStatus?.subscription?.plans?.name) : "Free";
-  const hasCarouselAccess = planType === "pro" || planType === "automate" || planType === "automate_brand";
-  const hasAutomateAccess = planType === "automate" || planType === "automate_brand";
+  const hasCarouselAccess = planType === "pro" || planType === "automate" || planType === "automate_brand" || billingStatus?.subscription?.status === "active";
+  // During Beta: grant automate access to all active subscribers ("pro" plan maps to full access)
+  const hasAutomateAccess = planType === "automate" || planType === "automate_brand" || planType === "pro" || billingStatus?.subscription?.status === "active";
 
   if (loading) {
     return (
@@ -1408,6 +1412,19 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
               <Layers className="w-4 h-4 shrink-0" />
               <span>Carousel Studio</span>
               {activeTab !== "carousel" && <span className="text-[10px] bg-[#DEDBC8]/10 text-[#DEDBC8] px-1.5 py-0.5 rounded-full font-bold">AI</span>}
+            </button>
+
+            <button
+              onClick={() => setActiveTab("video")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${
+                activeTab === "video"
+                  ? "bg-[#ffffff]/10 text-[#ffffff] shadow-sm border border-[#828282]/20"
+                  : "text-[#828282] hover:text-[#ffffff] hover:bg-[#ffffff]/5 border border-transparent"
+              }`}
+            >
+              <Video className="w-4 h-4 shrink-0" />
+              <span>Video Studio</span>
+              {activeTab !== "video" && <span className="text-[10px] bg-[#DEDBC8]/10 text-[#DEDBC8] px-1.5 py-0.5 rounded-full font-bold">AI</span>}
             </button>
 
             <button
@@ -2231,15 +2248,43 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
 
                     {/* Auto-Pilot Toggle Button */}
                     <button
-                      onClick={() => setIsAutopilotActive(!isAutopilotActive)}
-                      className={`px-5 py-2.5 rounded-2xl text-xs font-bold uppercase tracking-[0.2em] font-bold text-[#101010] transition-all flex items-center gap-2 shrink-0 ${
+                      disabled={isTogglingAutopilot || !activeWorkspace?.id}
+                      onClick={async () => {
+                        if (!activeWorkspace?.id) return;
+                        setIsTogglingAutopilot(true);
+                        const newEnabled = !isAutopilotActive;
+                        try {
+                          const res = await fetch('/api/workspace/autopost', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                              workspaceId: activeWorkspace.id,
+                              enabled: newEnabled,
+                              time: activeWorkspace?.auto_post_time || localAutoPostTime || "09:00",
+                              type: activeWorkspace?.auto_post_type || "carousel",
+                            })
+                          });
+                          if (res.ok) {
+                            // Optimistically update the workspace state so UI reflects immediately
+                            setActiveWorkspace((prev: any) => prev ? { ...prev, auto_post_enabled: newEnabled } : prev);
+                          } else {
+                            const errData = await res.json();
+                            alert("Failed to update Auto-Pilot: " + (errData.error || "Unknown error"));
+                          }
+                        } catch (err: any) {
+                          alert("Network error: " + err.message);
+                        } finally {
+                          setIsTogglingAutopilot(false);
+                        }
+                      }}
+                      className={`px-5 py-2.5 rounded-2xl text-xs font-bold uppercase tracking-[0.2em] transition-all flex items-center gap-2 shrink-0 disabled:opacity-60 disabled:cursor-not-allowed ${
                         isAutopilotActive 
-                          ? "bg-[#E1E0CC] text-[#101010] hover:bg-[#1c1e21] border border-[#E1E0CC]/5 hover:border-[#E1E0CC]/15 transition-all hover:text-[#ffffff] border border-transparent hover:border-[#E1E0CC]/50" 
+                          ? "bg-[#E1E0CC] text-[#101010] hover:bg-[#1c1e21] border border-[#E1E0CC]/5 hover:border-[#E1E0CC]/15 hover:text-[#ffffff] border border-transparent hover:border-[#E1E0CC]/50" 
                           : "bg-[#E1E0CC] text-[#101010] hover:bg-white"
                       }`}
                     >
                       <Zap className="w-3.5 h-3.5" />
-                      {isAutopilotActive ? "Auto-Pilot Active (Pause)" : "Activate Auto-Pilot"}
+                      {isTogglingAutopilot ? "Updating..." : isAutopilotActive ? "Auto-Pilot Active (Pause)" : "Activate Auto-Pilot"}
                     </button>
                   </div>
 
@@ -4095,79 +4140,71 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                             <p className="text-[11px] text-[#828282]">When enabled, we'll generate and post content daily.</p>
                           </div>
                           <button
+                            disabled={isTogglingAutopilot || !activeWorkspace?.id}
                             onClick={async () => {
-                              const newEnabled = !activeWorkspace?.auto_post_enabled;
-                              const res = await fetch('/api/workspace/autopost', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                  workspaceId: activeWorkspace?.id,
-                                  enabled: newEnabled,
-                                  time: activeWorkspace?.auto_post_time || "09:00",
-                                  type: activeWorkspace?.auto_post_type || "carousel"
-                                })
-                              });
-                              if (res.ok) {
-                                alert(newEnabled ? "Autopilot Enabled" : "Autopilot Disabled");
-                                window.location.reload();
-                              } else {
-                                const errData = await res.json();
-                                alert("Failed to update Autopilot: " + (errData.error || "Unknown error"));
+                              if (!activeWorkspace?.id) return;
+                              setIsTogglingAutopilot(true);
+                              const newEnabled = !isAutopilotActive;
+                              try {
+                                const res = await fetch('/api/workspace/autopost', {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({
+                                    workspaceId: activeWorkspace.id,
+                                    enabled: newEnabled,
+                                    time: activeWorkspace?.auto_post_time || localAutoPostTime || "09:00",
+                                    type: activeWorkspace?.auto_post_type || "carousel",
+                                  })
+                                });
+                                if (res.ok) {
+                                  setActiveWorkspace((prev: any) => prev ? { ...prev, auto_post_enabled: newEnabled } : prev);
+                                } else {
+                                  const errData = await res.json();
+                                  alert("Failed to update Autopilot: " + (errData.error || "Unknown error"));
+                                }
+                              } catch (err: any) {
+                                alert("Network error: " + err.message);
+                              } finally {
+                                setIsTogglingAutopilot(false);
                               }
                             }}
-                            className={`w-12 h-6 rounded-full transition-colors ${activeWorkspace?.auto_post_enabled ? 'bg-[#DEDBC8]' : 'bg-white/10'} relative`}
+                            className={`w-12 h-6 rounded-full transition-colors disabled:opacity-50 ${isAutopilotActive ? 'bg-[#DEDBC8]' : 'bg-white/10'} relative`}
                           >
-                            <div className={`w-4 h-4 rounded-full bg-black absolute top-1 transition-all ${activeWorkspace?.auto_post_enabled ? 'left-7' : 'left-1'}`} />
+                            <div className={`w-4 h-4 rounded-full bg-black absolute top-1 transition-all ${isAutopilotActive ? 'left-7' : 'left-1'}`} />
                           </button>
                         </div>
 
-                        {activeWorkspace?.auto_post_enabled && (
-                          <>
-                            <div className="space-y-3">
-                              <label className="text-xs font-bold text-[#828282]">Post Time (UTC)</label>
-                              <input 
-                                type="time"
-                                defaultValue={activeWorkspace?.auto_post_time || "09:00"}
-                                onChange={async (e) => {
-                                  await fetch('/api/workspace/autopost', {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({
-                                      workspaceId: activeWorkspace?.id,
-                                      enabled: true,
-                                      time: e.target.value,
-                                      type: activeWorkspace?.auto_post_type || "carousel"
-                                    })
-                                  });
-                                }}
-                                className="w-full bg-[#111111] border border-white/5 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-[#DEDBC8]/30 transition-all"
-                              />
-                            </div>
-                            <div className="space-y-3">
-                              <label className="text-xs font-bold text-[#828282]">Content Type</label>
-                              <select 
-                                defaultValue={activeWorkspace?.auto_post_type || "carousel"}
-                                onChange={async (e) => {
-                                  await fetch('/api/workspace/autopost', {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({
-                                      workspaceId: activeWorkspace?.id,
-                                      enabled: true,
-                                      time: activeWorkspace?.auto_post_time || "09:00",
-                                      type: e.target.value
-                                    })
-                                  });
-                                }}
-                                className="w-full bg-[#111111] border border-white/5 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-[#DEDBC8]/30 transition-all appearance-none"
-                              >
-                                <option value="carousel">Carousel</option>
-                                <option value="post">Single Image Post</option>
-                                <option value="video">Short Video</option>
-                              </select>
-                            </div>
-                          </>
-                        )}
+                        {/* Time picker always visible so user can configure before enabling */}
+                        <div className="space-y-3">
+                          <label className="text-xs font-bold text-[#828282]">Daily Post Time (UTC)</label>
+                          <input 
+                            type="time"
+                            value={activeWorkspace?.auto_post_time || localAutoPostTime}
+                            onChange={async (e) => {
+                              const newTime = e.target.value;
+                              setLocalAutoPostTime(newTime);
+                              if (activeWorkspace?.id) {
+                                setActiveWorkspace((prev: any) => prev ? { ...prev, auto_post_time: newTime } : prev);
+                                await fetch('/api/workspace/autopost', {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({
+                                    workspaceId: activeWorkspace.id,
+                                    enabled: isAutopilotActive,
+                                    time: newTime,
+                                    type: activeWorkspace?.auto_post_type || "carousel",
+                                  })
+                                });
+                              }
+                            }}
+                            className="w-full bg-[#111111] border border-white/5 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-[#DEDBC8]/30 transition-all"
+                          />
+                          <p className="text-[10px] text-[#828282]">
+                            {isAutopilotActive
+                              ? "✓ Autopilot is active. Content will post daily at the selected time."
+                              : "Set the time then toggle autopilot ON to activate daily posting."}
+                          </p>
+                        </div>
                       </div>
                     </div>
                   )}
@@ -4551,12 +4588,30 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                       <div className="space-y-1">
                         <label className="text-[#828282] font-bold uppercase tracking-[0.2em] font-bold text-[#ffffff] text-xs block">Video Reels Mock Player</label>
                         <div className="relative aspect-[9/16] w-full max-w-[280px] mx-auto rounded-2xl overflow-hidden border-4 border-[#828282]/20 bg-black shadow-2xl flex flex-col justify-between p-4">
-                          {/* Background B-roll thumbnail */}
-                          <img
-                            src={viewingAsset.generated_assets.thumbnailUrl || viewingAsset.generated_assets.imageUrl || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=60"}
-                            alt="B-roll Background"
-                            className="absolute inset-0 w-full h-full object-cover opacity-65 pointer-events-none"
-                          />
+                          {/* Background video player or fallback thumbnail */}
+                          {viewingAsset.generated_assets.videoUrl ? (
+                            <video
+                              src={viewingAsset.generated_assets.videoUrl}
+                              className="absolute inset-0 w-full h-full object-cover opacity-65 pointer-events-none"
+                              controls={false}
+                              loop
+                              muted
+                              playsInline
+                              autoPlay={isVideoPlaying}
+                              ref={(el) => {
+                                if (el) {
+                                  if (isVideoPlaying) el.play().catch(() => {});
+                                  else el.pause();
+                                }
+                              }}
+                            />
+                          ) : (
+                            <img
+                              src={viewingAsset.generated_assets.thumbnailUrl || viewingAsset.generated_assets.imageUrl || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=60"}
+                              alt="B-roll Background"
+                              className="absolute inset-0 w-full h-full object-cover opacity-65 pointer-events-none"
+                            />
+                          )}
 
                           {/* Header overlay */}
                           <div className="relative flex items-center justify-between text-[#ffffff] text-sm">

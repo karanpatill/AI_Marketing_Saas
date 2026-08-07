@@ -76,11 +76,20 @@ export async function POST(request: Request) {
       if (!caption) {
         return NextResponse.json({ error: 'Missing caption for publishing' }, { status: 400 });
       }
-      const result = await FacebookPublisherService.publishPost(
-        workspaceId,
-        caption,
-        body.imageBase64 || body.imageUrl
-      );
+      let result;
+      if (body.videoUrl) {
+        result = await FacebookPublisherService.publishVideo(
+          workspaceId,
+          caption,
+          body.videoUrl
+        );
+      } else {
+        result = await FacebookPublisherService.publishPost(
+          workspaceId,
+          caption,
+          body.imageBase64 || body.imageUrl
+        );
+      }
       return NextResponse.json(result);
     }
 

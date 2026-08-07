@@ -58,6 +58,31 @@ export class AutomationPublishingService {
     logger.info({ workspaceId, outputReference }, "Publishing asset to connected accounts");
     
     try {
+      // Handle Video Assets
+      if (outputReference?.videoUrl) {
+        const caption = outputReference.caption || "Automated generated video #AI";
+        const { FacebookPublisherService } = await import('./social/FacebookPublisherService');
+        const { LinkedInPublisherService } = await import('./social/LinkedInPublisherService');
+
+        logger.info({ workspaceId }, 'Attempting to publish video to Facebook...');
+        let fbResult = await FacebookPublisherService.publishVideo(workspaceId, caption, outputReference.videoUrl);
+        if (fbResult.success) {
+          logger.info(`Successfully published video to Facebook: ${fbResult.postId}`);
+        } else {
+          logger.warn(`Failed to publish video to Facebook: ${fbResult.error}`);
+        }
+
+        logger.info({ workspaceId }, 'Attempting to publish video to LinkedIn...');
+        let inResult = await LinkedInPublisherService.publishVideo(workspaceId, caption, outputReference.videoUrl);
+        if (inResult.success) {
+          logger.info(`Successfully published video to LinkedIn`);
+        } else {
+          logger.warn(`Failed to publish video to LinkedIn: ${inResult.error}`);
+        }
+
+        return { success: true, fbResult, inResult };
+      }
+
       let base64Images: string[] = [];
 
       // Check if we have HTML to render from AI generation
@@ -99,13 +124,11 @@ export class AutomationPublishingService {
 
       const caption = outputReference.caption || "Automated generated content #AI";
       
-      const imageBase64 = base64Images[0]; // For now, we take the first image (or slide)
-      
       const { FacebookPublisherService } = await import('./social/FacebookPublisherService');
       const { LinkedInPublisherService } = await import('./social/LinkedInPublisherService');
 
       logger.info({ workspaceId }, 'Attempting to publish to Facebook...');
-      let fbResult = await FacebookPublisherService.publishPost(workspaceId, caption, imageBase64);
+      let fbResult = await FacebookPublisherService.publishPost(workspaceId, caption, base64Images);
       if (fbResult.success) {
         logger.info(`Successfully published asset to Facebook: ${fbResult.postId}`);
       } else {
@@ -113,7 +136,7 @@ export class AutomationPublishingService {
       }
 
       logger.info({ workspaceId }, 'Attempting to publish to LinkedIn...');
-      let inResult = await LinkedInPublisherService.publishPost(workspaceId, caption, imageBase64);
+      let inResult = await LinkedInPublisherService.publishPost(workspaceId, caption, base64Images);
       if (inResult.success) {
         logger.info(`Successfully published asset to LinkedIn`);
       } else {

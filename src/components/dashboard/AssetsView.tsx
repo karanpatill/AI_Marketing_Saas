@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { toJpeg } from "html-to-image";
-import { Loader2, Image as ImageIcon, Layers, Download, ExternalLink, Calendar as CalendarIcon, Clock, Share2 } from "lucide-react";
+import { Loader2, Image as ImageIcon, Layers, Video, Download, ExternalLink, Calendar as CalendarIcon, Clock, Share2 } from "lucide-react";
 import { format } from "date-fns";
 import { LinkedInPublishModal } from "./LinkedInPublishModal";
 import { FacebookPublishModal } from "./FacebookPublishModal";
@@ -27,7 +27,7 @@ export function AssetsView({ workspaceId, refreshKey = 0 }: { workspaceId: strin
     if (ratio === '4/5' || ratio === '4:5') return { width: 1080, height: 1350, tw: 'aspect-[4/5]' };
     return { width: 1080, height: 1080, tw: 'aspect-square' };
   };
-  const [activeSubTab, setActiveSubTab] = useState<"image" | "carousel">("image");
+  const [activeSubTab, setActiveSubTab] = useState<"image" | "carousel" | "video">("image");
   const [assets, setAssets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [publishModal, setPublishModal] = useState<{ open: boolean; asset: any | null }>({ open: false, asset: null });
@@ -121,12 +121,17 @@ export function AssetsView({ workspaceId, refreshKey = 0 }: { workspaceId: strin
   const handlePublishToLinkedIn = async (asset: any, caption: string) => {
     const dim = getDimensionsForRatio(asset.metadata?.aspectRatio);
     let imageBase64 = "";
+    let videoUrl = "";
 
-    const html = asset.metadata?.html || asset.metadata?.html_content;
-    if (html) {
-      imageBase64 = await renderHtmlToImage(html, dim.width, dim.height);
-    } else if (asset.metadata?.imageUrl) {
-      imageBase64 = asset.metadata.imageUrl;
+    if (activeSubTab === "video") {
+      videoUrl = asset.metadata?.videoUrl || asset.file_url;
+    } else {
+      const html = asset.metadata?.html || asset.metadata?.html_content;
+      if (html) {
+        imageBase64 = await renderHtmlToImage(html, dim.width, dim.height);
+      } else if (asset.metadata?.imageUrl) {
+        imageBase64 = asset.metadata.imageUrl;
+      }
     }
 
     const res = await fetch("/api/social/linkedin", {
@@ -136,7 +141,7 @@ export function AssetsView({ workspaceId, refreshKey = 0 }: { workspaceId: strin
         action: "publish",
         workspaceId,
         caption,
-        imageBase64
+        ...(videoUrl ? { videoUrl } : { imageBase64 })
       })
     });
     const data = await res.json();
@@ -148,12 +153,17 @@ export function AssetsView({ workspaceId, refreshKey = 0 }: { workspaceId: strin
   const handlePublishToFacebook = async (asset: any, caption: string) => {
     const dim = getDimensionsForRatio(asset.metadata?.aspectRatio);
     let imageBase64 = "";
+    let videoUrl = "";
 
-    const html = asset.metadata?.html || asset.metadata?.html_content;
-    if (html) {
-      imageBase64 = await renderHtmlToImage(html, dim.width, dim.height);
-    } else if (asset.metadata?.imageUrl) {
-      imageBase64 = asset.metadata.imageUrl;
+    if (activeSubTab === "video") {
+      videoUrl = asset.metadata?.videoUrl || asset.file_url;
+    } else {
+      const html = asset.metadata?.html || asset.metadata?.html_content;
+      if (html) {
+        imageBase64 = await renderHtmlToImage(html, dim.width, dim.height);
+      } else if (asset.metadata?.imageUrl) {
+        imageBase64 = asset.metadata.imageUrl;
+      }
     }
 
     const res = await fetch("/api/social/facebook", {
@@ -163,7 +173,7 @@ export function AssetsView({ workspaceId, refreshKey = 0 }: { workspaceId: strin
         action: "publish",
         workspaceId,
         caption,
-        imageBase64
+        ...(videoUrl ? { videoUrl } : { imageBase64 })
       })
     });
     const data = await res.json();
@@ -175,12 +185,17 @@ export function AssetsView({ workspaceId, refreshKey = 0 }: { workspaceId: strin
   const handlePublishToInstagram = async (asset: any, caption: string) => {
     const dim = getDimensionsForRatio(asset.metadata?.aspectRatio);
     let imageBase64 = "";
+    let videoUrl = "";
 
-    const html = asset.metadata?.html || asset.metadata?.html_content;
-    if (html) {
-      imageBase64 = await renderHtmlToImage(html, dim.width, dim.height);
-    } else if (asset.metadata?.imageUrl) {
-      imageBase64 = asset.metadata.imageUrl;
+    if (activeSubTab === "video") {
+      videoUrl = asset.metadata?.videoUrl || asset.file_url;
+    } else {
+      const html = asset.metadata?.html || asset.metadata?.html_content;
+      if (html) {
+        imageBase64 = await renderHtmlToImage(html, dim.width, dim.height);
+      } else if (asset.metadata?.imageUrl) {
+        imageBase64 = asset.metadata.imageUrl;
+      }
     }
 
     const res = await fetch("/api/social/instagram", {
@@ -190,7 +205,7 @@ export function AssetsView({ workspaceId, refreshKey = 0 }: { workspaceId: strin
         action: "publish",
         workspaceId,
         caption,
-        imageUrl: imageBase64
+        ...(videoUrl ? { videoUrl } : { imageUrl: imageBase64 })
       })
     });
     const data = await res.json();
@@ -206,7 +221,7 @@ export function AssetsView({ workspaceId, refreshKey = 0 }: { workspaceId: strin
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold tracking-tight text-[#ffffff]">Generated Assets</h2>
-          <p className="text-sm text-[#828282] mt-1">Access your historical generated images and carousels.</p>
+          <p className="text-sm text-[#828282] mt-1">Access your historical generated images, carousels, and videos.</p>
         </div>
       </div>
 
@@ -232,6 +247,16 @@ export function AssetsView({ workspaceId, refreshKey = 0 }: { workspaceId: strin
         >
           <Layers className="w-4 h-4" /> Carousels
         </button>
+        <button
+          onClick={() => setActiveSubTab("video")}
+          className={`px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${
+            activeSubTab === "video"
+              ? "bg-[#DEDBC8] text-black"
+              : "text-[#828282] hover:text-white bg-[#ffffff]/5 hover:bg-[#ffffff]/10"
+          }`}
+        >
+          <Video className="w-4 h-4" /> Videos
+        </button>
       </div>
 
       {/* Content */}
@@ -243,11 +268,11 @@ export function AssetsView({ workspaceId, refreshKey = 0 }: { workspaceId: strin
         ) : assets.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-center">
             <div className="w-16 h-16 rounded-2xl bg-[#ffffff]/5 flex items-center justify-center mb-4">
-              {activeSubTab === "image" ? <ImageIcon className="w-8 h-8 text-[#828282]" /> : <Layers className="w-8 h-8 text-[#828282]" />}
+              {activeSubTab === "image" ? <ImageIcon className="w-8 h-8 text-[#828282]" /> : (activeSubTab === "carousel" ? <Layers className="w-8 h-8 text-[#828282]" /> : <Video className="w-8 h-8 text-[#828282]" />)}
             </div>
             <h3 className="text-lg font-bold text-white mb-2">No {activeSubTab}s found</h3>
             <p className="text-sm text-[#828282] max-w-sm">
-              You haven't generated any {activeSubTab}s yet. Head over to the {activeSubTab === "image" ? "Campaign Generate" : "Carousel Studio"} to create your first asset.
+              You haven't generated any {activeSubTab}s yet. Head over to the {activeSubTab === "image" ? "Campaign Generate" : (activeSubTab === "carousel" ? "Carousel Studio" : "Studio Video")} to create your first asset.
             </p>
           </div>
         ) : (
@@ -285,6 +310,13 @@ export function AssetsView({ workspaceId, refreshKey = 0 }: { workspaceId: strin
                          {asset.metadata.slides.length} Slides
                        </div>
                     </div>
+                  ) : activeSubTab === "video" && (asset.metadata?.videoUrl || asset.file_url) ? (
+                    <video
+                      src={asset.metadata.videoUrl || asset.file_url}
+                      controls
+                      playsInline
+                      className="w-full h-full object-contain absolute inset-0 bg-black"
+                    />
                   ) : (
                     <div className="text-sm text-[#828282]">Preview not available</div>
                   )}
@@ -362,6 +394,19 @@ export function AssetsView({ workspaceId, refreshKey = 0 }: { workspaceId: strin
                          <Download className="w-4 h-4" />
                        </button>
                     )}
+
+                    {activeSubTab === "video" && (
+                        <a
+                          href={asset.metadata?.videoUrl || asset.file_url}
+                          download={`video-${asset.id}.mp4`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-10 h-10 rounded-full bg-[#DEDBC8] text-black flex items-center justify-center hover:scale-110 transition-transform"
+                          title="Download MP4 Video"
+                        >
+                          <Download className="w-4 h-4" />
+                        </a>
+                     )}
 
                       <button
                         onClick={(e) => {

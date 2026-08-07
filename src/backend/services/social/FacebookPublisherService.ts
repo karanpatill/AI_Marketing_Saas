@@ -271,7 +271,7 @@ export class FacebookPublisherService {
   public static async publishPost(
     workspaceId: string,
     caption: string,
-    imageBase64?: string
+    imageBase64?: string | string[]
   ): Promise<FacebookPublishResult> {
     const connection = await this.getConnection(workspaceId);
 
@@ -289,11 +289,43 @@ export class FacebookPublisherService {
       formData.append('access_token', connection.accessToken);
 
       if (imageBase64) {
-        endpoint = `https://graph.facebook.com/v19.0/${connection.pageId}/photos`;
-        const cleanBase64 = imageBase64.replace(/^data:image\/(png|jpeg|jpg);base64,/, "");
-        const imageBuffer = Buffer.from(cleanBase64, 'base64');
-        const blob = new Blob([imageBuffer], { type: 'image/jpeg' });
-        formData.append('source', blob, 'image.jpeg');
+        if (Array.isArray(imageBase64)) {
+          // Multi-image post (carousel)
+          const photoIds: string[] = [];
+          for (const img of imageBase64) {
+            const cleanBase64 = img.replace(/^data:image\/(png|jpeg|jpg);base64,/, "");
+            const imageBuffer = Buffer.from(cleanBase64, 'base64');
+            const blob = new Blob([imageBuffer], { type: 'image/jpeg' });
+            
+            const photoFormData = new FormData();
+            photoFormData.append('source', blob, 'image.jpeg');
+            photoFormData.append('published', 'false');
+            photoFormData.append('access_token', connection.accessToken);
+            
+            const photoRes = await fetch(`https://graph.facebook.com/v19.0/${connection.pageId}/photos`, {
+              method: 'POST',
+              body: photoFormData
+            });
+            const photoData = await photoRes.json();
+            if (photoRes.ok && photoData.id) {
+              photoIds.push(photoData.id);
+            } else {
+              console.warn("Failed to upload photo for Facebook carousel:", photoData);
+            }
+          }
+
+          if (photoIds.length > 0) {
+            const attachedMedia = photoIds.map(id => ({ media_fbid: id }));
+            formData.append('attached_media', JSON.stringify(attachedMedia));
+          }
+        } else {
+          // Single image post
+          endpoint = `https://graph.facebook.com/v19.0/${connection.pageId}/photos`;
+          const cleanBase64 = imageBase64.replace(/^data:image\/(png|jpeg|jpg);base64,/, "");
+          const imageBuffer = Buffer.from(cleanBase64, 'base64');
+          const blob = new Blob([imageBuffer], { type: 'image/jpeg' });
+          formData.append('source', blob, 'image.jpeg');
+        }
       }
 
       const res = await fetch(endpoint, { method: 'POST', body: formData });
@@ -311,6 +343,56 @@ export class FacebookPublisherService {
       };
     } catch (err: any) {
       return { success: false, error: err.message || "Network error while publishing to Facebook." };
+    }
+  }
+
+  /**
+   * Publishes a video post to Facebook Page Feed.
+   */
+  public static async publishVideo(
+    workspaceId: string,
+    caption: string,
+    videoUrl: string
+  ): Promise<FacebookPublishResult> {
+    const connection = await this.getConnection(workspaceId);
+
+    if (!connection || !connection.isConnected || !connection.accessToken || !connection.pageId) {
+      return {
+        success: false,
+        error: "Facebook Page not connected for this workspace."
+      };
+    }
+
+    try {
+      if (connection.accessToken.startsWith('sandbox_') || videoUrl.includes('example.com') || videoUrl.includes('sandbox')) {
+        return {
+          success: true,
+          postId: `fb_video_sandbox_${Date.now()}`,
+          permalink: `https://facebook.com/sandbox_video_post`
+        };
+      }
+
+      const endpoint = `https://graph.facebook.com/v19.0/${connection.pageId}/videos`;
+      const formData = new FormData();
+      formData.append('description', caption);
+      formData.append('file_url', videoUrl);
+      formData.append('access_token', connection.accessToken);
+
+      const res = await fetch(endpoint, { method: 'POST', body: formData });
+      const data = await res.json();
+
+      if (!res.ok) {
+        return { success: false, error: data.error?.message || "Failed to publish video to Facebook." };
+      }
+
+      const postId = data.id;
+      return {
+        success: true,
+        postId,
+        permalink: `https://facebook.com/${postId}`
+      };
+    } catch (err: any) {
+      return { success: false, error: err.message || "Network error while publishing video to Facebook." };
     }
   }
 }

@@ -88,13 +88,14 @@ export class GenerationManager {
         let assetType = 'other';
         if (job.job_type === 'generate_post') assetType = 'image';
         else if (job.job_type === 'generate_carousel') assetType = 'carousel';
+        else if (job.job_type === 'generate_video') assetType = 'video';
 
         // Don't duplicate if we already saved it (some jobs might retry, though jobs usually just fail)
         const { data: savedAsset, error: assetError } = await this.supabase.from('assets').insert({
           workspace_id: job.workspace_id,
           project_id: null,
           type: assetType,
-          file_url: 'generated', // We store the actual output in metadata for HTML/JSON since there is no single URL
+          file_url: result.outputReference?.videoUrl || 'generated', // We store the actual output in metadata for HTML/JSON since there is no single URL
           metadata: {
             ...result.outputReference,
             systemPrompt: optimizedPrompt
@@ -110,7 +111,7 @@ export class GenerationManager {
         if (job.input_payload?.calendarItemId) {
           const postPayload = {
             brand_dna_id: job.input_payload.brandDnaId,
-            post_type: job.job_type === 'generate_carousel' ? 'carousel' : 'static',
+            post_type: job.job_type === 'generate_carousel' ? 'carousel' : (job.job_type === 'generate_video' ? 'video' : 'static'),
             caption: result.outputReference?.caption || "",
             generated_assets: result.outputReference || {},
             is_winning: false,
