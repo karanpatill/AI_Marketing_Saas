@@ -13,79 +13,6 @@ import {
 import Navbar from "@/components/Navbar";
 
 // --- Types ---
-type LogoOption = {
-  id: string;
-  name: string;
-  description: string;
-  imageUrl: string | null;
-  svgContent?: string | null; // raw SVG string for inline rendering
-  error: string | null;
-};
-
-type MoodboardOption = {
-  id: string;
-  name: string;
-  tagline: string;
-  imageUrl: string | null;
-  error: string | null;
-};
-
-type BrandKit = {
-  kitVariant?: "A" | "B";
-  colors: {
-    primaryHex: string;
-    secondaryHex: string;
-    primaryRgb: string;
-    secondaryRgb: string;
-    primaryCmyk: string;
-    secondaryCmyk: string;
-    pantoneApprox: string;
-  };
-  typography: {
-    primaryFont: string;
-    bodyFont: string;
-    usage: string;
-  };
-  // guidelines is optional (AI response may not always include it)
-  guidelines?: {
-    safeZone: string;
-    minSize: string;
-    rules: string[];
-  };
-  // assets stored flat from API or under assets key
-  assets?: {
-    primaryLogoSvg: string;
-    secondaryLogoSvg: string;
-    monogramSvg: string;
-    iconSvg: string;
-    faviconSvg: string;
-    socialIconsSvg: string;
-    appIconSvg: string;
-  };
-  // API returns these at top level
-  primaryLogoSvg?: string;
-  secondaryLogoSvg?: string;
-  monogramSvg?: string;
-  iconSvg?: string;
-  faviconSvg?: string;
-  socialIconsSvg?: string;
-  appIconSvg?: string;
-};
-
-type MoodboardPalette = { name: string; hex: string; role: string };
-type MoodboardStyle = {
-  id: string;
-  name: string;
-  tagline: string;
-  palette: MoodboardPalette[];
-  typography: { headline: string; body: string; style: string };
-  keywords: string[];
-  gradient: string;
-  accentGradient: string;
-  texture: string;
-  imagePrompt: string;
-  generatedImageUrl: string | null;
-};
 
 type OnboardingData = {
   brandName: string;
@@ -119,7 +46,6 @@ type OnboardingData = {
   accentColor: string;
 
   // Brand Identity Studio
-  kitType: "upload" | "generate";
   logoUrl: string;
   productImages: string[];
   teamPhotos: string[];
@@ -128,11 +54,9 @@ type OnboardingData = {
   fonts: string[];
   icons: string[];
   brandGuidelinesFile: string;
-  // Selected logo from fal.ai generation
-  selectedLogo: { id: string; name: string; imageUrl: string } | null;
 
-  // Moodboard Studio — user picks one of 3 AI-generated options
-  approvedMoodboard: { id: string; name: string; tagline: string; imageUrl: string } | null;
+  // Moodboard Studio — user picks one of 3 preset options
+  approvedMoodboard: { id: string; name: string; tagline: string; imageUrl: string | null } | null;
 };
 
 const INITIAL_DATA: OnboardingData = {
@@ -167,7 +91,6 @@ const INITIAL_DATA: OnboardingData = {
   mainGoal: "",
 
   // Brand Identity Studio defaults
-  kitType: "generate",
   logoUrl: "",
   productImages: [],
   teamPhotos: [],
@@ -176,7 +99,6 @@ const INITIAL_DATA: OnboardingData = {
   fonts: [],
   icons: [],
   brandGuidelinesFile: "",
-  selectedLogo: null,
 
   // Moodboard Studio defaults
   approvedMoodboard: null,
@@ -395,28 +317,12 @@ export default function OnboardingPage() {
   const [newCompetitorInput, setNewCompetitorInput] = useState("");
   const [uploadingField, setUploadingField] = useState<string | null>(null);
 
-  // â”€â”€ Brand Logo Studio: 3-phase flow â”€â”€
-  // Phase A: Color Decision
-  const [hasDecidedColors, setHasDecidedColors] = useState<boolean | null>(null);
+  // ── Brand Logo Studio: Color Decision ──
   const [userPrimaryColor, setUserPrimaryColor] = useState("#0F172A");
   const [userSecondaryColor, setUserSecondaryColor] = useState("#0A0A0A");
-  // Phase B: Generation
-  const [isGeneratingKits, setIsGeneratingKits] = useState(false);
-  
-  // ── Brand Logo Studio (fal.ai image generation) ──
-  const [isGeneratingLogos, setIsGeneratingLogos] = useState(false);
-  const [logoOptions, setLogoOptions] = useState<LogoOption[]>([]);
-  const [logoError, setLogoError] = useState<string | null>(null);
-  const [isLogoApproved, setIsLogoApproved] = useState(false);
 
-  // ── Moodboard Studio (fal.ai — 3 options) ──
-  const [isGeneratingMoods, setIsGeneratingMoods] = useState(false);
-  const [moodOptions, setMoodOptions] = useState<MoodboardOption[]>([]);
-  const [moodError, setMoodError] = useState<string | null>(null);
-  const [moodboardImages, setMoodboardImages] = useState<Record<string, string | null>>({});
-  const [moodboardGeneratingId, setMoodboardGeneratingId] = useState<string | null>(null);
-  const [hoveredMood, setHoveredMood] = useState<string | null>(null);
-  const [inspectingMoodboard, setInspectingMoodboard] = useState<MoodboardOption | null>(null);
+  // ── Moodboard Studio — inspect modal ──
+  const [inspectingMoodboard, setInspectingMoodboard] = useState<{ id: string; name: string; tagline: string; imageUrl: string | null } | null>(null);
 
   // ── Tagline Generator ──
   const [isGeneratingTaglines, setIsGeneratingTaglines] = useState(false);
@@ -438,10 +344,6 @@ export default function OnboardingPage() {
           setData(parsed);
           if (parsed.usp && parsed.usp.trim().length > 0) {
             setHasTagline("yes");
-          }
-          if (parsed.selectedLogo) {
-            setIsLogoApproved(true);
-            setLogoOptions([parsed.selectedLogo]);
           }
         } else {
           setData(INITIAL_DATA);
@@ -469,8 +371,6 @@ export default function OnboardingPage() {
     if (window.confirm("Are you sure you want to clear your local onboarding draft cache and start a fresh brand?")) {
       localStorage.removeItem("automarc_onboarding_v6");
       setData(INITIAL_DATA);
-      setLogoOptions([]);
-      setMoodOptions([]);
       setStep(1);
       window.location.reload();
     }
@@ -526,99 +426,6 @@ export default function OnboardingPage() {
       alert("Could not extract details. Please enter manually.");
     } finally {
       setIsScanning(false);
-    }
-  };
-
-  // ── fal.ai Logo and Moodboard Generation Handlers ──
-  const handleGenerateLogos = async () => {
-    setIsGeneratingLogos(true);
-    setLogoError(null);
-    try {
-      const res = await fetch("/api/generate-logo", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          brandName: data.brandName,
-          industry: data.industry,
-          businessDescription: data.businessDescription,
-          brandPersonality: Array.isArray(data.brandPersonality)
-            ? (data.brandPersonality as string[]).join(", ")
-            : String(data.brandPersonality || "Modern"),
-          brandValues: Array.isArray(data.brandValues) ? data.brandValues : [],
-          usp: data.usp,
-          mission: data.mission,
-          userPrimaryColor: userPrimaryColor,
-          userSecondaryColor: userSecondaryColor,
-          kitVariant: "A",
-        }),
-      });
-      if (!res.ok) {
-        const errText = await res.text();
-        throw new Error(errText || `Server returned ${res.status}`);
-      }
-      const result = await res.json();
-      if (result.error) {
-        throw new Error(result.error);
-      }
-      // API now returns { logos: LogoOption[], kitData: {...} }
-      const logos = result.logos || [];
-      setLogoOptions(logos);
-    } catch (e: any) {
-      console.error("Logo generation error:", e);
-      setLogoError(e.message || "Failed to generate logos");
-    } finally {
-      setIsGeneratingLogos(false);
-    }
-  };
-
-  const handleGenerateMoodboards = async () => {
-    setIsGeneratingMoods(true);
-    setMoodError(null);
-    try {
-      const res = await fetch("/api/generate-moodboard", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          brandName: data.brandName,
-          industry: data.industry,
-          brandPersonality: data.brandPersonality,
-          brandValues: data.brandValues,
-          usp: data.usp,
-          website: data.website,
-          mission: data.mission,
-          vision: data.vision,
-          targetAudience: data.targetAudience,
-          customerPersonas: data.customerPersonas,
-          competitors: data.competitors,
-          primaryColor: userPrimaryColor,
-          secondaryColor: userSecondaryColor,
-        }),
-      });
-      if (!res.ok) {
-        const errText = await res.text();
-        throw new Error(errText || `Server returned ${res.status}`);
-      }
-      const result = await res.json();
-      if (result.error) {
-        throw new Error(result.error);
-      }
-      const moods = result.moodboards || [];
-      setMoodOptions(moods);
-      if (moods.length > 0) {
-        updateData({ 
-          approvedMoodboard: {
-            id: moods[0].id,
-            name: moods[0].name,
-            tagline: moods[0].tagline,
-            imageUrl: moods[0].imageUrl
-          }
-        });
-      }
-    } catch (e: any) {
-      console.error("Moodboard generation error:", e);
-      setMoodError(e.message || "Failed to generate moodboards");
-    } finally {
-      setIsGeneratingMoods(false);
     }
   };
 
@@ -772,9 +579,7 @@ export default function OnboardingPage() {
       case 4:
         return (data.platforms || []).length > 0 && data.mainGoal !== "";
       case 5:
-        if (data.kitType === "upload") return (data.logoUrl || "").trim().length > 0;
-        // For generate mode: must have selected a logo
-        return data.selectedLogo !== null;
+        return (data.logoUrl || "").trim().length > 0;
       case 6:
         // Moodboard Studio â€” must approve one moodboard
         return data.approvedMoodboard !== null;
@@ -905,7 +710,7 @@ export default function OnboardingPage() {
       // TRANSACTION STEP 2: Insert Brand Assets linked to DNA ID
       const { error: assetsError } = await supabase.from("brand_assets").insert({
         brand_dna_id: dnaResult.id,
-        logo_url: data.kitType === "generate" ? (data.selectedLogo?.imageUrl || "") : data.logoUrl,
+        logo_url: data.logoUrl || "",
         product_images: data.productImages,
         team_photos: data.teamPhotos,
         office_images: data.officeImages,
@@ -914,9 +719,8 @@ export default function OnboardingPage() {
         icons: data.icons,
         brand_guidelines: data.brandGuidelinesFile || "",
         logo_studio_data: {
-          ...(data.kitType === "generate" ? (data.selectedLogo || {}) : {}),
+          uploadUrl: data.logoUrl || "",
           colors: {
-            ...(data.kitType === "generate" && (data.selectedLogo as any)?.colors ? (data.selectedLogo as any).colors : {}),
             primaryHex: data.primaryColor || "#0D0D0D",
             secondaryHex: data.accentColor || "#DEDBC8",
           }
@@ -1838,13 +1642,9 @@ export default function OnboardingPage() {
             </div>
           )}
 
-          {/* â”€â”€â”€ Step 5: Brand Identity Studio (Upload or Generate with AI) â”€â”€â”€ */}
+          {/* ─── Step 5: Brand Identity Studio (Upload Only) ─── */}
           {step === 5 && (
             <div className="space-y-6 animate-fade-up">
-              {(() => {
-                const fontInfo = getPersonalityFont(data.brandPersonality);
-                return <style dangerouslySetInnerHTML={{ __html: fontInfo.import }} />;
-              })()}
               <div>
                 <span className="text-[9px] font-bold text-[#0A0A0A] uppercase tracking-widest bg-[#0A0A0A]/10 px-2.5 py-1 rounded-md">Phase 2</span>
                 <h2 className="text-lg font-bold text-white flex items-center gap-2 mt-2">
@@ -1852,644 +1652,284 @@ export default function OnboardingPage() {
                   Brand Identity Studio
                 </h2>
                 <p className="text-xs text-[#E1E0CC]/40 mt-1">
-                  Upload your pre-existing graphics or trigger the one-click AI generation engine to assemble your Brand Kit instantly.
+                  Upload your brand logo and visual media assets.
                 </p>
               </div>
 
-              {/* Toggle Controls */}
-              <div className="flex border border-[#E1E0CC]/15/80 bg-[#101010] p-1 rounded-2xl max-w-xs">
-                <button
-                  onClick={() => updateData({ kitType: "generate" })}
-                  className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all
-                    ${data.kitType === "generate" ? "bg-[#101010] text-white shadow-sm" : "text-[#E1E0CC]/60 hover:text-white"}`}
-                >
-                  AI Logo Studio
-                </button>
-                <button
-                  onClick={() => updateData({ kitType: "upload" })}
-                  className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all
-                    ${data.kitType === "upload" ? "bg-[#101010] text-white shadow-sm" : "text-[#E1E0CC]/60 hover:text-white"}`}
-                >
-                  Upload Assets
-                </button>
+              <div className="space-y-6">
+                {/* Category 1: Core Branding Assets */}
+                <div className="space-y-3">
+                  <h3 className="text-xs font-bold text-[#E1E0CC]/40 uppercase tracking-widest">1. Core Branding Assets</h3>
+                  <div className="grid grid-cols-1 gap-4">
+                    {/* Primary Logo */}
+                    <div className="border border-[#E1E0CC]/15/80 rounded-2xl p-4 flex flex-col justify-between bg-[#101010] min-h-[140px]">
+                      <div>
+                        <h4 className="font-bold text-white flex items-center gap-1.5 text-xs">
+                          <ImageIcon className="w-4 h-4 text-[#0A0A0A]" />
+                          Logo Graphic *
+                        </h4>
+                        <p className="text-[10px] text-[#E1E0CC]/40 mt-0.5">Upload brand logo (SVG/PNG).</p>
+                      </div>
+                      <div className="mt-3 flex items-center gap-4">
+                        {data.logoUrl ? (
+                          <div className="relative w-14 h-14 rounded-2xl border border-[#E1E0CC]/15 bg-[#0a0a0a] flex items-center justify-center p-1 group overflow-hidden shadow-sm shrink-0">
+                            <img src={data.logoUrl} alt="Logo" className="max-w-full max-h-full object-contain" />
+                            <button
+                              onClick={() => removeUploadedFile("logo")}
+                              className="absolute inset-0 bg-[#E1E0CC]/10/90 text-white text-[9px] font-bold opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        ) : (
+                          <label className={`px-3 py-1.5 bg-[#0a0a0a] border border-[#E1E0CC]/15 hover:bg-gray-100 text-[#E1E0CC]/80 text-xs font-bold rounded-lg transition-colors flex items-center gap-1 cursor-pointer shrink-0
+                            ${uploadingField === "logo" ? "opacity-50 cursor-not-allowed" : ""}`}>
+                            {uploadingField === "logo" ? <Loader2 className="w-3.5 h-3.5 animate-spin text-[#0A0A0A]" /> : <UploadCloud className="w-3.5 h-3.5 text-[#E1E0CC]/40" />}
+                            Upload Logo
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => handleRealFileUpload(e, "logo")}
+                              disabled={uploadingField !== null}
+                            />
+                          </label>
+                        )}
+                        {data.logoUrl && (
+                          <span className="text-[10px] text-[#E1E0CC] font-bold flex items-center gap-1">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-[#E1E0CC] fill-emerald-50" /> Loaded
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Category 2: Visual Media Assets */}
+                <div className="space-y-3">
+                  <h3 className="text-xs font-bold text-[#E1E0CC]/40 uppercase tracking-widest">2. Visual Media Assets</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Product Images */}
+                    <div className="border border-[#E1E0CC]/15/80 rounded-2xl p-4 bg-[#101010] space-y-3">
+                      <div>
+                        <h4 className="font-bold text-white flex items-center gap-1.5 text-xs">
+                          <ImageIcon className="w-4 h-4 text-[#0A0A0A]" />
+                          Product Images
+                        </h4>
+                        <p className="text-[10px] text-[#E1E0CC]/40 mt-0.5">Upload product captures or catalogs.</p>
+                      </div>
+                      <div className="flex flex-wrap gap-2 pt-1">
+                        {data.productImages.map((img, i) => (
+                          <div key={i} className="relative w-12 h-12 rounded-lg border border-[#E1E0CC]/15 overflow-hidden group shrink-0">
+                            <img src={img} alt="Product" className="w-full h-full object-cover" />
+                            <button
+                              onClick={() => removeUploadedFile("productImages", i)}
+                              className="absolute inset-0 bg-[#E1E0CC]/10/90 text-white text-[8px] font-bold opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        ))}
+                        <label className={`w-12 h-12 border border-dashed border-[#E1E0CC]/20 hover:border-brand-secondary rounded-lg flex flex-col items-center justify-center text-[#E1E0CC]/40 hover:text-[#0A0A0A] transition-colors cursor-pointer shrink-0
+                          ${uploadingField === "productImages" ? "opacity-50 cursor-not-allowed" : ""}`}>
+                          {uploadingField === "productImages" ? <Loader2 className="w-4 h-4 animate-spin text-brand-secondary" /> : <Plus className="w-4 h-4" />}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => handleRealFileUpload(e, "productImages")}
+                            disabled={uploadingField !== null}
+                          />
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* Team Photos */}
+                    <div className="border border-[#E1E0CC]/15/80 rounded-2xl p-4 bg-[#101010] space-y-3">
+                      <div>
+                        <h4 className="font-bold text-white flex items-center gap-1.5 text-xs">
+                          <Users className="w-4 h-4 text-[#0A0A0A]" />
+                          Team Photos
+                        </h4>
+                        <p className="text-[10px] text-[#E1E0CC]/40 mt-0.5">Upload headshots or group captures.</p>
+                      </div>
+                      <div className="flex flex-wrap gap-2 pt-1">
+                        {data.teamPhotos.map((img, i) => (
+                          <div key={i} className="relative w-12 h-12 rounded-lg border border-[#E1E0CC]/15 overflow-hidden group shrink-0">
+                            <img src={img} alt="Team" className="w-full h-full object-cover" />
+                            <button
+                              onClick={() => removeUploadedFile("teamPhotos", i)}
+                              className="absolute inset-0 bg-[#E1E0CC]/10/90 text-white text-[8px] font-bold opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        ))}
+                        <label className={`w-12 h-12 border border-dashed border-[#E1E0CC]/20 hover:border-brand-secondary rounded-lg flex flex-col items-center justify-center text-[#E1E0CC]/40 hover:text-[#0A0A0A] transition-colors cursor-pointer shrink-0
+                          ${uploadingField === "teamPhotos" ? "opacity-50 cursor-not-allowed" : ""}`}>
+                          {uploadingField === "teamPhotos" ? <Loader2 className="w-4 h-4 animate-spin text-brand-secondary" /> : <Plus className="w-4 h-4" />}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => handleRealFileUpload(e, "teamPhotos")}
+                            disabled={uploadingField !== null}
+                          />
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* Office Images */}
+                    <div className="border border-[#E1E0CC]/15/80 rounded-2xl p-4 bg-[#101010] space-y-3">
+                      <div>
+                        <h4 className="font-bold text-white flex items-center gap-1.5 text-xs">
+                          <Building className="w-4 h-4 text-[#0A0A0A]" />
+                          Office & Workspace Images
+                        </h4>
+                        <p className="text-[10px] text-[#E1E0CC]/40 mt-0.5">Upload building, workplace, or setup photos.</p>
+                      </div>
+                      <div className="flex flex-wrap gap-2 pt-1">
+                        {data.officeImages.map((img, i) => (
+                          <div key={i} className="relative w-12 h-12 rounded-lg border border-[#E1E0CC]/15 overflow-hidden group shrink-0">
+                            <img src={img} alt="Office" className="w-full h-full object-cover" />
+                            <button
+                              onClick={() => removeUploadedFile("officeImages", i)}
+                              className="absolute inset-0 bg-[#E1E0CC]/10/90 text-white text-[8px] font-bold opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        ))}
+                        <label className={`w-12 h-12 border border-dashed border-[#E1E0CC]/20 hover:border-brand-secondary rounded-lg flex flex-col items-center justify-center text-[#E1E0CC]/40 hover:text-[#0A0A0A] transition-colors cursor-pointer shrink-0
+                          ${uploadingField === "officeImages" ? "opacity-50 cursor-not-allowed" : ""}`}>
+                          {uploadingField === "officeImages" ? <Loader2 className="w-4 h-4 animate-spin text-brand-secondary" /> : <Plus className="w-4 h-4" />}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => handleRealFileUpload(e, "officeImages")}
+                            disabled={uploadingField !== null}
+                          />
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* Brand Videos */}
+                    <div className="border border-[#E1E0CC]/15/80 rounded-2xl p-4 bg-[#101010] space-y-3">
+                      <div>
+                        <h4 className="font-bold text-white flex items-center gap-1.5 text-xs">
+                          <Video className="w-4 h-4 text-[#0A0A0A]" />
+                          Brand Videos
+                        </h4>
+                        <p className="text-[10px] text-[#E1E0CC]/40 mt-0.5">Upload promotional videos or teasers.</p>
+                      </div>
+                      <div className="flex flex-wrap gap-2 pt-1">
+                        {data.brandVideos.map((vid, i) => (
+                          <div key={i} className="relative w-12 h-12 rounded-lg border border-[#E1E0CC]/15 overflow-hidden bg-[#0A0A0A] flex items-center justify-center group shrink-0">
+                            <Video className="w-5 h-5 text-white/50" />
+                            <button
+                              onClick={() => removeUploadedFile("brandVideos", i)}
+                              className="absolute inset-0 bg-[#E1E0CC]/10/90 text-white text-[8px] font-bold opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        ))}
+                        <label className={`w-12 h-12 border border-dashed border-[#E1E0CC]/20 hover:border-brand-secondary rounded-lg flex flex-col items-center justify-center text-[#E1E0CC]/40 hover:text-[#0A0A0A] transition-colors cursor-pointer shrink-0
+                          ${uploadingField === "brandVideos" ? "opacity-50 cursor-not-allowed" : ""}`}>
+                          {uploadingField === "brandVideos" ? <Loader2 className="w-4 h-4 animate-spin text-brand-secondary" /> : <Plus className="w-4 h-4" />}
+                          <input
+                            type="file"
+                            accept="video/*"
+                            className="hidden"
+                            onChange={(e) => handleRealFileUpload(e, "brandVideos")}
+                            disabled={uploadingField !== null}
+                          />
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Category 3: Design System Resources */}
+                <div className="space-y-3">
+                  <h3 className="text-xs font-bold text-[#E1E0CC]/40 uppercase tracking-widest">3. Design System Resources</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Fonts */}
+                    <div className="border border-[#E1E0CC]/15/80 rounded-2xl p-4 bg-[#101010] space-y-3">
+                      <div>
+                        <h4 className="font-bold text-white flex items-center gap-1.5 text-xs">
+                          <Type className="w-4 h-4 text-[#0A0A0A]" />
+                          Brand Fonts
+                        </h4>
+                        <p className="text-[10px] text-[#E1E0CC]/40 mt-0.5">Upload custom typography font files.</p>
+                      </div>
+                      <div className="flex flex-wrap gap-2 pt-1">
+                        {data.fonts.map((f, i) => (
+                          <div key={i} className="relative w-12 h-12 rounded-lg border border-[#E1E0CC]/15 bg-[#0a0a0a] flex items-center justify-center group shrink-0">
+                            <Type className="w-5 h-5 text-[#E1E0CC]/40" />
+                            <button
+                              onClick={() => removeUploadedFile("fonts", i)}
+                              className="absolute inset-0 bg-[#E1E0CC]/10/90 text-white text-[8px] font-bold opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        ))}
+                        <label className={`w-12 h-12 border border-dashed border-[#E1E0CC]/20 hover:border-brand-secondary rounded-lg flex flex-col items-center justify-center text-[#E1E0CC]/40 hover:text-[#0A0A0A] transition-colors cursor-pointer shrink-0
+                          ${uploadingField === "fonts" ? "opacity-50 cursor-not-allowed" : ""}`}>
+                          {uploadingField === "fonts" ? <Loader2 className="w-4 h-4 animate-spin text-brand-secondary" /> : <Plus className="w-4 h-4" />}
+                          <input
+                            type="file"
+                            accept=".woff,.woff2,.ttf,.otf"
+                            className="hidden"
+                            onChange={(e) => handleRealFileUpload(e, "fonts")}
+                            disabled={uploadingField !== null}
+                          />
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* Icons */}
+                    <div className="border border-[#E1E0CC]/15/80 rounded-2xl p-4 bg-[#101010] space-y-3">
+                      <div>
+                        <h4 className="font-bold text-white flex items-center gap-1.5 text-xs">
+                          <Sparkles className="w-4 h-4 text-[#0A0A0A]" />
+                          Brand Icons
+                        </h4>
+                        <p className="text-[10px] text-[#E1E0CC]/40 mt-0.5">Upload custom SVG/PNG icon sets.</p>
+                      </div>
+                      <div className="flex flex-wrap gap-2 pt-1">
+                        {data.icons.map((img, i) => (
+                          <div key={i} className="relative w-12 h-12 rounded-lg border border-[#E1E0CC]/15 overflow-hidden group shrink-0">
+                            <img src={img} alt="Icon" className="w-full h-full object-cover" />
+                            <button
+                              onClick={() => removeUploadedFile("icons", i)}
+                              className="absolute inset-0 bg-[#E1E0CC]/10/90 text-white text-[8px] font-bold opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        ))}
+                        <label className={`w-12 h-12 border border-dashed border-[#E1E0CC]/20 hover:border-brand-secondary rounded-lg flex flex-col items-center justify-center text-[#E1E0CC]/40 hover:text-[#0A0A0A] transition-colors cursor-pointer shrink-0
+                          ${uploadingField === "icons" ? "opacity-50 cursor-not-allowed" : ""}`}>
+                          {uploadingField === "icons" ? <Loader2 className="w-4 h-4 animate-spin text-brand-secondary" /> : <Plus className="w-4 h-4" />}
+                          <input
+                            type="file"
+                            accept="image/*,.svg"
+                            className="hidden"
+                            onChange={(e) => handleRealFileUpload(e, "icons")}
+                            disabled={uploadingField !== null}
+                          />
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
-              
-              {/* ── SUB-TAB: AI LOGO STUDIO (fal.ai Image Generation) ── */}
-              {data.kitType === "generate" && (
-                <div className="space-y-6">
-                  {/* Case 1: Logo is approved */}
-                  {isLogoApproved && data.selectedLogo ? (
-                    (() => {
-                      const fontInfo = getPersonalityFont(data.brandPersonality);
-                      const displayBrandName = fontInfo.name === "Montserrat" ? data.brandName.toUpperCase() : data.brandName;
-                      return (
-                        <div className="space-y-6">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <CheckCircle2 className="w-5 h-5 text-[#E1E0CC]" />
-                              <h4 className="text-sm font-bold text-white">
-                                Approved Brand Logo: {data.selectedLogo.name}
-                              </h4>
-                            </div>
-                            <button
-                              onClick={() => {
-                                updateData({ selectedLogo: null });
-                                setIsLogoApproved(false);
-                              }}
-                              className="text-[10px] text-[#E1E0CC]/40 hover:text-[#E1E0CC]/80 font-bold flex items-center gap-1 border border-[#E1E0CC]/15 px-3 py-1.5 rounded-lg transition-colors"
-                            >
-                              <Sparkles className="w-3 h-3" /> Change Logo
-                            </button>
-                          </div>
-
-                          <div className="max-w-md bg-[#101010] border border-[#E1E0CC]/10 rounded-2xl p-5 shadow-sm space-y-4">
-                            <div className="bg-[#101010] border border-[#E1E0CC]/10 rounded-2xl aspect-square w-full flex flex-col items-center justify-center p-8 relative overflow-hidden shadow-inner bg-gradient-to-b from-white to-gray-50/30">
-                              {/* Logo Symbol Mark */}
-                              <div className="flex-1 flex items-center justify-center w-full">
-                                <img
-                                  src={data.selectedLogo.imageUrl}
-                                  alt="Symbol Mark"
-                                  className="max-h-[55%] max-w-[55%] object-contain"
-                                />
-                              </div>
-                              {/* Styled Brand Typography */}
-                              <div className="pt-2 pb-4 text-center">
-                                <span 
-                                  className={`text-white ${fontInfo.textStyle}`}
-                                  style={{ fontFamily: fontInfo.family, fontSize: "1.25rem", lineHeight: "1.75rem" }}
-                                >
-                                  {displayBrandName}
-                                </span>
-                              </div>
-                            </div>
-                            <div className="flex justify-between items-center text-xs">
-                              <div>
-                                <span className="text-[#E1E0CC]/40 block text-[9px]">LOGO STYLE</span>
-                                <span className="font-bold text-[#E1E0CC]">{data.selectedLogo.name}</span>
-                              </div>
-                              <span className="text-[10px] text-[#E1E0CC] font-bold flex items-center gap-1">
-                                <CheckCircle2 className="w-3.5 h-3.5 text-[#E1E0CC] fill-emerald-50" /> Approved & Selected
-                              </span>
-                            </div>
-                          </div>
-
-                          {/* Logo Variations Suite (12+ Custom Layouts & Formats) */}
-                          <div className="border-t border-gray-150 pt-6 mt-6 space-y-4">
-                            <div>
-                              <h4 className="text-sm font-bold text-white">Dynamic Logo Variations Suite</h4>
-                              <p className="text-xs text-[#E1E0CC]/40 mt-0.5">Your brand identity package has been successfully compiled into 12 custom layout and color formats.</p>
-                            </div>
-                            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
-                              {/* 1. Primary Full Color */}
-                              <div className="bg-[#0a0a0a] border border-gray-150 rounded-2xl p-3 flex flex-col justify-between items-center text-center shadow-sm">
-                                <div className="w-12 h-12 flex items-center justify-center p-1 bg-[#101010] rounded-lg border border-[#E1E0CC]/10">
-                                  <img src={data.selectedLogo.imageUrl} alt="Primary" className="max-w-full max-h-full object-contain" />
-                                </div>
-                                <span className="text-[8px] font-bold text-[#E1E0CC]/60 mt-2 block">Primary Full Color</span>
-                              </div>
-
-                              {/* 2. Solid Black */}
-                              <div className="bg-[#101010] border border-gray-150 rounded-2xl p-3 flex flex-col justify-between items-center text-center shadow-sm">
-                                <div className="w-12 h-12 flex items-center justify-center p-1 bg-[#101010] rounded-lg">
-                                  <img src={data.selectedLogo.imageUrl} alt="Solid Black" className="max-w-full max-h-full object-contain" style={{ filter: "grayscale(1) contrast(1000%)" }} />
-                                </div>
-                                <span className="text-[8px] font-bold text-[#E1E0CC]/60 mt-2 block">Black Version</span>
-                              </div>
-
-                              {/* 3. Solid White Inverted */}
-                              <div className="bg-[#0A0A0A] border border-[#828282]/20 rounded-2xl p-3 flex flex-col justify-between items-center text-center shadow-sm">
-                                <div className="w-12 h-12 flex items-center justify-center p-1 bg-black rounded-lg">
-                                  <img src={data.selectedLogo.imageUrl} alt="Solid White" className="max-w-full max-h-full object-contain" style={{ filter: "grayscale(1) contrast(1000%) invert(1)" }} />
-                                </div>
-                                <span className="text-[8px] font-bold text-[#E1E0CC]/40 mt-2 block">White Inverted</span>
-                              </div>
-
-                              {/* 4. Grayscale */}
-                              <div className="bg-[#0a0a0a] border border-gray-150 rounded-2xl p-3 flex flex-col justify-between items-center text-center shadow-sm">
-                                <div className="w-12 h-12 flex items-center justify-center p-1 bg-[#101010] rounded-lg border border-[#E1E0CC]/10">
-                                  <img src={data.selectedLogo.imageUrl} alt="Grayscale" className="max-w-full max-h-full object-contain" style={{ filter: "grayscale(1)" }} />
-                                </div>
-                                <span className="text-[8px] font-bold text-[#E1E0CC]/60 mt-2 block">Grayscale</span>
-                              </div>
-
-                              {/* 5. Watermark */}
-                              <div className="bg-[#0a0a0a] border border-gray-150 rounded-2xl p-3 flex flex-col justify-between items-center text-center shadow-sm">
-                                <div className="w-12 h-12 flex items-center justify-center p-1 bg-[#101010] rounded-lg border border-[#E1E0CC]/10 relative">
-                                  <img src={data.selectedLogo.imageUrl} alt="Watermark" className="max-w-full max-h-full object-contain opacity-20" />
-                                </div>
-                                <span className="text-[8px] font-bold text-[#E1E0CC]/60 mt-2 block">Watermark (20% Op)</span>
-                              </div>
-
-                              {/* 6. Favicon / Icon */}
-                              <div className="bg-[#0a0a0a] border border-gray-150 rounded-2xl p-3 flex flex-col justify-between items-center text-center shadow-sm">
-                                <div className="w-12 h-12 flex items-center justify-center">
-                                  <div className="w-7 h-7 rounded-lg bg-[#0A0A0A] border border-white/10 flex items-center justify-center p-0.5 overflow-hidden shadow-sm">
-                                    <img src={data.selectedLogo.imageUrl} alt="Favicon" className="max-w-full max-h-full object-contain" />
-                                  </div>
-                                </div>
-                                <span className="text-[8px] font-bold text-[#E1E0CC]/60 mt-2 block">Favicon / App Icon</span>
-                              </div>
-
-                              {/* 7. Wordmark / Text */}
-                              <div className="bg-[#0a0a0a] border border-gray-150 rounded-2xl p-3 flex flex-col justify-between items-center text-center shadow-sm">
-                                <div className="w-12 h-12 flex items-center justify-center">
-                                  <span 
-                                    className={`text-center font-extrabold text-white ${fontInfo.textStyle}`}
-                                    style={{ fontFamily: fontInfo.family }}
-                                  >
-                                    {displayBrandName}
-                                  </span>
-                                </div>
-                                <span className="text-[8px] font-bold text-[#E1E0CC]/60 mt-2 block">Wordmark / Text</span>
-                              </div>
-
-                              {/* 8. Horizontal Layout */}
-                              <div className="bg-[#0a0a0a] border border-gray-150 rounded-2xl p-3 flex flex-col justify-between items-center text-center shadow-sm col-span-2 sm:col-span-1">
-                                <div className="w-full h-12 flex items-center justify-center gap-1.5 px-1 bg-[#101010] rounded-lg border border-[#E1E0CC]/10">
-                                  <img src={data.selectedLogo.imageUrl} alt="Icon" className="w-4 h-4 object-contain" style={{ filter: "grayscale(1) contrast(1000%)" }} />
-                                  <span 
-                                    className="text-[9px] font-bold text-white truncate max-w-[50px] uppercase"
-                                    style={{ fontFamily: fontInfo.family }}
-                                  >
-                                    {displayBrandName}
-                                  </span>
-                                </div>
-                                <span className="text-[8px] font-bold text-[#E1E0CC]/60 mt-2 block">Horizontal Layout</span>
-                              </div>
-
-                              {/* 9. Stacked / Vertical Layout */}
-                              <div className="bg-[#0a0a0a] border border-gray-150 rounded-2xl p-3 flex flex-col justify-between items-center text-center shadow-sm">
-                                <div className="w-12 h-12 flex flex-col items-center justify-center gap-0.5 bg-[#101010] rounded-lg border border-[#E1E0CC]/10">
-                                  <img src={data.selectedLogo.imageUrl} alt="Icon" className="w-4 h-4 object-contain" style={{ filter: "grayscale(1) contrast(1000%)" }} />
-                                  <span 
-                                    className="text-[7px] font-bold text-white max-w-[45px] truncate text-center uppercase"
-                                    style={{ fontFamily: fontInfo.family }}
-                                  >
-                                    {displayBrandName}
-                                  </span>
-                                </div>
-                                <span className="text-[8px] font-bold text-[#E1E0CC]/60 mt-2 block">Vertical Stacked</span>
-                              </div>
-
-                              {/* 10. Vintage Style */}
-                              <div className="bg-[#FAF6EE] border border-[#EBE3D5] rounded-2xl p-3 flex flex-col justify-between items-center text-center shadow-sm">
-                                <div className="w-12 h-12 flex items-center justify-center p-1 bg-[#FAF6EE] rounded-lg">
-                                  <img src={data.selectedLogo.imageUrl} alt="Vintage" className="max-w-full max-h-full object-contain" style={{ filter: "sepia(0.8) contrast(1.2)" }} />
-                                </div>
-                                <span className="text-[8px] font-bold text-[#E1E0CC] mt-2 block">Vintage / Retro</span>
-                              </div>
-
-                              {/* 11. Minimalist Style */}
-                              <div className="bg-[#0a0a0a] border border-gray-150 rounded-2xl p-3 flex flex-col justify-between items-center text-center shadow-sm">
-                                <div className="w-12 h-12 flex items-center justify-center p-1 bg-[#101010] rounded-lg border border-[#E1E0CC]/10">
-                                  <img src={data.selectedLogo.imageUrl} alt="Minimalist" className="max-w-full max-h-full object-contain" style={{ filter: "contrast(1.5) brightness(1.05)" }} />
-                                </div>
-                                <span className="text-[8px] font-bold text-[#E1E0CC]/60 mt-2 block">Minimalist</span>
-                              </div>
-
-                              {/* 12. Emblem / Badge Layout */}
-                              <div className="bg-[#0a0a0a] border border-gray-150 rounded-2xl p-3 flex flex-col justify-between items-center text-center shadow-sm">
-                                <div className="w-12 h-12 flex items-center justify-center">
-                                  <div className="w-9 h-9 rounded-full border-2 border-dashed border-gray-400 flex items-center justify-center p-1 overflow-hidden">
-                                    <img src={data.selectedLogo.imageUrl} alt="Emblem" className="max-w-full max-h-full object-contain" />
-                                  </div>
-                                </div>
-                                <span className="text-[8px] font-bold text-[#E1E0CC]/60 mt-2 block">Emblem Badge</span>
-                              </div>
-
-                            </div>
-
-                            {/* Continue Button for Variations Suite View */}
-                            <div className="pt-4 flex justify-end">
-                              <button
-                                onClick={() => setStep(6)}
-                                className="px-6 py-2.5 bg-[#0A0A0A] text-white hover:bg-[#1C1C1C] font-bold text-xs uppercase tracking-wider rounded-2xl transition-all flex items-center gap-2 shadow-lg shadow-black/10"
-                              >
-                                Continue to Social Media Visual Direction <ArrowRight className="w-4 h-4" />
-                              </button>
-                            </div>
-
-                          </div>
-                        </div>
-                      );
-                    })()
-                  ) : (
-                    // Case 2: No logo selected yet
-                    <div className="space-y-5">
-                      {/* Generation Actions / Prompt Trigger */}
-                      {logoOptions.length === 0 && !isGeneratingLogos && (
-                        <div className="bg-gradient-to-br from-[#0A0A0A] to-[#1C1C1C] border border-[#828282]/20 rounded-2xl p-7 text-center space-y-4">
-                          <div className="w-14 h-14 rounded-2xl bg-[#0A0A0A]/10 border border-[#0A0A0A]/20 flex items-center justify-center mx-auto">
-                            <Palette className="w-7 h-7 text-[#0A0A0A]" />
-                          </div>
-                          <div>
-                            <h4 className="text-base font-bold text-white">Generate Bespoke Brand Logo with AI</h4>
-                            <p className="text-xs text-[#E1E0CC]/40 max-w-sm mx-auto mt-1.5 leading-relaxed">
-                              Our AI will generate a premium, high-quality bespoke logo tailored to your brand personality using fal.ai Flux Dev.
-                            </p>
-                          </div>
-                          <button
-                            onClick={handleGenerateLogos}
-                            className="px-6 py-2.5 bg-[#0A0A0A] hover:bg-[#0A0A0A]/90 text-white font-bold text-xs uppercase tracking-wider rounded-2xl transition-all flex items-center gap-2 mx-auto shadow-lg shadow-[#0A0A0A]/20"
-                          >
-                            <Sparkles className="w-4 h-4" />
-                            Generate Custom Logo
-                          </button>
-                        </div>
-                      )}
-
-                      {/* Loading skeleton */}
-                      {isGeneratingLogos && (
-                        <div className="space-y-5">
-                          <div className="bg-[#0A0A0A] border border-[#828282]/20 rounded-2xl p-6 text-center space-y-2">
-                            <Loader2 className="w-8 h-8 text-white animate-spin mx-auto" />
-                            <h4 className="text-sm font-bold text-white">Generating 6 Brand Logos in Parallel...</h4>
-                            <p className="text-xs text-[#E1E0CC]/60">Generating premium brand logo. Please wait...</p>
-                          </div>
-                          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                            {Array.from({ length: 6 }).map((_, i) => (
-                              <div key={i} className="aspect-square bg-[#0A0A0A]/50 border border-[#828282]/20 rounded-2xl animate-pulse flex items-center justify-center">
-                                <Loader2 className="w-5 h-5 text-[#E1E0CC]/80 animate-spin" />
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Error state */}
-                      {logoError && (
-                        <div className="bg-[#E1E0CC]/10 border border-[#E1E0CC]/20 rounded-2xl p-4 text-xs text-[#E1E0CC] flex items-start gap-2">
-                          <AlertTriangle className="w-4 h-4 text-[#E1E0CC] shrink-0 mt-0.5" />
-                          <div>
-                            <p className="font-bold">Failed to generate logos</p>
-                            <p className="text-[#E1E0CC] mt-1">{formatFetchError(logoError)}</p>
-                            <button
-                              onClick={handleGenerateLogos}
-                              className="mt-2 text-white hover:underline font-bold"
-                            >
-                              Try Again
-                            </button>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Selection grid */}
-                      {logoOptions.length > 0 && !isGeneratingLogos && (
-                        <div className="space-y-4">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <h4 className="text-sm font-bold text-white">Review Generated Logo</h4>
-                              <p className="text-xs text-[#E1E0CC]/40 mt-0.5">Approve this custom logo to instantly compile your 12 brand assets.</p>
-                            </div>
-                            <button
-                              onClick={handleGenerateLogos}
-                              className="text-[10px] text-[#E1E0CC]/60 hover:text-white font-bold flex items-center gap-1 border border-[#E1E0CC]/15 px-3 py-1.5 rounded-lg transition-all"
-                            >
-                              <Sparkles className="w-3 h-3" /> Regenerate
-                            </button>
-                          </div>
-
-                          <div className="max-w-md mx-auto">
-                            {logoOptions.map((opt) => (
-                              <div
-                                key={opt.id}
-                                className="bg-[#101010] border border-[#828282]/20 rounded-2xl p-5 shadow-sm space-y-4"
-                              >
-                                {/* Logo Symbol Mark — inline SVG, no text */}
-                                <div className="bg-[#0A0A0A] border border-[#828282]/20 rounded-2xl aspect-square w-full flex items-center justify-center p-2 overflow-hidden shadow-inner">
-                                  {opt.svgContent ? (
-                                    <div
-                                      className="w-full h-full flex items-center justify-center [&>svg]:max-w-full [&>svg]:max-h-full [&>svg]:w-full [&>svg]:h-full"
-                                      dangerouslySetInnerHTML={{ __html: opt.svgContent }}
-                                    />
-                                  ) : opt.imageUrl ? (
-                                    <img
-                                      src={opt.imageUrl}
-                                      alt={opt.name}
-                                      className="w-full h-full object-cover rounded-xl"
-                                    />
-                                  ) : opt.error ? (
-                                    <div className="text-center p-2 text-[10px] text-[#E1E0CC] bg-[#E1E0CC]/10 rounded w-full">
-                                      {formatFetchError(opt.error)}
-                                    </div>
-                                  ) : (
-                                    <div className="text-center text-[10px] text-[#E1E0CC]/40">No preview</div>
-                                  )}
-                                </div>
-                                <div className="flex justify-between items-center text-xs">
-                                  <div>
-                                    <span className="text-[#E1E0CC]/40 block text-[9px]">LOGO STYLE</span>
-                                    <span className="font-bold text-[#E1E0CC]">{opt.name}</span>
-                                  </div>
-                                  <button
-                                    onClick={() => {
-                                      const svgForStorage = opt.svgContent
-                                        ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(opt.svgContent)}`
-                                        : opt.imageUrl;
-                                      if (svgForStorage) {
-                                        updateData({
-                                          selectedLogo: {
-                                            id: opt.id,
-                                            name: opt.name,
-                                            imageUrl: svgForStorage,
-                                          },
-                                        });
-                                        setIsLogoApproved(true);
-                                      }
-                                    }}
-                                    disabled={!opt.svgContent && !opt.imageUrl}
-                                    className="px-5 py-2.5 bg-[#0A0A0A] hover:bg-[#1C1C1C] text-white font-bold text-xs uppercase tracking-wider rounded-2xl transition-all shadow-sm shadow-[#0A0A0A]/10 flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
-                                  >
-                                    <CheckCircle2 className="w-3.5 h-3.5" /> Approve Logo
-                                  </button>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                </div>
-              )}
-
-              {/* ── SUB-TAB: MANUAL UPLOADS ── */}
-              {data.kitType === "upload" && (
-                <div className="space-y-6">
-                  {/* Category 1: Core Branding Assets */}
-                  <div className="space-y-3">
-                    <h3 className="text-xs font-bold text-[#E1E0CC]/40 uppercase tracking-widest">1. Core Branding Assets</h3>
-                    <div className="grid grid-cols-1 gap-4">
-                      {/* Primary Logo */}
-                      <div className="border border-[#E1E0CC]/15/80 rounded-2xl p-4 flex flex-col justify-between bg-[#101010] min-h-[140px]">
-                        <div>
-                          <h4 className="font-bold text-white flex items-center gap-1.5 text-xs">
-                            <ImageIcon className="w-4 h-4 text-[#0A0A0A]" />
-                            Logo Graphic *
-                          </h4>
-                          <p className="text-[10px] text-[#E1E0CC]/40 mt-0.5">Upload brand logo (SVG/PNG).</p>
-                        </div>
-                        <div className="mt-3 flex items-center gap-4">
-                          {data.logoUrl ? (
-                            <div className="relative w-14 h-14 rounded-2xl border border-[#E1E0CC]/15 bg-[#0a0a0a] flex items-center justify-center p-1 group overflow-hidden shadow-sm shrink-0">
-                              <img src={data.logoUrl} alt="Logo" className="max-w-full max-h-full object-contain" />
-                              <button
-                                onClick={() => removeUploadedFile("logo")}
-                                className="absolute inset-0 bg-[#E1E0CC]/10/90 text-white text-[9px] font-bold opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
-                              >
-                                Delete
-                              </button>
-                            </div>
-                          ) : (
-                            <label className={`px-3 py-1.5 bg-[#0a0a0a] border border-[#E1E0CC]/15 hover:bg-gray-100 text-[#E1E0CC]/80 text-xs font-bold rounded-lg transition-colors flex items-center gap-1 cursor-pointer shrink-0
-                              ${uploadingField === "logo" ? "opacity-50 cursor-not-allowed" : ""}`}>
-                              {uploadingField === "logo" ? <Loader2 className="w-3.5 h-3.5 animate-spin text-[#0A0A0A]" /> : <UploadCloud className="w-3.5 h-3.5 text-[#E1E0CC]/40" />}
-                              Upload Logo
-                              <input
-                                type="file"
-                                accept="image/*"
-                                className="hidden"
-                                onChange={(e) => handleRealFileUpload(e, "logo")}
-                                disabled={uploadingField !== null}
-                              />
-                            </label>
-                          )}
-                          {data.logoUrl && (
-                            <span className="text-[10px] text-[#E1E0CC] font-bold flex items-center gap-1">
-                              <CheckCircle2 className="w-3.5 h-3.5 text-[#E1E0CC] fill-emerald-50" /> Loaded
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Category 2: Visual Media Assets */}
-                  <div className="space-y-3">
-                    <h3 className="text-xs font-bold text-[#E1E0CC]/40 uppercase tracking-widest">2. Visual Media Assets</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {/* Product Images */}
-                      <div className="border border-[#E1E0CC]/15/80 rounded-2xl p-4 bg-[#101010] space-y-3">
-                        <div>
-                          <h4 className="font-bold text-white flex items-center gap-1.5 text-xs">
-                            <ImageIcon className="w-4 h-4 text-[#0A0A0A]" />
-                            Product Images
-                          </h4>
-                          <p className="text-[10px] text-[#E1E0CC]/40 mt-0.5">Upload product captures or catalogs.</p>
-                        </div>
-                        <div className="flex flex-wrap gap-2 pt-1">
-                          {data.productImages.map((img, i) => (
-                            <div key={i} className="relative w-12 h-12 rounded-lg border border-[#E1E0CC]/15 overflow-hidden group shrink-0">
-                              <img src={img} alt="Product" className="w-full h-full object-cover" />
-                              <button
-                                onClick={() => removeUploadedFile("productImages", i)}
-                                className="absolute inset-0 bg-[#E1E0CC]/10/90 text-white text-[8px] font-bold opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
-                              >
-                                Remove
-                              </button>
-                            </div>
-                          ))}
-                          <label className={`w-12 h-12 border border-dashed border-[#E1E0CC]/20 hover:border-brand-secondary rounded-lg flex flex-col items-center justify-center text-[#E1E0CC]/40 hover:text-[#0A0A0A] transition-colors cursor-pointer shrink-0
-                            ${uploadingField === "productImages" ? "opacity-50 cursor-not-allowed" : ""}`}>
-                            {uploadingField === "productImages" ? <Loader2 className="w-4 h-4 animate-spin text-brand-secondary" /> : <Plus className="w-4 h-4" />}
-                            <input
-                              type="file"
-                              accept="image/*"
-                              className="hidden"
-                              onChange={(e) => handleRealFileUpload(e, "productImages")}
-                              disabled={uploadingField !== null}
-                            />
-                          </label>
-                        </div>
-                      </div>
-
-                      {/* Team Photos */}
-                      <div className="border border-[#E1E0CC]/15/80 rounded-2xl p-4 bg-[#101010] space-y-3">
-                        <div>
-                          <h4 className="font-bold text-white flex items-center gap-1.5 text-xs">
-                            <Users className="w-4 h-4 text-[#0A0A0A]" />
-                            Team Photos
-                          </h4>
-                          <p className="text-[10px] text-[#E1E0CC]/40 mt-0.5">Upload headshots or group captures.</p>
-                        </div>
-                        <div className="flex flex-wrap gap-2 pt-1">
-                          {data.teamPhotos.map((img, i) => (
-                            <div key={i} className="relative w-12 h-12 rounded-lg border border-[#E1E0CC]/15 overflow-hidden group shrink-0">
-                              <img src={img} alt="Team" className="w-full h-full object-cover" />
-                              <button
-                                onClick={() => removeUploadedFile("teamPhotos", i)}
-                                className="absolute inset-0 bg-[#E1E0CC]/10/90 text-white text-[8px] font-bold opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
-                              >
-                                Remove
-                              </button>
-                            </div>
-                          ))}
-                          <label className={`w-12 h-12 border border-dashed border-[#E1E0CC]/20 hover:border-brand-secondary rounded-lg flex flex-col items-center justify-center text-[#E1E0CC]/40 hover:text-[#0A0A0A] transition-colors cursor-pointer shrink-0
-                            ${uploadingField === "teamPhotos" ? "opacity-50 cursor-not-allowed" : ""}`}>
-                            {uploadingField === "teamPhotos" ? <Loader2 className="w-4 h-4 animate-spin text-brand-secondary" /> : <Plus className="w-4 h-4" />}
-                            <input
-                              type="file"
-                              accept="image/*"
-                              className="hidden"
-                              onChange={(e) => handleRealFileUpload(e, "teamPhotos")}
-                              disabled={uploadingField !== null}
-                            />
-                          </label>
-                        </div>
-                      </div>
-
-                      {/* Office Images */}
-                      <div className="border border-[#E1E0CC]/15/80 rounded-2xl p-4 bg-[#101010] space-y-3">
-                        <div>
-                          <h4 className="font-bold text-white flex items-center gap-1.5 text-xs">
-                            <Building className="w-4 h-4 text-[#0A0A0A]" />
-                            Office & Workspace Images
-                          </h4>
-                          <p className="text-[10px] text-[#E1E0CC]/40 mt-0.5">Upload building, workplace, or setup photos.</p>
-                        </div>
-                        <div className="flex flex-wrap gap-2 pt-1">
-                          {data.officeImages.map((img, i) => (
-                            <div key={i} className="relative w-12 h-12 rounded-lg border border-[#E1E0CC]/15 overflow-hidden group shrink-0">
-                              <img src={img} alt="Office" className="w-full h-full object-cover" />
-                              <button
-                                onClick={() => removeUploadedFile("officeImages", i)}
-                                className="absolute inset-0 bg-[#E1E0CC]/10/90 text-white text-[8px] font-bold opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
-                              >
-                                Remove
-                              </button>
-                            </div>
-                          ))}
-                          <label className={`w-12 h-12 border border-dashed border-[#E1E0CC]/20 hover:border-brand-secondary rounded-lg flex flex-col items-center justify-center text-[#E1E0CC]/40 hover:text-[#0A0A0A] transition-colors cursor-pointer shrink-0
-                            ${uploadingField === "officeImages" ? "opacity-50 cursor-not-allowed" : ""}`}>
-                            {uploadingField === "officeImages" ? <Loader2 className="w-4 h-4 animate-spin text-brand-secondary" /> : <Plus className="w-4 h-4" />}
-                            <input
-                              type="file"
-                              accept="image/*"
-                              className="hidden"
-                              onChange={(e) => handleRealFileUpload(e, "officeImages")}
-                              disabled={uploadingField !== null}
-                            />
-                          </label>
-                        </div>
-                      </div>
-
-                      {/* Brand Videos */}
-                      <div className="border border-[#E1E0CC]/15/80 rounded-2xl p-4 bg-[#101010] space-y-3">
-                        <div>
-                          <h4 className="font-bold text-white flex items-center gap-1.5 text-xs">
-                            <Video className="w-4 h-4 text-[#0A0A0A]" />
-                            Brand Videos
-                          </h4>
-                          <p className="text-[10px] text-[#E1E0CC]/40 mt-0.5">Upload promotional videos or teasers.</p>
-                        </div>
-                        <div className="flex flex-wrap gap-2 pt-1">
-                          {data.brandVideos.map((vid, i) => (
-                            <div key={i} className="relative w-12 h-12 rounded-lg border border-[#E1E0CC]/15 overflow-hidden bg-[#0A0A0A] flex items-center justify-center group shrink-0">
-                              <Video className="w-5 h-5 text-white/50" />
-                              <button
-                                onClick={() => removeUploadedFile("brandVideos", i)}
-                                className="absolute inset-0 bg-[#E1E0CC]/10/90 text-white text-[8px] font-bold opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
-                              >
-                                Remove
-                              </button>
-                            </div>
-                          ))}
-                          <label className={`w-12 h-12 border border-dashed border-[#E1E0CC]/20 hover:border-brand-secondary rounded-lg flex flex-col items-center justify-center text-[#E1E0CC]/40 hover:text-[#0A0A0A] transition-colors cursor-pointer shrink-0
-                            ${uploadingField === "brandVideos" ? "opacity-50 cursor-not-allowed" : ""}`}>
-                            {uploadingField === "brandVideos" ? <Loader2 className="w-4 h-4 animate-spin text-brand-secondary" /> : <Plus className="w-4 h-4" />}
-                            <input
-                              type="file"
-                              accept="video/*"
-                              className="hidden"
-                              onChange={(e) => handleRealFileUpload(e, "brandVideos")}
-                              disabled={uploadingField !== null}
-                            />
-                          </label>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Category 3: Design System Resources */}
-                  <div className="space-y-3">
-                    <h3 className="text-xs font-bold text-[#E1E0CC]/40 uppercase tracking-widest">3. Design System Resources</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {/* Fonts */}
-                      <div className="border border-[#E1E0CC]/15/80 rounded-2xl p-4 bg-[#101010] space-y-3">
-                        <div>
-                          <h4 className="font-bold text-white flex items-center gap-1.5 text-xs">
-                            <Type className="w-4 h-4 text-[#0A0A0A]" />
-                            Brand Fonts
-                          </h4>
-                          <p className="text-[10px] text-[#E1E0CC]/40 mt-0.5">Upload custom typography font files.</p>
-                        </div>
-                        <div className="flex flex-wrap gap-2 pt-1">
-                          {data.fonts.map((f, i) => (
-                            <div key={i} className="relative w-12 h-12 rounded-lg border border-[#E1E0CC]/15 bg-[#0a0a0a] flex items-center justify-center group shrink-0">
-                              <Type className="w-5 h-5 text-[#E1E0CC]/40" />
-                              <button
-                                onClick={() => removeUploadedFile("fonts", i)}
-                                className="absolute inset-0 bg-[#E1E0CC]/10/90 text-white text-[8px] font-bold opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
-                              >
-                                Remove
-                              </button>
-                            </div>
-                          ))}
-                          <label className={`w-12 h-12 border border-dashed border-[#E1E0CC]/20 hover:border-brand-secondary rounded-lg flex flex-col items-center justify-center text-[#E1E0CC]/40 hover:text-[#0A0A0A] transition-colors cursor-pointer shrink-0
-                            ${uploadingField === "fonts" ? "opacity-50 cursor-not-allowed" : ""}`}>
-                            {uploadingField === "fonts" ? <Loader2 className="w-4 h-4 animate-spin text-brand-secondary" /> : <Plus className="w-4 h-4" />}
-                            <input
-                              type="file"
-                              accept=".woff,.woff2,.ttf,.otf"
-                              className="hidden"
-                              onChange={(e) => handleRealFileUpload(e, "fonts")}
-                              disabled={uploadingField !== null}
-                            />
-                          </label>
-                        </div>
-                      </div>
-
-                      {/* Icons */}
-                      <div className="border border-[#E1E0CC]/15/80 rounded-2xl p-4 bg-[#101010] space-y-3">
-                        <div>
-                          <h4 className="font-bold text-white flex items-center gap-1.5 text-xs">
-                            <Sparkles className="w-4 h-4 text-[#0A0A0A]" />
-                            Brand Icons
-                          </h4>
-                          <p className="text-[10px] text-[#E1E0CC]/40 mt-0.5">Upload custom SVG/PNG icon sets.</p>
-                        </div>
-                        <div className="flex flex-wrap gap-2 pt-1">
-                          {data.icons.map((img, i) => (
-                            <div key={i} className="relative w-12 h-12 rounded-lg border border-[#E1E0CC]/15 overflow-hidden group shrink-0">
-                              <img src={img} alt="Icon" className="w-full h-full object-cover" />
-                              <button
-                                onClick={() => removeUploadedFile("icons", i)}
-                                className="absolute inset-0 bg-[#E1E0CC]/10/90 text-white text-[8px] font-bold opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
-                              >
-                                Remove
-                              </button>
-                            </div>
-                          ))}
-                          <label className={`w-12 h-12 border border-dashed border-[#E1E0CC]/20 hover:border-brand-secondary rounded-lg flex flex-col items-center justify-center text-[#E1E0CC]/40 hover:text-[#0A0A0A] transition-colors cursor-pointer shrink-0
-                            ${uploadingField === "icons" ? "opacity-50 cursor-not-allowed" : ""}`}>
-                            {uploadingField === "icons" ? <Loader2 className="w-4 h-4 animate-spin text-brand-secondary" /> : <Plus className="w-4 h-4" />}
-                            <input
-                              type="file"
-                              accept="image/*,.svg"
-                              className="hidden"
-                              onChange={(e) => handleRealFileUpload(e, "icons")}
-                              disabled={uploadingField !== null}
-                            />
-                          </label>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
           )}
+
 
           {/* ─── Step 6: Moodboard Studio 🌟 ─── */}
           {step === 6 && (
@@ -2505,531 +1945,79 @@ export default function OnboardingPage() {
                 </p>
               </div>
 
-              {/* Case 1: Moodboard is selected */}
-              {data.approvedMoodboard ? (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <CheckCircle2 className="w-5 h-5 text-[#E1E0CC]" />
-                      <span className="text-xs font-bold text-white">Approved Moodboard: {data.approvedMoodboard.name}</span>
-                    </div>
-                    <button
-                      onClick={() => updateData({ approvedMoodboard: null })}
-                      className="text-[10px] text-[#E1E0CC]/40 hover:text-[#E1E0CC]/80 font-bold flex items-center gap-1 border border-[#E1E0CC]/15 px-3 py-1.5 rounded-lg transition-colors"
-                    >
-                      Change Moodboard
-                    </button>
-                  </div>
-
-                  {/* ── PREMIUM APPROVED MOODBOARD DISPLAY ── */}
-                  <div className="relative overflow-hidden rounded-2xl border border-[#C9A84C]/30 shadow-2xl shadow-black/20 bg-[#0A0A0A]">
-                    {data.approvedMoodboard.imageUrl ? (
-                      <>
-                        {/* Thin gold top bar */}
-                        <div className="absolute top-0 left-0 right-0 z-10 h-0.5 bg-gradient-to-r from-transparent via-[#C9A84C] to-transparent" />
-
-                        {/* Full-size moodboard image — shown large and dominant */}
-                        <img
-                          src={data.approvedMoodboard.imageUrl}
-                          alt={data.approvedMoodboard.name}
-                          className="w-full block object-cover object-top"
-                        />
-
-                        {/* Bottom overlay with branding */}
-                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/95 via-black/50 to-transparent px-5 py-4 pt-16">
-                          <div className="flex items-end justify-between gap-3">
-                            <div>
-                              <p className="text-[8px] font-black uppercase tracking-[0.25em] text-[#C9A84C] mb-1.5 flex items-center gap-1">
-                                <span>✦</span> Approved Visual Direction
-                              </p>
-                              <p className="text-white font-bold text-sm leading-tight">{data.approvedMoodboard.name}</p>
-                              <p className="text-white/55 text-[10px] mt-0.5 max-w-xs">{data.approvedMoodboard.tagline}</p>
-                            </div>
-                            <div className="shrink-0 flex flex-col items-end gap-1.5">
-                              <span className="text-[9px] bg-[#E1E0CC]/10/20 text-[#E1E0CC]/70 border border-[#E1E0CC]/20/30 px-2.5 py-1 rounded-full font-bold uppercase tracking-wider flex items-center gap-1">
-                                <CheckCircle2 className="w-3 h-3" /> Active
-                              </span>
-                              <span className="text-[8px] text-[#C9A84C]/60 font-mono">{data.brandName}</span>
-                            </div>
-                          </div>
-                        </div>
-                      </>
-                    ) : (
-                      <div className="p-8 text-center text-[#E1E0CC]/60 text-xs">
-                        No image generated — click &quot;Change Moodboard&quot; and regenerate.
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Bottom nudge */}
-                  <div className="flex items-center justify-between text-[10px] text-[#E1E0CC]/40 px-0.5">
-                    <span>Visual direction locked for <strong className="text-[#E1E0CC]/80">{data.brandName}</strong></span>
-                    <span className="text-[#0A0A0A] font-bold">Continue to finalize →</span>
-                  </div>
-                </div>
-              ) : (
-                // Case 2: No moodboard approved yet
-                <div className="space-y-5">
-                  {/* Action Trigger button */}
-                  {moodOptions.length === 0 && !isGeneratingMoods && (
-                    <div className="bg-gradient-to-br from-[#0A0A0A] to-[#1C1C1C] border border-[#828282]/20 rounded-2xl p-7 text-center space-y-4">
-                      <div className="w-14 h-14 rounded-2xl bg-[#0A0A0A]/10 border border-[#0A0A0A]/20 flex items-center justify-center mx-auto">
-                        <Sparkles className="w-7 h-7 text-[#0A0A0A]" />
-                      </div>
-                      <div>
-                        <h4 className="text-base font-bold text-white">Generate Custom Brand Moodboard with AI</h4>
-                        <p className="text-xs text-[#E1E0CC]/40 max-w-sm mx-auto mt-1.5 leading-relaxed">
-                          Our AI will generate a highly detailed visual moodboard matching your brand values, personality, and industry using fal.ai Flux.
-                        </p>
-                      </div>
-                      <button
-                        onClick={handleGenerateMoodboards}
-                        className="px-6 py-2.5 bg-[#E1E0CC] hover:bg-white text-[#101010] font-bold text-xs uppercase tracking-wider rounded-2xl transition-all flex items-center gap-2 mx-auto shadow-lg shadow-[#0A0A0A]/20"
-                      >
-                        <Sparkles className="w-4 h-4" />
-                        Generate Custom Moodboard
-                      </button>
-                    </div>
-                  )}
-
-                  {/* Loading State */}
-                  {isGeneratingMoods && (
-                    <div className="space-y-5">
-                      <div className="bg-[#0A0A0A] border border-[#828282]/20 rounded-2xl p-6 text-center space-y-2">
-                        <Loader2 className="w-8 h-8 text-[#0A0A0A] animate-spin mx-auto" />
-                        <h4 className="text-sm font-bold text-white">Generating 3 Moodboard Concepts in Parallel...</h4>
-                        <p className="text-xs text-[#E1E0CC]/60">Processing with fal.ai Flux. This may take up to 10 seconds.</p>
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {Array.from({ length: 3 }).map((_, i) => (
-                          <div key={i} className="aspect-video bg-[#0A0A0A]/50 border border-[#828282]/20 rounded-2xl animate-pulse flex items-center justify-center">
-                            <Loader2 className="w-5 h-5 text-[#E1E0CC]/80 animate-spin" />
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Error State */}
-                  {moodError && (
-                    <div className="bg-[#E1E0CC]/10 border border-[#E1E0CC]/20 rounded-2xl p-4 text-xs text-[#E1E0CC] flex items-start gap-2">
-                      <AlertTriangle className="w-4 h-4 text-[#E1E0CC] shrink-0 mt-0.5" />
-                      <div>
-                        <p className="font-bold">Failed to generate moodboards</p>
-                        <p className="text-[#E1E0CC] mt-1">{formatFetchError(moodError)}</p>
-                        <button
-                          onClick={handleGenerateMoodboards}
-                          className="mt-2 text-[#0A0A0A] hover:underline font-bold"
-                        >
-                          Try Again
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Moodboard Options grid */}
-                  {moodOptions.length > 0 && !isGeneratingMoods && (
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h4 className="text-sm font-bold text-white">Select Visual Concept</h4>
-                          <p className="text-xs text-[#E1E0CC]/40 mt-0.5">Select the concept that represents your brand values best. Click "Inspect Brand Board" to view the full design system dashboard.</p>
-                        </div>
-                        <button
-                          onClick={handleGenerateMoodboards}
-                          className="text-[10px] text-[#E1E0CC]/60 hover:text-[#E1E0CC] font-bold flex items-center gap-1 border border-[#E1E0CC]/15 px-3 py-1.5 rounded-lg transition-all"
-                        >
-                          <Sparkles className="w-3 h-3" /> Regenerate
-                        </button>
-                      </div>
-
-                      <div className={moodOptions.length === 1 ? "max-w-sm mx-auto w-full" : "grid grid-cols-1 md:grid-cols-3 gap-6"}>
-                        {moodOptions.map((opt) => {
-                          const preset = MOODBOARD_PRESETS[opt.id] || MOODBOARD_PRESETS.option_1;
-                          const isApproved = data.approvedMoodboard?.id === opt.id;
-                          return (
-                            <div
-                              key={opt.id}
-                              className={`bg-[#101010] border rounded-2xl p-4 flex flex-col justify-between transition-all hover:shadow-lg group relative
-                                ${isApproved ? "border-[#0A0A0A] ring-2 ring-[#0A0A0A]/20" : "border-[#E1E0CC]/15/80"}`}
-                            >
-                              <div>
-                                <div className="aspect-video bg-gradient-to-br from-[#1C1C1C] to-black border border-[#E1E0CC]/5 shadow-[0_0_30px_rgba(225,224,204,0.02)]/80 rounded-2xl flex items-center justify-center overflow-hidden mb-3 relative group-hover:scale-[1.01] transition-transform duration-300">
-                                  {opt.imageUrl ? (
-                                    <>
-                                      <img
-                                        src={opt.imageUrl}
-                                        alt={opt.name}
-                                        className="w-full h-full object-cover"
-                                      />
-                                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity gap-2">
-                                        <button
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            setInspectingMoodboard(opt);
-                                          }}
-                                          className="px-3 py-1.5 bg-[#101010] text-white rounded-lg text-[10px] font-bold shadow-md hover:bg-gray-100 transition-colors"
-                                        >
-                                          Inspect Brand Board
-                                        </button>
-                                      </div>
-                                    </>
-                                  ) : (
-                                    <div className="text-center p-2 text-[10px] text-[#E1E0CC] bg-[#E1E0CC]/10 rounded">
-                                      {formatFetchError(opt.error || "Failed to render")}
-                                    </div>
-                                  )}
-                                </div>
-                                <div className="space-y-1">
-                                  <div className="flex items-center justify-between">
-                                    <span className="text-xs font-bold text-white">{opt.name}</span>
-                                    {isApproved && <span className="text-[8px] font-black bg-[#E1E0CC]/10 text-[#E1E0CC] px-1.5 py-0.5 rounded-full uppercase tracking-wider">Active</span>}
-                                  </div>
-                                  <p className="text-[9px] text-[#E1E0CC]/40 leading-tight">{opt.tagline}</p>
-                                </div>
-
-                                {/* Micro Color & Font swatches */}
-                                <div className="flex items-center gap-3 mt-4 pt-3 border-t border-[#E1E0CC]/10">
-                                  <div className="flex gap-1">
-                                    {preset.colors.slice(0, 4).map((c, idx) => (
-                                      <div
-                                        key={idx}
-                                        className="w-3.5 h-3.5 rounded-full border border-white shadow-sm shrink-0"
-                                        style={{ backgroundColor: c.hex }}
-                                        title={c.name}
-                                      />
-                                    ))}
-                                  </div>
-                                  <span className="text-[9px] text-[#E1E0CC]/40 font-mono">
-                                    {preset.typography.headline} / {preset.typography.body}
-                                  </span>
-                                </div>
-                              </div>
-
-                              <div className="mt-4 flex gap-2 w-full">
-                                <button
-                                  onClick={() => setInspectingMoodboard(opt)}
-                                  className="flex-1 py-2 bg-[#0a0a0a] hover:bg-gray-100 text-[#E1E0CC]/80 text-[10px] font-bold rounded-lg border border-[#E1E0CC]/15 transition-colors"
-                                >
-                                  Inspect Board
-                                </button>
-                                <button
-                                  disabled={!opt.imageUrl}
-                                  onClick={() => {
-                                    if (opt.imageUrl) {
-                                      updateData({
-                                        approvedMoodboard: {
-                                          id: opt.id,
-                                          name: opt.name,
-                                          tagline: opt.tagline,
-                                          imageUrl: opt.imageUrl,
-                                        },
-                                      });
-                                    }
-                                  }}
-                                  className={`flex-1 py-2 text-[10px] font-bold rounded-lg transition-colors
-                                    ${isApproved 
-                                      ? "bg-[#E1E0CC]/10 text-white hover:bg-[#E1E0CC]/10" 
-                                      : "bg-[#101010] text-white hover:bg-brand-darkHover"}`}
-                                >
-                                  {isApproved ? "Approved" : "Approve & Select"}
-                                </button>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* ─── LIVE BRAND BOARD SHEET PREVIEW MODAL 🎨 ─── */}
-                  {inspectingMoodboard && (() => {
-                    const preset = MOODBOARD_PRESETS[inspectingMoodboard.id] || MOODBOARD_PRESETS.option_1;
-                    const isApproved = (data.approvedMoodboard as any)?.id === inspectingMoodboard.id;
-                    const logoGraphic = (data.selectedLogo as any)?.imageUrl || data.logoUrl;
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {Object.entries(MOODBOARD_PRESETS).map(([key, preset]) => {
+                    const isApproved = data.approvedMoodboard?.id === key;
                     return (
-                      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md">
-                        <div 
-                          className="w-full max-w-6xl rounded-3xl overflow-hidden border border-slate-200/80 shadow-2xl transition-all relative bg-[#101010]/95 backdrop-blur-lg text-slate-800"
-                        >
-                          {/* Close button top right */}
-                          <button
-                            onClick={() => setInspectingMoodboard(null)}
-                            className="absolute top-4 right-4 z-10 p-2 text-[#E1E0CC]/40 hover:text-[#E1E0CC] rounded-full hover:bg-gray-100 transition-colors"
-                          >
-                            <X className="w-5 h-5" />
-                          </button>
+                      <div
+                        key={key}
+                        onClick={() => {
+                          updateData({
+                            approvedMoodboard: {
+                              id: key,
+                              name: key === 'option_1' ? 'Dark Premium' : key === 'option_2' ? 'Clean Minimal' : 'Vibrant Digital',
+                              tagline: preset.summary,
+                              imageUrl: null,
+                            }
+                          });
+                        }}
+                        className={`bg-[#101010] border rounded-2xl p-5 flex flex-col justify-between transition-all cursor-pointer hover:shadow-lg group relative
+                          ${isApproved ? "border-brand-secondary ring-2 ring-brand-secondary/20 shadow-brand-secondary/10 shadow-lg" : "border-[#E1E0CC]/15/80"}`}
+                      >
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-bold text-white">
+                              {key === 'option_1' ? 'Dark Premium' : key === 'option_2' ? 'Clean Minimal' : 'Vibrant Digital'}
+                            </span>
+                            {isApproved && <CheckCircle2 className="w-4 h-4 text-brand-secondary" />}
+                          </div>
+                          
+                          <p className="text-[10px] text-[#E1E0CC]/60 leading-tight">
+                            {preset.summary}
+                          </p>
 
-                          {/* Top Header Section */}
-                          <div className="p-6 md:p-8 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded bg-slate-100 text-slate-800">
-                                  Brand Board Direction
-                                </span>
-                              </div>
-                              <h2 className="text-xl font-extrabold mt-1 text-slate-900">{inspectingMoodboard.name}</h2>
-                              <p className="text-xs text-slate-500 font-medium">{inspectingMoodboard.tagline}</p>
-                            </div>
-
-                            <div className="flex items-center gap-3">
-                              <button
-                                onClick={() => setInspectingMoodboard(null)}
-                                className="px-4 py-2 border border-slate-200 hover:border-slate-300 rounded-2xl text-xs text-slate-700 hover:bg-slate-50 font-bold transition-all"
-                              >
-                                Close Board
-                              </button>
-                              <button
-                                onClick={() => {
-                                  if (inspectingMoodboard.imageUrl) {
-                                    updateData({
-                                      approvedMoodboard: {
-                                        id: inspectingMoodboard.id,
-                                        name: inspectingMoodboard.name,
-                                        tagline: inspectingMoodboard.tagline,
-                                        imageUrl: inspectingMoodboard.imageUrl,
-                                      },
-                                    });
-                                    setInspectingMoodboard(null);
-                                  }
-                                }}
-                                className="px-5 py-2 bg-[#0A0A0A] hover:bg-[#0A0A0A]/90 text-white rounded-2xl text-xs font-black transition-all flex items-center gap-1.5"
-                              >
-                                {isApproved ? <Check className="w-4 h-4" /> : <Sparkles className="w-4 h-4" />}
-                                {isApproved ? "Approved Direction" : "Approve & Apply Direction"}
-                              </button>
+                          <div className="space-y-2 pt-2">
+                            <span className="text-[9px] font-bold text-[#E1E0CC]/40 uppercase tracking-widest">Color Palette</span>
+                            <div className="flex gap-1.5 flex-wrap">
+                              {preset.colors.map((c, idx) => (
+                                <div
+                                  key={idx}
+                                  className="w-5 h-5 rounded-full border border-white/10 shadow-sm"
+                                  style={{ backgroundColor: c.hex }}
+                                  title={c.name}
+                                />
+                              ))}
                             </div>
                           </div>
 
-                          {/* ── BRAND BOARD CANVAS GRID ── */}
-                          <div className="p-5 md:p-7 grid grid-cols-1 md:grid-cols-12 gap-5 max-h-[72vh] overflow-y-auto overscroll-contain">
-
-                            {/* ── ROW 1 ── */}
-
-                            {/* BLOCK A: Logo + Brand Identity (4 cols) */}
-                            <div className="md:col-span-4 bg-slate-50/50 border border-slate-100 rounded-2xl p-5 flex flex-col gap-4 shadow-sm">
-                              <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Brand Identity</p>
-
-                              {/* Logo circle — large and filled */}
-                              <div className="flex flex-col items-center gap-3">
-                                <div
-                                  className="w-24 h-24 rounded-full flex items-center justify-center overflow-hidden border-2 border-slate-200 shadow-md bg-[#101010]"
-                                  style={{ backgroundColor: userPrimaryColor || "#111" }}
-                                >
-                                  {(() => {
-                                    const svgLogoOpt = logoOptions[0];
-                                    const svgStr = (svgLogoOpt as any)?.svgContent;
-                                    if (svgStr) {
-                                      return (
-                                        <div
-                                          className="w-16 h-16 flex items-center justify-center [&>svg]:w-full [&>svg]:h-full"
-                                          dangerouslySetInnerHTML={{ __html: svgStr }}
-                                        />
-                                      );
-                                    }
-                                    if (logoGraphic) {
-                                      return <img src={logoGraphic} alt="Logo" className="w-14 h-14 object-contain" />;
-                                    }
-                                    return (
-                                      <span className="text-2xl font-black text-white" style={{ fontFamily: "serif" }}>
-                                        {(data.brandName || "B").charAt(0).toUpperCase()}
-                                      </span>
-                                    );
-                                  })()}
-                                </div>
-                                <div className="text-center">
-                                  <p className="text-slate-800 font-bold text-base tracking-tight">{data.brandName}</p>
-                                  <p className="text-slate-500 text-[10px] mt-0.5 italic max-w-[160px] text-center leading-snug">
-                                    {data.usp ? `"${data.usp}"` : "No tagline set"}
-                                  </p>
-                                </div>
-                              </div>
-
-                              <div className="border-t border-slate-100 pt-3 space-y-1">
-                                <div className="flex justify-between text-[9px]">
-                                  <span className="text-slate-400 uppercase tracking-wider">Industry</span>
-                                  <span className="text-slate-700 font-bold">{data.industry}</span>
-                                </div>
-                                <div className="flex justify-between text-[9px]">
-                                  <span className="text-slate-400 uppercase tracking-wider">Personality</span>
-                                  <span className="text-slate-700 font-bold capitalize">
-                                    {Array.isArray(data.brandPersonality) ? (data.brandPersonality as string[]).join(", ") : String(data.brandPersonality)}
-                                  </span>
-                                </div>
-                              </div>
+                          <div className="space-y-2 pt-2 border-t border-[#E1E0CC]/10">
+                            <span className="text-[9px] font-bold text-[#E1E0CC]/40 uppercase tracking-widest">Typography</span>
+                            <div className="flex flex-col gap-1">
+                              <span className="text-[10px] text-[#E1E0CC]"><strong className="text-white">Headlines:</strong> {preset.typography.headline}</span>
+                              <span className="text-[10px] text-[#E1E0CC]"><strong className="text-white">Body:</strong> {preset.typography.body}</span>
                             </div>
+                          </div>
 
-                            {/* BLOCK B: Color Palette — from brand data (5 cols) */}
-                            <div className="md:col-span-5 bg-slate-50/50 border border-slate-100 rounded-2xl p-5 flex flex-col gap-3 shadow-sm">
-                              <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Color Palette</p>
-                              <div className="grid grid-cols-2 gap-3 flex-1">
-                                {/* Primary color from user selection */}
-                                <div className="space-y-2">
-                                  <div
-                                    className="h-20 w-full rounded-2xl border border-slate-200 shadow-inner"
-                                    style={{ backgroundColor: userPrimaryColor || "#1A0A00" }}
-                                  />
-                                  <div>
-                                    <p className="text-[9px] font-bold text-slate-800 uppercase tracking-wider">Primary</p>
-                                    <p className="text-[8px] text-slate-400 font-mono mt-0.5">{userPrimaryColor || "#1A0A00"}</p>
-                                  </div>
-                                </div>
-                                {/* Secondary / accent */}
-                                <div className="space-y-2">
-                                  <div
-                                    className="h-20 w-full rounded-2xl border border-slate-200 shadow-inner"
-                                    style={{ backgroundColor: userSecondaryColor || "#C9A84C" }}
-                                  />
-                                  <div>
-                                    <p className="text-[9px] font-bold text-slate-800 uppercase tracking-wider">Accent</p>
-                                    <p className="text-[8px] text-slate-400 font-mono mt-0.5">{userSecondaryColor || "#C9A84C"}</p>
-                                  </div>
-                                </div>
-                                {/* Dark neutral */}
-                                <div className="space-y-2">
-                                  <div className="h-14 w-full rounded-2xl border border-slate-200 bg-slate-900" />
-                                  <div>
-                                    <p className="text-[9px] font-bold text-slate-800 uppercase tracking-wider">Background</p>
-                                    <p className="text-[8px] text-slate-400 font-mono mt-0.5">#0F172A</p>
-                                  </div>
-                                </div>
-                                {/* White/light */}
-                                <div className="space-y-2">
-                                  <div className="h-14 w-full rounded-2xl border border-slate-200 bg-slate-50" />
-                                  <div>
-                                    <p className="text-[9px] font-bold text-slate-800 uppercase tracking-wider">Highlight</p>
-                                    <p className="text-[8px] text-slate-400 font-mono mt-0.5">#F8FAFC</p>
-                                  </div>
-                                </div>
-                              </div>
+                          <div className="space-y-2 pt-2 border-t border-[#E1E0CC]/10">
+                            <span className="text-[9px] font-bold text-[#E1E0CC]/40 uppercase tracking-widest">Essence</span>
+                            <div className="flex gap-1.5 flex-wrap">
+                              {preset.essence.map((e, idx) => (
+                                <span key={idx} className="text-[9px] bg-[#E1E0CC]/5 text-[#E1E0CC]/80 px-2 py-0.5 rounded-full">
+                                  {e}
+                                </span>
+                              ))}
                             </div>
-
-                            {/* BLOCK C: Typography (3 cols) */}
-                            <div className="md:col-span-3 bg-slate-50/50 border border-slate-100 rounded-2xl p-5 flex flex-col gap-3 shadow-sm">
-                              <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Typography System</p>
-                              <div className="space-y-4 flex-1">
-                                <div>
-                                  <span className="text-[8px] text-slate-400 block mb-1 uppercase tracking-wider">Headline</span>
-                                  <span className="text-lg font-bold text-slate-900 block tracking-tight" style={{ fontFamily: preset.typography.headline }}>
-                                    {preset.typography.headline}
-                                  </span>
-                                  <span className="text-[9px] text-slate-400 font-mono block mt-1">AaBbCc 123</span>
-                                </div>
-                                <div>
-                                  <span className="text-[8px] text-slate-400 block mb-1 uppercase tracking-wider">Body</span>
-                                  <span className="text-sm text-slate-700 block" style={{ fontFamily: preset.typography.body }}>
-                                    {preset.typography.body}
-                                  </span>
-                                  <span className="text-[9px] text-slate-400 font-mono block mt-1">aAbBcC 456</span>
-                                </div>
-                              </div>
-                              <p className="text-[8px] text-slate-500 border-t border-slate-100 pt-2 leading-relaxed">
-                                {preset.typography.desc}
-                              </p>
-                            </div>
-
-                            {/* ── ROW 2 ── */}
-
-                            {/* BLOCK D: Brand Mood & Tone — TEXT ONLY (5 cols) */}
-                            <div className="md:col-span-5 bg-slate-50/50 border border-slate-100 rounded-2xl p-5 flex flex-col gap-4 shadow-sm">
-                              <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Brand Mood & Tone</p>
-
-                              {/* Personality tags */}
-                              <div className="flex flex-wrap gap-2">
-                                {(Array.isArray(data.brandValues) ? data.brandValues : []).map((v: string) => (
-                                  <span
-                                    key={v}
-                                    className="text-[10px] font-black uppercase tracking-wider px-3 py-1.5 rounded-lg border bg-[#0a0a0a] text-[#0A0A0A] border-[#E1E0CC]/15"
-                                  >
-                                    {v}
-                                  </span>
-                                ))}
-                              </div>
-
-                              {/* Tone descriptors */}
-                              <div className="space-y-2 flex-1">
-                                <p className="text-[8px] text-slate-400 uppercase tracking-wider">Voice Attributes</p>
-                                <div className="space-y-1.5">
-                                  {[
-                                    { label: "Tone", value: Array.isArray(data.brandPersonality) ? (data.brandPersonality as string[]).join(", ") : String(data.brandPersonality || "Professional") },
-                                    { label: "Audience", value: data.targetAudience || "Not defined" },
-                                    { label: "Mission", value: data.mission || "Not defined" },
-                                  ].map(({ label, value }) => (
-                                    <div key={label} className="flex gap-2 text-[9px]">
-                                      <span className="text-slate-400 uppercase tracking-wider w-14 shrink-0">{label}</span>
-                                      <span className="text-slate-600 leading-snug line-clamp-2">{value}</span>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-
-                              {/* Separator words */}
-                              <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
-                                {preset.imageryTags.slice(0, 4).map((tag) => (
-                                  <span key={tag} className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{tag}</span>
-                                ))}
-                              </div>
-                            </div>
-
-                            {/* BLOCK E: Social Post Visual Direction — approved moodboard (7 cols) */}
-                            <div className="md:col-span-7 bg-slate-50/50 border border-slate-100 rounded-2xl overflow-hidden flex flex-col shadow-sm">
-                              <div className="px-5 pt-5 pb-3">
-                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Social Post Visual Direction</p>
-                              </div>
-                              {(() => {
-                                const mb = data.approvedMoodboard as { id: string; name: string; tagline: string; imageUrl: string } | null;
-                                return mb?.imageUrl ? (
-                                  <div className="flex-1 relative">
-                                    {/* Show the approved moodboard — NO logo overlay */}
-                                    <img
-                                      src={mb.imageUrl}
-                                      alt="Approved Moodboard"
-                                      className="w-full h-full object-cover object-top"
-                                      style={{ minHeight: "200px", maxHeight: "280px" }}
-                                    />
-                                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-slate-950/80 to-transparent px-4 py-3">
-                                      <p className="text-[9px] text-[#C9A84C] font-black uppercase tracking-wider">✦ Approved Visual Direction</p>
-                                      <p className="text-white text-[10px] font-bold mt-0.5">{mb.name}</p>
-                                    </div>
-                                  </div>
-                                ) : (
-                                  <div className="flex-1 flex items-center justify-center p-6 text-center">
-                                    <div>
-                                      <p className="text-slate-400 text-xs font-semibold">No moodboard approved yet.</p>
-                                      <p className="text-slate-500 text-[10px] mt-1 leading-snug">Generate and approve a direction in the Social Media Visual Direction studio to see it here.</p>
-                                    </div>
-                                  </div>
-                                );
-                              })()}
-                            </div>
-
-                            {/* ── ROW 3 — Full width: Visual Brain Summary ── */}
-                            <div className="md:col-span-12 bg-slate-50/80 border border-slate-100 rounded-2xl p-5 flex flex-col md:flex-row md:items-center gap-5 shadow-sm">
-                              <div className="space-y-2 flex-1">
-                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Visual Brand Summary</p>
-                                <p className="text-xs text-slate-600 leading-relaxed font-medium">
-                                  {data.businessDescription || preset.summary || `${data.brandName} is a ${data.industry} brand with a ${Array.isArray(data.brandPersonality) ? (data.brandPersonality as string[]).join(", ") : String(data.brandPersonality || "professional")} identity, serving ${data.targetAudience || "a global audience"}.`}
-                                </p>
-                              </div>
-
-                              <div className="flex items-center gap-2 md:shrink-0">
-                                <div className="w-8 h-8 rounded-full border border-slate-200" style={{ backgroundColor: userPrimaryColor || "#1A0A00" }} />
-                                <div className="w-8 h-8 rounded-full border border-slate-200" style={{ backgroundColor: userSecondaryColor || "#C9A84C" }} />
-                                <div className="w-8 h-8 rounded-full border border-slate-200 bg-slate-900" />
-                                <div className="w-8 h-8 rounded-full border border-slate-200 bg-slate-50" />
-                              </div>
-                            </div>
-
-
                           </div>
                         </div>
                       </div>
                     );
-                  })()}
+                  })}
                 </div>
-              )}
+              </div>
             </div>
           )}
+
 
 
           {/* â”€â”€â”€ Step 7: Review & Finalize â”€â”€â”€ */}
@@ -3069,37 +2057,13 @@ export default function OnboardingPage() {
                 <div className="space-y-3 border-t md:border-t-0 md:border-l border-[#E1E0CC]/15/80 md:pl-6 pt-4 md:pt-0">
                   <p className="text-[10px] font-bold text-[#E1E0CC]/40 uppercase tracking-widest">Brand Kit Specifications</p>
                   <div className="space-y-2">
-                    <div>
-                      <span className="text-[#E1E0CC]/40 block text-[9px]">KIT TYPE CONFIGURATION</span>
-                      <span className="font-semibold text-[#E1E0CC] capitalize">{data.kitType} Kit Mode</span>
+                    <div className="space-y-1">
+                      <span className="text-[#E1E0CC]/40 block text-[9px]">LOGO SOURCE</span>
+                      <span className="font-semibold text-[#E1E0CC] flex items-center gap-1">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-[#E1E0CC]" />
+                        {data.logoUrl ? "Uploaded Custom Logo" : "Not Provided"}
+                      </span>
                     </div>
-                    
-                    {data.kitType === "generate" && data.selectedLogo ? (
-                      <div className="space-y-2">
-                        <div>
-                          <span className="text-[#E1E0CC]/40 block text-[9px]">PRIMARY LOGO MARK</span>
-                          <div className="h-14 w-32 bg-[#0a0a0a] border border-[#E1E0CC]/10 rounded p-1 flex items-center justify-center mt-1">
-                            <img
-                              src={data.selectedLogo.imageUrl}
-                              alt={data.selectedLogo.name}
-                              className="max-w-full max-h-full object-contain"
-                            />
-                          </div>
-                        </div>
-                        <div>
-                          <span className="text-[#E1E0CC]/40 block text-[9px]">LOGO STYLE</span>
-                          <span className="font-bold text-[#E1E0CC]">{data.selectedLogo.name}</span>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="space-y-1">
-                        <span className="text-[#E1E0CC]/40 block text-[9px]">LOGO SOURCE</span>
-                        <span className="font-semibold text-[#E1E0CC] flex items-center gap-1">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-[#E1E0CC] fill-emerald-50" />
-                          {data.logoUrl ? "Uploaded Custom Logo" : "Not Provided"}
-                        </span>
-                      </div>
-                    )}
                   </div>
                 </div>
               </div>
