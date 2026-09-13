@@ -1652,284 +1652,95 @@ export default function OnboardingPage() {
                   Brand Identity Studio
                 </h2>
                 <p className="text-xs text-[#E1E0CC]/40 mt-1">
-                  Upload your brand logo and visual media assets.
+                  Upload your brand logo and core visual assets. Keep it simple — you can add more specific photos (like team or office pictures) later when generating individual posts.
                 </p>
               </div>
 
               <div className="space-y-6">
-                {/* Category 1: Core Branding Assets */}
-                <div className="space-y-3">
-                  <h3 className="text-xs font-bold text-[#E1E0CC]/40 uppercase tracking-widest">1. Core Branding Assets</h3>
-                  <div className="grid grid-cols-1 gap-4">
-                    {/* Primary Logo */}
-                    <div className="border border-[#E1E0CC]/15/80 rounded-2xl p-4 flex flex-col justify-between bg-[#101010] min-h-[140px]">
-                      <div>
-                        <h4 className="font-bold text-white flex items-center gap-1.5 text-xs">
-                          <ImageIcon className="w-4 h-4 text-[#0A0A0A]" />
-                          Logo Graphic *
-                        </h4>
-                        <p className="text-[10px] text-[#E1E0CC]/40 mt-0.5">Upload brand logo (SVG/PNG).</p>
-                      </div>
-                      <div className="mt-3 flex items-center gap-4">
-                        {data.logoUrl ? (
-                          <div className="relative w-14 h-14 rounded-2xl border border-[#E1E0CC]/15 bg-[#0a0a0a] flex items-center justify-center p-1 group overflow-hidden shadow-sm shrink-0">
-                            <img src={data.logoUrl} alt="Logo" className="max-w-full max-h-full object-contain" />
-                            <button
-                              onClick={() => removeUploadedFile("logo")}
-                              className="absolute inset-0 bg-[#E1E0CC]/10/90 text-white text-[9px] font-bold opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
-                            >
-                              Delete
-                            </button>
-                          </div>
-                        ) : (
-                          <label className={`px-3 py-1.5 bg-[#0a0a0a] border border-[#E1E0CC]/15 hover:bg-gray-100 text-[#E1E0CC]/80 text-xs font-bold rounded-lg transition-colors flex items-center gap-1 cursor-pointer shrink-0
-                            ${uploadingField === "logo" ? "opacity-50 cursor-not-allowed" : ""}`}>
-                            {uploadingField === "logo" ? <Loader2 className="w-3.5 h-3.5 animate-spin text-[#0A0A0A]" /> : <UploadCloud className="w-3.5 h-3.5 text-[#E1E0CC]/40" />}
-                            Upload Logo
-                            <input
-                              type="file"
-                              accept="image/*"
-                              className="hidden"
-                              onChange={(e) => handleRealFileUpload(e, "logo")}
-                              disabled={uploadingField !== null}
-                            />
-                          </label>
-                        )}
-                        {data.logoUrl && (
-                          <span className="text-[10px] text-[#E1E0CC] font-bold flex items-center gap-1">
-                            <CheckCircle2 className="w-3.5 h-3.5 text-[#E1E0CC] fill-emerald-50" /> Loaded
-                          </span>
-                        )}
-                      </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  
+                  {/* Primary Logo (Required) */}
+                  <div className="border border-[#E1E0CC]/15/80 rounded-2xl p-4 flex flex-col justify-between bg-[#101010] min-h-[140px]">
+                    <div>
+                      <h4 className="font-bold text-white flex items-center gap-1.5 text-xs">
+                        <ImageIcon className="w-4 h-4 text-[#0A0A0A]" />
+                        Logo Graphic <span className="text-red-500">*</span>
+                      </h4>
+                      <p className="text-[10px] text-[#E1E0CC]/40 mt-0.5">Upload brand logo (SVG/PNG) for watermarks.</p>
                     </div>
-                  </div>
-                </div>
-
-                {/* Category 2: Visual Media Assets */}
-                <div className="space-y-3">
-                  <h3 className="text-xs font-bold text-[#E1E0CC]/40 uppercase tracking-widest">2. Visual Media Assets</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Product Images */}
-                    <div className="border border-[#E1E0CC]/15/80 rounded-2xl p-4 bg-[#101010] space-y-3">
-                      <div>
-                        <h4 className="font-bold text-white flex items-center gap-1.5 text-xs">
-                          <ImageIcon className="w-4 h-4 text-[#0A0A0A]" />
-                          Product Images
-                        </h4>
-                        <p className="text-[10px] text-[#E1E0CC]/40 mt-0.5">Upload product captures or catalogs.</p>
-                      </div>
-                      <div className="flex flex-wrap gap-2 pt-1">
-                        {data.productImages.map((img, i) => (
-                          <div key={i} className="relative w-12 h-12 rounded-lg border border-[#E1E0CC]/15 overflow-hidden group shrink-0">
-                            <img src={img} alt="Product" className="w-full h-full object-cover" />
-                            <button
-                              onClick={() => removeUploadedFile("productImages", i)}
-                              className="absolute inset-0 bg-[#E1E0CC]/10/90 text-white text-[8px] font-bold opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
-                            >
-                              Remove
-                            </button>
-                          </div>
-                        ))}
-                        <label className={`w-12 h-12 border border-dashed border-[#E1E0CC]/20 hover:border-brand-secondary rounded-lg flex flex-col items-center justify-center text-[#E1E0CC]/40 hover:text-[#0A0A0A] transition-colors cursor-pointer shrink-0
-                          ${uploadingField === "productImages" ? "opacity-50 cursor-not-allowed" : ""}`}>
-                          {uploadingField === "productImages" ? <Loader2 className="w-4 h-4 animate-spin text-brand-secondary" /> : <Plus className="w-4 h-4" />}
+                    <div className="mt-3 flex items-center gap-4">
+                      {data.logoUrl ? (
+                        <div className="relative w-14 h-14 rounded-2xl border border-[#E1E0CC]/15 bg-[#0a0a0a] flex items-center justify-center p-1 group overflow-hidden shadow-sm shrink-0">
+                          <img src={data.logoUrl} alt="Logo" className="max-w-full max-h-full object-contain" />
+                          <button
+                            onClick={() => removeUploadedFile("logo")}
+                            className="absolute inset-0 bg-[#E1E0CC]/10/90 text-white text-[9px] font-bold opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      ) : (
+                        <label className={`px-3 py-1.5 bg-[#0a0a0a] border border-[#E1E0CC]/15 hover:bg-gray-100 text-[#E1E0CC]/80 text-xs font-bold rounded-lg transition-colors flex items-center gap-1 cursor-pointer shrink-0
+                          ${uploadingField === "logo" ? "opacity-50 cursor-not-allowed" : ""}`}>
+                          {uploadingField === "logo" ? <Loader2 className="w-3.5 h-3.5 animate-spin text-[#0A0A0A]" /> : <UploadCloud className="w-3.5 h-3.5 text-[#E1E0CC]/40" />}
+                          Upload Logo
                           <input
                             type="file"
                             accept="image/*"
                             className="hidden"
-                            onChange={(e) => handleRealFileUpload(e, "productImages")}
+                            onChange={(e) => handleRealFileUpload(e, "logo")}
                             disabled={uploadingField !== null}
                           />
                         </label>
-                      </div>
-                    </div>
-
-                    {/* Team Photos */}
-                    <div className="border border-[#E1E0CC]/15/80 rounded-2xl p-4 bg-[#101010] space-y-3">
-                      <div>
-                        <h4 className="font-bold text-white flex items-center gap-1.5 text-xs">
-                          <Users className="w-4 h-4 text-[#0A0A0A]" />
-                          Team Photos
-                        </h4>
-                        <p className="text-[10px] text-[#E1E0CC]/40 mt-0.5">Upload headshots or group captures.</p>
-                      </div>
-                      <div className="flex flex-wrap gap-2 pt-1">
-                        {data.teamPhotos.map((img, i) => (
-                          <div key={i} className="relative w-12 h-12 rounded-lg border border-[#E1E0CC]/15 overflow-hidden group shrink-0">
-                            <img src={img} alt="Team" className="w-full h-full object-cover" />
-                            <button
-                              onClick={() => removeUploadedFile("teamPhotos", i)}
-                              className="absolute inset-0 bg-[#E1E0CC]/10/90 text-white text-[8px] font-bold opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
-                            >
-                              Remove
-                            </button>
-                          </div>
-                        ))}
-                        <label className={`w-12 h-12 border border-dashed border-[#E1E0CC]/20 hover:border-brand-secondary rounded-lg flex flex-col items-center justify-center text-[#E1E0CC]/40 hover:text-[#0A0A0A] transition-colors cursor-pointer shrink-0
-                          ${uploadingField === "teamPhotos" ? "opacity-50 cursor-not-allowed" : ""}`}>
-                          {uploadingField === "teamPhotos" ? <Loader2 className="w-4 h-4 animate-spin text-brand-secondary" /> : <Plus className="w-4 h-4" />}
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={(e) => handleRealFileUpload(e, "teamPhotos")}
-                            disabled={uploadingField !== null}
-                          />
-                        </label>
-                      </div>
-                    </div>
-
-                    {/* Office Images */}
-                    <div className="border border-[#E1E0CC]/15/80 rounded-2xl p-4 bg-[#101010] space-y-3">
-                      <div>
-                        <h4 className="font-bold text-white flex items-center gap-1.5 text-xs">
-                          <Building className="w-4 h-4 text-[#0A0A0A]" />
-                          Office & Workspace Images
-                        </h4>
-                        <p className="text-[10px] text-[#E1E0CC]/40 mt-0.5">Upload building, workplace, or setup photos.</p>
-                      </div>
-                      <div className="flex flex-wrap gap-2 pt-1">
-                        {data.officeImages.map((img, i) => (
-                          <div key={i} className="relative w-12 h-12 rounded-lg border border-[#E1E0CC]/15 overflow-hidden group shrink-0">
-                            <img src={img} alt="Office" className="w-full h-full object-cover" />
-                            <button
-                              onClick={() => removeUploadedFile("officeImages", i)}
-                              className="absolute inset-0 bg-[#E1E0CC]/10/90 text-white text-[8px] font-bold opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
-                            >
-                              Remove
-                            </button>
-                          </div>
-                        ))}
-                        <label className={`w-12 h-12 border border-dashed border-[#E1E0CC]/20 hover:border-brand-secondary rounded-lg flex flex-col items-center justify-center text-[#E1E0CC]/40 hover:text-[#0A0A0A] transition-colors cursor-pointer shrink-0
-                          ${uploadingField === "officeImages" ? "opacity-50 cursor-not-allowed" : ""}`}>
-                          {uploadingField === "officeImages" ? <Loader2 className="w-4 h-4 animate-spin text-brand-secondary" /> : <Plus className="w-4 h-4" />}
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={(e) => handleRealFileUpload(e, "officeImages")}
-                            disabled={uploadingField !== null}
-                          />
-                        </label>
-                      </div>
-                    </div>
-
-                    {/* Brand Videos */}
-                    <div className="border border-[#E1E0CC]/15/80 rounded-2xl p-4 bg-[#101010] space-y-3">
-                      <div>
-                        <h4 className="font-bold text-white flex items-center gap-1.5 text-xs">
-                          <Video className="w-4 h-4 text-[#0A0A0A]" />
-                          Brand Videos
-                        </h4>
-                        <p className="text-[10px] text-[#E1E0CC]/40 mt-0.5">Upload promotional videos or teasers.</p>
-                      </div>
-                      <div className="flex flex-wrap gap-2 pt-1">
-                        {data.brandVideos.map((vid, i) => (
-                          <div key={i} className="relative w-12 h-12 rounded-lg border border-[#E1E0CC]/15 overflow-hidden bg-[#0A0A0A] flex items-center justify-center group shrink-0">
-                            <Video className="w-5 h-5 text-white/50" />
-                            <button
-                              onClick={() => removeUploadedFile("brandVideos", i)}
-                              className="absolute inset-0 bg-[#E1E0CC]/10/90 text-white text-[8px] font-bold opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
-                            >
-                              Remove
-                            </button>
-                          </div>
-                        ))}
-                        <label className={`w-12 h-12 border border-dashed border-[#E1E0CC]/20 hover:border-brand-secondary rounded-lg flex flex-col items-center justify-center text-[#E1E0CC]/40 hover:text-[#0A0A0A] transition-colors cursor-pointer shrink-0
-                          ${uploadingField === "brandVideos" ? "opacity-50 cursor-not-allowed" : ""}`}>
-                          {uploadingField === "brandVideos" ? <Loader2 className="w-4 h-4 animate-spin text-brand-secondary" /> : <Plus className="w-4 h-4" />}
-                          <input
-                            type="file"
-                            accept="video/*"
-                            className="hidden"
-                            onChange={(e) => handleRealFileUpload(e, "brandVideos")}
-                            disabled={uploadingField !== null}
-                          />
-                        </label>
-                      </div>
+                      )}
+                      {data.logoUrl && (
+                        <span className="text-[10px] text-[#E1E0CC] font-bold flex items-center gap-1">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-[#E1E0CC]" /> Loaded
+                        </span>
+                      )}
                     </div>
                   </div>
-                </div>
 
-                {/* Category 3: Design System Resources */}
-                <div className="space-y-3">
-                  <h3 className="text-xs font-bold text-[#E1E0CC]/40 uppercase tracking-widest">3. Design System Resources</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Fonts */}
-                    <div className="border border-[#E1E0CC]/15/80 rounded-2xl p-4 bg-[#101010] space-y-3">
-                      <div>
-                        <h4 className="font-bold text-white flex items-center gap-1.5 text-xs">
-                          <Type className="w-4 h-4 text-[#0A0A0A]" />
-                          Brand Fonts
-                        </h4>
-                        <p className="text-[10px] text-[#E1E0CC]/40 mt-0.5">Upload custom typography font files.</p>
-                      </div>
-                      <div className="flex flex-wrap gap-2 pt-1">
-                        {data.fonts.map((f, i) => (
-                          <div key={i} className="relative w-12 h-12 rounded-lg border border-[#E1E0CC]/15 bg-[#0a0a0a] flex items-center justify-center group shrink-0">
-                            <Type className="w-5 h-5 text-[#E1E0CC]/40" />
-                            <button
-                              onClick={() => removeUploadedFile("fonts", i)}
-                              className="absolute inset-0 bg-[#E1E0CC]/10/90 text-white text-[8px] font-bold opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
-                            >
-                              Remove
-                            </button>
-                          </div>
-                        ))}
-                        <label className={`w-12 h-12 border border-dashed border-[#E1E0CC]/20 hover:border-brand-secondary rounded-lg flex flex-col items-center justify-center text-[#E1E0CC]/40 hover:text-[#0A0A0A] transition-colors cursor-pointer shrink-0
-                          ${uploadingField === "fonts" ? "opacity-50 cursor-not-allowed" : ""}`}>
-                          {uploadingField === "fonts" ? <Loader2 className="w-4 h-4 animate-spin text-brand-secondary" /> : <Plus className="w-4 h-4" />}
-                          <input
-                            type="file"
-                            accept=".woff,.woff2,.ttf,.otf"
-                            className="hidden"
-                            onChange={(e) => handleRealFileUpload(e, "fonts")}
-                            disabled={uploadingField !== null}
-                          />
-                        </label>
-                      </div>
+                  {/* Product Images (Optional) */}
+                  <div className="border border-[#E1E0CC]/15/80 rounded-2xl p-4 bg-[#101010] flex flex-col justify-between min-h-[140px]">
+                    <div>
+                      <h4 className="font-bold text-white flex items-center gap-1.5 text-xs">
+                        <ImageIcon className="w-4 h-4 text-[#0A0A0A]" />
+                        Product / Brand Assets
+                        <span className="text-[8px] text-[#E1E0CC]/40 uppercase ml-1">(Optional)</span>
+                      </h4>
+                      <p className="text-[10px] text-[#E1E0CC]/40 mt-0.5">Upload product catalogs or key brand imagery.</p>
                     </div>
-
-                    {/* Icons */}
-                    <div className="border border-[#E1E0CC]/15/80 rounded-2xl p-4 bg-[#101010] space-y-3">
-                      <div>
-                        <h4 className="font-bold text-white flex items-center gap-1.5 text-xs">
-                          <Sparkles className="w-4 h-4 text-[#0A0A0A]" />
-                          Brand Icons
-                        </h4>
-                        <p className="text-[10px] text-[#E1E0CC]/40 mt-0.5">Upload custom SVG/PNG icon sets.</p>
-                      </div>
-                      <div className="flex flex-wrap gap-2 pt-1">
-                        {data.icons.map((img, i) => (
-                          <div key={i} className="relative w-12 h-12 rounded-lg border border-[#E1E0CC]/15 overflow-hidden group shrink-0">
-                            <img src={img} alt="Icon" className="w-full h-full object-cover" />
-                            <button
-                              onClick={() => removeUploadedFile("icons", i)}
-                              className="absolute inset-0 bg-[#E1E0CC]/10/90 text-white text-[8px] font-bold opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
-                            >
-                              Remove
-                            </button>
-                          </div>
-                        ))}
-                        <label className={`w-12 h-12 border border-dashed border-[#E1E0CC]/20 hover:border-brand-secondary rounded-lg flex flex-col items-center justify-center text-[#E1E0CC]/40 hover:text-[#0A0A0A] transition-colors cursor-pointer shrink-0
-                          ${uploadingField === "icons" ? "opacity-50 cursor-not-allowed" : ""}`}>
-                          {uploadingField === "icons" ? <Loader2 className="w-4 h-4 animate-spin text-brand-secondary" /> : <Plus className="w-4 h-4" />}
-                          <input
-                            type="file"
-                            accept="image/*,.svg"
-                            className="hidden"
-                            onChange={(e) => handleRealFileUpload(e, "icons")}
-                            disabled={uploadingField !== null}
-                          />
-                        </label>
-                      </div>
+                    <div className="flex flex-wrap gap-2 pt-3">
+                      {data.productImages.map((img, i) => (
+                        <div key={i} className="relative w-12 h-12 rounded-lg border border-[#E1E0CC]/15 overflow-hidden group shrink-0">
+                          <img src={img} alt="Product" className="w-full h-full object-cover" />
+                          <button
+                            onClick={() => removeUploadedFile("productImages", i)}
+                            className="absolute inset-0 bg-[#E1E0CC]/10/90 text-white text-[8px] font-bold opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      ))}
+                      <label className={`w-12 h-12 border border-dashed border-[#E1E0CC]/20 hover:border-brand-secondary rounded-lg flex flex-col items-center justify-center text-[#E1E0CC]/40 hover:text-[#0A0A0A] transition-colors cursor-pointer shrink-0
+                        ${uploadingField === "productImages" ? "opacity-50 cursor-not-allowed" : ""}`}>
+                        {uploadingField === "productImages" ? <Loader2 className="w-4 h-4 animate-spin text-[#0A0A0A]" /> : <Plus className="w-4 h-4" />}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => handleRealFileUpload(e, "productImages")}
+                          disabled={uploadingField !== null}
+                        />
+                      </label>
                     </div>
                   </div>
+
                 </div>
               </div>
             </div>
           )}
-
 
           {/* ─── Step 6: Moodboard Studio 🌟 ─── */}
           {step === 6 && (
