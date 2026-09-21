@@ -1,6 +1,13 @@
 import { NextResponse } from "next/server";
+import { requireAuth } from '@/backend/middlewares/auth';
 
 export async function POST(req: Request) {
+  try {
+    await requireAuth();
+  } catch {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const body = await req.json();
     const brandName        = String(body.brandName        || "Brand");

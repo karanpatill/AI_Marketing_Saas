@@ -1,40 +1,42 @@
-import React from 'react';
+import React from "react";
+import { cn } from "@/lib/cn";
 
-export function Table({ children, className = '' }: { children: React.ReactNode, className?: string }) {
+export function Table({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={`w-full overflow-auto bg-[#101010] rounded-2xl border border-[#E1E0CC]/10 ${className}`}>
-      <table className="w-full text-sm text-left">{children}</table>
+    <div className={cn("w-full overflow-auto rounded-lg border border-line bg-surface", className)}>
+      <table className="w-full text-left text-body">{children}</table>
     </div>
   );
 }
 
 export function TableHeader({ children }: { children: React.ReactNode }) {
-  return (
-    <thead className="bg-[#212121] text-[#E1E0CC]/60 text-xs uppercase tracking-wider border-b border-[#E1E0CC]/10">
-      {children}
-    </thead>
-  );
+  return <thead className="border-b border-line bg-surface-2/60 text-label text-ink-3">{children}</thead>;
 }
 
 export function TableBody({ children }: { children: React.ReactNode }) {
-  return <tbody className="divide-y divide-[#E1E0CC]/5 text-[#E1E0CC]">{children}</tbody>;
+  return <tbody className="divide-y divide-line text-ink">{children}</tbody>;
 }
 
-export function TableRow({ children, className = '', onClick }: { children: React.ReactNode, className?: string, onClick?: () => void }) {
+export function TableRow({
+  children,
+  className = "",
+  onClick,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  onClick?: () => void;
+}) {
   return (
-    <tr 
-      onClick={onClick}
-      className={`hover:bg-white/[0.02] transition-colors border-t border-[#E1E0CC]/5 ${className}`}
-    >
+    <tr onClick={onClick} className={cn("transition-colors hover:bg-surface-2/60", onClick && "cursor-pointer", className)}>
       {children}
     </tr>
   );
 }
 
-export function TableHead({ children, className = '' }: { children: React.ReactNode, className?: string }) {
-  return <th className={`px-6 py-3 font-medium text-[#E1E0CC]/60 ${className}`}>{children}</th>;
+export function TableHead({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return <th className={cn("h-11 px-4 font-medium", className)}>{children}</th>;
 }
 
-export function TableCell({ children, className = '' }: { children: React.ReactNode, className?: string }) {
-  return <td className={`px-6 py-4 whitespace-nowrap text-[#E1E0CC] ${className}`}>{children}</td>;
+export function TableCell({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return <td className={cn("h-13 px-4 py-3 align-middle", className)}>{children}</td>;
 }

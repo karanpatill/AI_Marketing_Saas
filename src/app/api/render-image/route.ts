@@ -1,17 +1,39 @@
-import { NextResponse } from "next/server";
-import puppeteer from "puppeteer";
+import { NextRequest, NextResponse } from "next/server";
+import puppeteer, { Browser } from "puppeteer";
+import { z } from "zod";
+import { withApiWrapper } from "@/backend/middlewares/apiWrapper";
+import { requireAuth } from "@/backend/middlewares/auth";
+import { isPrivateAddress } from "@/backend/utils/urlSafety";
+import { logger } from "@/backend/utils/logger";
 
-export async function POST(request: Request) {
-  let browser;
+export const maxDuration = 30;
+
+const bodySchema = z.object({
+  html: z.string().min(1).max(512 * 1024),
+  width: z.number().int().min(100).max(2160).default(1080),
+  height: z.number().int().min(100).max(2160).default(1080),
+});
+
+/** Only allow the sandboxed page to load public http(s) subresources (fonts, images, Tailwind CDN). */
+function isAllowedSubresource(url: string): boolean {
   try {
-    const { html, width = 1080, height = 1080 } = await request.json();
+    const parsed = new URL(url);
+    if (parsed.protocol === "data:") return true;
+    if (parsed.protocol !== "https:" && parsed.protocol !== "http:") return false;
+    const host = parsed.hostname.toLowerCase();
+    if (host === "localhost" || host.endsWith(".local") || host.endsWith(".internal")) return false;
+    if (/^[\d.]+$|:/.test(host) && isPrivateAddress(host.replace(/^\[|\]$/g, ""))) return false;
+    return true;
+  } catch {
+    return false;
+  }
+}
 
-    if (!html) {
-      return NextResponse.json({ error: "Missing html" }, { status: 400 });
-    }
+export const POST = withApiWrapper(async (request: NextRequest) => {
+  await requireAuth();
+  const { html, width, height } = bodySchema.parse(await request.json());
 
-    // Build a full HTML page with Tailwind CDN for perfect class support
-    const fullHtml = `<!DOCTYPE html>
+  const fullHtml = `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
@@ -29,21 +51,22 @@ export async function POST(request: Request) {
 </body>
 </html>`;
 
+  let browser: Browser | undefined;
+  try {
     browser = await puppeteer.launch({
       headless: true,
-      args: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage",
-        "--disable-gpu",
-      ],
+      args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage", "--disable-gpu"],
     });
 
     const page = await browser.newPage();
+    await page.setRequestInterception(true);
+    page.on("request", (req) => {
+      if (isAllowedSubresource(req.url())) req.continue();
+      else req.abort();
+    });
+
     await page.setViewport({ width, height, deviceScaleFactor: 1 });
     await page.setContent(fullHtml, { waitUntil: "load", timeout: 15000 });
-
-    // Wait for fonts and images to fully load
     await page.evaluate(() => document.fonts.ready);
     await new Promise((r) => setTimeout(r, 800));
 
@@ -53,18 +76,11 @@ export async function POST(request: Request) {
       clip: { x: 0, y: 0, width, height },
     });
 
-    const base64 = `data:image/jpeg;base64,${Buffer.from(screenshot).toString("base64")}`;
-
-    return NextResponse.json({ imageBase64: base64 });
-  } catch (err: any) {
-    console.error("[Render Image Error]:", err);
-    return NextResponse.json(
-      { error: err.message || "Failed to render image" },
-      { status: 500 }
-    );
+    return NextResponse.json({ imageBase64: `data:image/jpeg;base64,${Buffer.from(screenshot).toString("base64")}` });
+  } catch (err) {
+    logger.error({ err }, "Render image failed");
+    return NextResponse.json({ error: "Failed to render image" }, { status: 500 });
   } finally {
-    if (browser) {
-      await browser.close();
-    }
+    if (browser) await browser.close();
   }
-}
+});

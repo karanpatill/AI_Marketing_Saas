@@ -1,7 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { createAdminClient } from "@/lib/supabaseServer";
 import { withApiWrapper } from "@/backend/middlewares/apiWrapper";
-import { requireAuth } from "@/backend/middlewares/auth";
+import { requireAuth, resolveWorkspaceForUser, requireWorkspaceAccess } from "@/backend/middlewares/auth";
 import { AIGenerationService } from "@/backend/services/AIGenerationService";
 import { BillingService } from "@/backend/services/BillingService";
 export const POST = withApiWrapper(async (req: NextRequest) => {
@@ -20,7 +20,7 @@ export const POST = withApiWrapper(async (req: NextRequest) => {
   let topic = prompt || "A professional marketing post";
   let finalJobType = jobType || 'generate_post';
   let finalAspectRatio = aspectRatio || '1:1';
-  let resolvedWorkspaceId = orgId || "00000000-0000-0000-0000-000000000000";
+  let resolvedWorkspaceId = await resolveWorkspaceForUser(user.id, body.workspaceId || orgId);
 
   if (calendarItemId) {
     const { data: item } = await supabaseAdmin
@@ -33,7 +33,10 @@ export const POST = withApiWrapper(async (req: NextRequest) => {
       topic = item.title;
       // Depending on the content type, route to correct generator
       finalJobType = item.post_type?.toLowerCase().includes('carousel') ? 'generate_carousel' : 'generate_post';
-      resolvedWorkspaceId = item.brand_dna?.workspace_id || resolvedWorkspaceId;
+      if (item.brand_dna?.workspace_id) {
+        await requireWorkspaceAccess(user.id, item.brand_dna.workspace_id);
+        resolvedWorkspaceId = item.brand_dna.workspace_id;
+      }
       // Default aspect ratio for calendar items if not specified
       finalAspectRatio = "1:1";
     }
@@ -56,7 +59,7 @@ export const POST = withApiWrapper(async (req: NextRequest) => {
 
   let brandQuery = supabaseAdmin.from('brand_dna').select('*');
   if (brandDnaId) {
-    brandQuery = brandQuery.eq('id', brandDnaId);
+    brandQuery = brandQuery.eq('id', brandDnaId).eq('workspace_id', resolvedWorkspaceId);
   } else {
     brandQuery = brandQuery.eq('workspace_id', resolvedWorkspaceId).order('created_at', { ascending: false }).limit(1);
   }

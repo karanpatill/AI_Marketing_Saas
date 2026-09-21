@@ -1,17 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withApiWrapper } from "@/backend/middlewares/apiWrapper";
-import { requireAuth } from "@/backend/middlewares/auth";
+import { requireAuth, requireWorkspaceAccess } from "@/backend/middlewares/auth";
 import { createAdminClient } from "@/lib/supabaseServer";
 import { ProjectService } from "@/backend/services/ProjectService";
 
 export const GET = withApiWrapper(async (req: NextRequest) => {
-  await requireAuth();
+  const user = await requireAuth();
   const url = new URL(req.url);
   const workspaceId = url.searchParams.get("workspaceId");
   
   if (!workspaceId) {
     return NextResponse.json({ error: "workspaceId is required" }, { status: 400 });
   }
+  await requireWorkspaceAccess(user.id, workspaceId);
 
   const supabase = createAdminClient();
   const service = new ProjectService(supabase);
@@ -21,13 +22,14 @@ export const GET = withApiWrapper(async (req: NextRequest) => {
 });
 
 export const POST = withApiWrapper(async (req: NextRequest) => {
-  await requireAuth();
+  const user = await requireAuth();
   const body = await req.json();
   const { workspaceId, name, ...data } = body;
 
   if (!workspaceId || !name) {
     return NextResponse.json({ error: "workspaceId and name are required" }, { status: 400 });
   }
+  await requireWorkspaceAccess(user.id, workspaceId);
 
   const supabase = createAdminClient();
   const service = new ProjectService(supabase);

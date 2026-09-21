@@ -3,55 +3,88 @@
 @tailwind utilities;
 
 /* -------------------------------------------------------------------------- */
-/* PRISMA CINEMATIC THEME DESIGN SYSTEM                                       */
+/* AUTOMARC DESIGN TOKENS — light, product-grade (Material-3 / Workspace feel) */
+/* Every colour in the app should come from these variables via Tailwind's     */
+/* semantic names (bg-surface, text-ink, border-line, bg-accent …).            */
 /* -------------------------------------------------------------------------- */
 
 :root {
-  --bg-global: #000000;
-  --surface-panel: #101010;
-  --surface-elevated: #212121;
-  --primary-text: #E1E0CC;
-  --primary-color: #DEDBC8;
-  --muted-text: rgba(225, 224, 204, 0.7);
-  --accent-green: #22C55E;
+  /* Surfaces */
+  --color-canvas: 248 249 250;        /* page background  #F8F9FA */
+  --color-surface: 255 255 255;       /* cards, panels    #FFFFFF */
+  --color-surface-2: 243 244 246;     /* subtle fills     #F3F4F6 */
+  --color-surface-3: 233 236 239;     /* hover fills      #E9ECEF */
+
+  /* Ink */
+  --color-ink: 31 31 31;              /* primary text     #1F1F1F */
+  --color-ink-2: 68 71 70;            /* secondary text   #444746 */
+  --color-ink-3: 116 119 117;         /* tertiary/labels  #747775 */
+  --color-ink-4: 171 174 172;         /* placeholders     #ABAEAC */
+
+  /* Lines */
+  --color-line: 227 230 234;          /* hairline border  #E3E6EA */
+  --color-line-2: 201 204 209;        /* strong border    #C9CCD1 */
+
+  /* Accent (Google-blue family) */
+  --color-accent: 11 87 208;          /* #0B57D0 */
+  --color-accent-hover: 9 73 176;     /* #0949B0 */
+  --color-accent-soft: 232 240 254;   /* #E8F0FE tinted fill */
+  --color-accent-ink: 4 30 73;        /* text on soft accent #041E49 */
+  --color-on-accent: 255 255 255;
+
+  /* Semantic */
+  --color-success: 24 128 56;         /* #188038 */
+  --color-success-soft: 230 244 234;  /* #E6F4EA */
+  --color-warning: 176 106 0;         /* #B06A00 */
+  --color-warning-soft: 254 247 224;  /* #FEF7E0 */
+  --color-danger: 197 34 31;          /* #C5221F */
+  --color-danger-soft: 252 232 230;   /* #FCE8E6 */
+  --color-info: 11 87 208;
+  --color-info-soft: 232 240 254;
+
+  /* Elevation */
+  --shadow-1: 0 1px 2px rgba(60, 64, 67, 0.3), 0 1px 3px 1px rgba(60, 64, 67, 0.15);
+  --shadow-2: 0 1px 2px rgba(60, 64, 67, 0.3), 0 2px 6px 2px rgba(60, 64, 67, 0.15);
+  --shadow-3: 0 4px 8px 3px rgba(60, 64, 67, 0.15), 0 1px 3px rgba(60, 64, 67, 0.3);
+
+  /* Shape */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+
+  /* Layout */
+  --sidebar-width: 256px;
+  --sidebar-width-collapsed: 72px;
+  --topbar-height: 64px;
 }
 
-/* Global Font Stack & Text Selection */
-* {
-  font-family: 'Almarai', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  box-sizing: border-box;
-}
-
-::selection {
-  background: rgba(222, 219, 200, 0.2);
-  color: #E1E0CC;
-}
-
-/* Scrollbar Styling */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-::-webkit-scrollbar-track {
-  background: #000000;
-}
-::-webkit-scrollbar-thumb {
-  background: #2a2a2a;
-  border-radius: 9999px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #3a3a3a;
-}
-
-/* Base Body Styles */
+/* Base ------------------------------------------------------------------- */
 @layer base {
-  html, body {
-    background-color: #000000;
-    color: #E1E0CC;
-    min-height: 100vh;
+  * {
+    box-sizing: border-box;
+    border-color: rgb(var(--color-line));
+  }
+
+  html {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    text-rendering: optimizeSpeed;
+    text-rendering: optimizeLegibility;
+    scroll-behavior: smooth;
+  }
+
+  html,
+  body {
+    background-color: rgb(var(--color-canvas));
+    color: rgb(var(--color-ink));
+    min-height: 100vh;
+    font-family: var(--font-inter), system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  ::selection {
+    background: rgb(var(--color-accent-soft));
+    color: rgb(var(--color-accent-ink));
   }
 
   a {
@@ -59,82 +92,89 @@
     text-decoration: none;
   }
 
-  input, button, textarea, select {
-    font-family: inherit;
-    border: none;
-    background: none;
+  input,
+  button,
+  textarea,
+  select {
+    font: inherit;
+    color: inherit;
+  }
+
+  h1, h2, h3, h4 {
+    letter-spacing: -0.01em;
+    font-weight: 500;
+  }
+
+  /* Keyboard focus only */
+  :focus-visible {
+    outline: 2px solid rgb(var(--color-accent));
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+  :focus:not(:focus-visible) {
     outline: none;
   }
+
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: rgb(var(--color-line-2));
+    border: 3px solid rgb(var(--color-canvas));
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-thumb:hover { background: rgb(var(--color-ink-4)); }
 }
 
-/* SVG Noise Utilities — GPU-composited so they don't repaint on scroll */
-.noise-overlay {
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-  transform: translate3d(0, 0, 0);
-  will-change: opacity;
-  pointer-events: none;
+/* Utilities ---------------------------------------------------------------- */
+@layer utilities {
+  .shadow-1 { box-shadow: var(--shadow-1); }
+  .shadow-2 { box-shadow: var(--shadow-2); }
+  .shadow-3 { box-shadow: var(--shadow-3); }
+
+  .hide-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+  .hide-scrollbar::-webkit-scrollbar { display: none; }
+
+  .text-balance { text-wrap: balance; }
+  .tabular { font-variant-numeric: tabular-nums; }
 }
 
-.bg-noise {
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-  transform: translate3d(0, 0, 0);
-  will-change: opacity;
-  pointer-events: none;
-}
-
-.font-serif-italic {
-  font-family: 'Instrument Serif', serif;
-  font-style: italic;
-}
-
-/* Shimmer Skeleton Loader */
+/* Motion ------------------------------------------------------------------- */
 @keyframes shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
 }
-
 .skeleton {
-  background: linear-gradient(90deg, #212121 25%, #2a2a2a 50%, #212121 75%);
+  background: linear-gradient(90deg, rgb(var(--color-surface-2)) 25%, rgb(var(--color-surface-3)) 50%, rgb(var(--color-surface-2)) 75%);
   background-size: 200% 100%;
-  animation: shimmer 1.5s ease-in-out infinite;
-  border-radius: 0.5rem;
+  animation: shimmer 1.4s ease-in-out infinite;
+  border-radius: var(--radius-sm);
 }
 
-@layer components {
-  /* Prisma Components */
-  .prisma-panel {
-    background-color: #101010;
-    border: 1px solid rgba(225, 224, 204, 0.1);
-    border-radius: 1rem;
-  }
-
-  .prisma-elevated {
-    background-color: #212121;
-    border: 1px solid rgba(225, 224, 204, 0.1);
-    border-radius: 1rem;
-  }
-
-  .prisma-btn-primary {
-    background-color: #DEDBC8;
-    color: #000000;
-    font-weight: 500;
-    border-radius: 9999px;
-    padding: 0.5rem 1.25rem;
-    transition: all 0.2s ease;
-  }
-  .prisma-btn-primary:hover {
-    background-color: #E1E0CC;
-  }
-
-  .prisma-btn-secondary {
-    background-color: transparent;
-    color: #E1E0CC;
-    border: 1px solid rgba(225, 224, 204, 0.3);
-    border-radius: 9999px;
-    padding: 0.5rem 1.25rem;
-    transition: all 0.2s ease;
-  }
-  .prisma-btn-secondary:hover {
-    border-color: rgba(225, 224, 204, 0.6);
-  }
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
 }
+.animate-fade-up { animation: fade-up 0.25s ease-out both; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+/* -------------------------------------------------------------------------- */
+/* LEGACY — kept only so the not-yet-migrated dashboard tabs still render.     */
+/* Remove once /dashboard/legacy is deleted.                                   */
+/* -------------------------------------------------------------------------- */
+.legacy-dark {
+  background-color: #000;
+  color: #e1e0cc;
+  font-family: var(--font-inter), system-ui, sans-serif;
+}
+.legacy-dark ::-webkit-scrollbar-track { background: #000; }
+.legacy-dark ::-webkit-scrollbar-thumb { background: #2a2a2a; border-color: #000; }
+.legacy-dark .prisma-panel { background-color: #101010; border: 1px solid rgba(225, 224, 204, 0.1); border-radius: 1rem; }
+.legacy-dark .prisma-elevated { background-color: #212121; border: 1px solid rgba(225, 224, 204, 0.1); border-radius: 1rem; }
+.legacy-dark .prisma-btn-primary { background-color: #dedbc8; color: #000; font-weight: 500; border-radius: 9999px; padding: 0.5rem 1.25rem; }
+.legacy-dark .prisma-btn-secondary { background-color: transparent; color: #e1e0cc; border: 1px solid rgba(225, 224, 204, 0.3); border-radius: 9999px; padding: 0.5rem 1.25rem; }
+.legacy-dark .skeleton { background: linear-gradient(90deg, #212121 25%, #2a2a2a 50%, #212121 75%); background-size: 200% 100%; }
+.font-serif-italic { font-family: var(--font-instrument-serif), Georgia, serif; font-style: italic; }
+.noise-overlay, .bg-noise { pointer-events: none; }

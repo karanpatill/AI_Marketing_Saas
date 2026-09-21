@@ -33,11 +33,12 @@ export function withApiWrapper(handler: HandlerFunction): HandlerFunction {
     } catch (error: any) {
       const duration = Date.now() - startTime;
       
-      logger.error({
-        req: { id: requestId },
-        err: error,
-        duration
-      }, 'Request Failed');
+      if (error instanceof BaseError && error.statusCode < 500) {
+        // Expected client-side failures (401/403/404/409) are not incidents.
+        logger.warn({ req: { id: requestId }, code: error.code, status: error.statusCode, duration }, error.message);
+      } else {
+        logger.error({ req: { id: requestId }, err: error, duration }, 'Request Failed');
+      }
 
       if (error instanceof BaseError) {
         return NextResponse.json({

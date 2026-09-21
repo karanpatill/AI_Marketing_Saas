@@ -173,6 +173,19 @@ export default function DashboardPage() {
       const params = new URLSearchParams(window.location.search);
       let needsCleanup = false;
 
+      // Deep links from the new app shell sidebar (/dashboard/legacy?tab=studio&settingsTab=team)
+      const tabParam = params.get("tab");
+      const validTabs = ["control", "dna", "campaigns", "mix", "studio", "carousel", "video", "settings", "assets"] as const;
+      if (tabParam && (validTabs as readonly string[]).includes(tabParam)) {
+        setActiveTab(tabParam as (typeof validTabs)[number]);
+      }
+      const settingsParam = params.get("settingsTab");
+      const validSettings = ["profile", "workspace", "integrations", "team", "autopilot", "billing"] as const;
+      if (settingsParam && (validSettings as readonly string[]).includes(settingsParam)) {
+        setActiveTab("settings");
+        setSettingsTab(settingsParam as (typeof validSettings)[number]);
+      }
+
       // LinkedIn
       if (params.get("linkedin_success") === "connected") {
         setToast({ message: "LinkedIn Account connected successfully!", type: "success" });
@@ -1227,7 +1240,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
   ];
 
   return (
-    <div className="h-screen w-full bg-black text-[#ffffff] flex flex-col relative pt-24 md:pt-28 overflow-hidden">
+    <div className="h-screen w-full bg-black text-[#ffffff] flex flex-col relative pt-4 overflow-hidden">
       {/* Noise Texture Background */}
       <div className="fixed inset-0 bg-noise opacity-[0.04] pointer-events-none z-0 mix-blend-overlay" />
       
@@ -1296,7 +1309,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
               {/* Upgrade Button */}
               <Link 
                 href="/dashboard/billing"
-                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-[#DEDBC8] text-black hover:bg-white transition-all rounded-lg text-xs font-bold uppercase tracking-wider"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-[#DEDBC8] text-black hover:bg-white transition-all rounded-lg text-xs font-bold uppercase tracking-wider"
               >
                 Upgrade
               </Link>
@@ -2198,8 +2211,8 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
           {activeTab === "campaigns" && (
             <div className="relative animate-fade-up">
               {!hasAutomateAccess && (
-                <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/40 backdrop-blur-md rounded-3xl">
-                  <div className="text-center space-y-4 p-8">
+                <div className="absolute inset-0 z-50 bg-black/40 backdrop-blur-md rounded-3xl overflow-clip">
+                  <div className="sticky top-32 flex flex-col items-center justify-center p-8 text-center space-y-4">
                     <div className="w-16 h-16 rounded-full bg-[#E1E0CC]/10 flex items-center justify-center text-[#E1E0CC] mx-auto mb-4">
                       <Lock className="w-8 h-8" />
                     </div>
@@ -2937,8 +2950,8 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
           {activeTab === "carousel" && (
             <div className="relative animate-fade-up">
               {!hasCarouselAccess && (
-                <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/40 backdrop-blur-md rounded-3xl">
-                  <div className="text-center space-y-4 p-8">
+                <div className="absolute inset-0 z-50 bg-black/40 backdrop-blur-md rounded-3xl overflow-clip">
+                  <div className="sticky top-32 flex flex-col items-center justify-center p-8 text-center space-y-4">
                     <div className="w-16 h-16 rounded-full bg-[#E1E0CC]/10 flex items-center justify-center text-[#E1E0CC] mx-auto mb-4">
                       <Lock className="w-8 h-8" />
                     </div>

@@ -1,25 +1,32 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth, requireWorkspaceAccess } from '@/backend/middlewares/auth';
+import { consumeOAuthState } from '@/backend/utils/oauthState';
+import { logger } from '@/backend/utils/logger';
 import { FacebookPublisherService } from '@/backend/services/social/FacebookPublisherService';
 import { InstagramPublisherService } from '@/backend/services/social/InstagramPublisherService';
 
-export async function GET(request: Request) {
-  const protocol = request.headers.get('x-forwarded-proto') || (request.url.startsWith('https') ? 'https' : 'http');
-  const host = request.headers.get('host') || 'localhost:3000';
-  const origin = `${protocol}://${host}`;
+export async function GET(request: NextRequest) {
+  const origin = request.nextUrl.origin;
 
-  const { searchParams } = new URL(request.url);
+  const { searchParams } = request.nextUrl;
   const code = searchParams.get('code');
-  const workspaceId = searchParams.get('state');
+  const state = searchParams.get('state');
   const error = searchParams.get('error');
 
-  if (error || !code || !workspaceId) {
-    console.error('[Instagram OAuth Callback Error]:', error || 'Missing code/state');
+  if (error || !code || !state) {
+    logger.warn({ error }, 'Instagram OAuth Callback Error');
     return NextResponse.redirect(
       `${origin}/dashboard?instagram_error=${encodeURIComponent(error || 'connection_failed')}&settingsTab=integrations`
     );
   }
 
   try {
+    // The callback must come from the same signed-in user that started the flow,
+    // and the state nonce must match the cookie we set for their chosen workspace.
+    const user = await requireAuth();
+    const workspaceId = await consumeOAuthState('instagram', state);
+    await requireWorkspaceAccess(user.id, workspaceId);
+
     const redirectUri = `${origin}/api/social/callback/instagram`;
 
     // 1. Exchange code for user access token (long-lived)
@@ -56,10 +63,10 @@ export async function GET(request: Request) {
     return NextResponse.redirect(
       `${origin}/dashboard?instagram_accounts=${igEncoded}&instagram_user_token=${encodeURIComponent(userAccessToken)}&instagram_workspace=${workspaceId}&settingsTab=integrations`
     );
-  } catch (err: any) {
-    console.error('[Instagram Token Exchange Failed]:', err);
+  } catch (err) {
+    logger.error({ err }, 'Instagram Token Exchange Failed');
     return NextResponse.redirect(
-      `${origin}/dashboard?instagram_error=${encodeURIComponent(err.message || 'token_exchange_failed')}&settingsTab=integrations`
+      `${origin}/dashboard?instagram_error=${encodeURIComponent((err instanceof Error && err.message) || 'token_exchange_failed')}&settingsTab=integrations`
     );
   }
 }

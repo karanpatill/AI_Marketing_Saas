@@ -1,4 +1,7 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth, requireWorkspaceAccess } from '@/backend/middlewares/auth';
+import { consumeOAuthState } from '@/backend/utils/oauthState';
+import { logger } from '@/backend/utils/logger';
 import { FacebookPublisherService } from '@/backend/services/social/FacebookPublisherService';
 
 /**
@@ -10,24 +13,28 @@ import { FacebookPublisherService } from '@/backend/services/social/FacebookPubl
  * 3. If user manages exactly 1 page → auto-connects it
  * 4. If multiple pages → redirects to dashboard with page list for user to pick
  */
-export async function GET(request: Request) {
-  const protocol = request.headers.get('x-forwarded-proto') || (request.url.startsWith('https') ? 'https' : 'http');
-  const host = request.headers.get('host') || 'localhost:3000';
-  const origin = `${protocol}://${host}`;
+export async function GET(request: NextRequest) {
+  const origin = request.nextUrl.origin;
 
-  const { searchParams } = new URL(request.url);
+  const { searchParams } = request.nextUrl;
   const code = searchParams.get('code');
-  const workspaceId = searchParams.get('state');
+  const state = searchParams.get('state');
   const error = searchParams.get('error');
 
-  if (error || !code || !workspaceId) {
-    console.error('[Facebook OAuth Callback Error]:', error || 'Missing code/state');
+  if (error || !code || !state) {
+    logger.warn({ error }, 'Facebook OAuth Callback Error');
     return NextResponse.redirect(
       `${origin}/dashboard?facebook_error=${encodeURIComponent(error || 'connection_failed')}&settingsTab=integrations`
     );
   }
 
   try {
+    // The callback must come from the same signed-in user that started the flow,
+    // and the state nonce must match the cookie we set for their chosen workspace.
+    const user = await requireAuth();
+    const workspaceId = await consumeOAuthState('facebook', state);
+    await requireWorkspaceAccess(user.id, workspaceId);
+
     const redirectUri = `${origin}/api/social/callback/facebook`;
 
     // 1. Exchange code for user access token (long-lived)
@@ -66,10 +73,10 @@ export async function GET(request: Request) {
     return NextResponse.redirect(
       `${origin}/dashboard?facebook_pages=${pagesEncoded}&facebook_user_token=${encodeURIComponent(userAccessToken)}&facebook_workspace=${workspaceId}&settingsTab=integrations`
     );
-  } catch (err: any) {
-    console.error('[Facebook Token Exchange Failed]:', err);
+  } catch (err) {
+    logger.error({ err }, 'Facebook Token Exchange Failed');
     return NextResponse.redirect(
-      `${origin}/dashboard?facebook_error=${encodeURIComponent(err.message || 'token_exchange_failed')}&settingsTab=integrations`
+      `${origin}/dashboard?facebook_error=${encodeURIComponent((err instanceof Error && err.message) || 'token_exchange_failed')}&settingsTab=integrations`
     );
   }
 }

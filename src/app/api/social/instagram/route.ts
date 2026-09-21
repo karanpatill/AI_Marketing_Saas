@@ -1,68 +1,63 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
+import { withApiWrapper } from '@/backend/middlewares/apiWrapper';
+import { requireAuth, requireWorkspaceAccess } from '@/backend/middlewares/auth';
 import { InstagramPublisherService } from '@/backend/services/social/InstagramPublisherService';
+import { redactConnection } from '@/backend/services/social/redact';
 
-export async function GET(request: Request) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const workspaceId = searchParams.get('workspaceId');
+const postSchema = z.object({
+  workspaceId: z.string().uuid(),
+  action: z.enum(['connect', 'publish']),
+  accountHandle: z.string().optional(),
+  instagramAccountId: z.string().optional(),
+  accessToken: z.string().optional(),
+  imageUrl: z.string().url().optional(),
+  caption: z.string().max(2200).optional(),
+});
 
-    if (!workspaceId) {
-      return NextResponse.json({ error: 'Missing workspaceId' }, { status: 400 });
-    }
+export const GET = withApiWrapper(async (request: NextRequest) => {
+  const user = await requireAuth();
+  const workspaceId = request.nextUrl.searchParams.get('workspaceId');
 
-    const connection = await InstagramPublisherService.getConnection(workspaceId);
-    return NextResponse.json({ connection });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  if (!workspaceId) {
+    return NextResponse.json({ error: 'Missing workspaceId' }, { status: 400 });
   }
-}
+  await requireWorkspaceAccess(user.id, workspaceId);
 
-export async function POST(request: Request) {
-  try {
-    const body = await request.json();
-    const { action, workspaceId, accountHandle, instagramAccountId, accessToken, imageUrl, caption } = body;
+  const connection = await InstagramPublisherService.getConnection(workspaceId);
+  return NextResponse.json({ connection: redactConnection(connection) });
+});
 
-    if (!workspaceId) {
-      return NextResponse.json({ error: 'Missing workspaceId' }, { status: 400 });
+export const POST = withApiWrapper(async (request: NextRequest) => {
+  const user = await requireAuth();
+  const body = postSchema.parse(await request.json());
+  const { workspaceId, action } = body;
+
+  await requireWorkspaceAccess(user.id, workspaceId);
+
+  if (action === 'connect') {
+    // Called after OAuth when the user picks one of several IG accounts
+    if (!body.accountHandle || !body.instagramAccountId || !body.accessToken) {
+      return NextResponse.json({ error: 'Missing account credentials' }, { status: 400 });
     }
-
-    if (action === 'connect') {
-      if (!accountHandle || !instagramAccountId || !accessToken) {
-        return NextResponse.json({ error: 'Missing account credentials' }, { status: 400 });
-      }
-
-      const formattedHandle = accountHandle.startsWith('@') ? accountHandle : `@${accountHandle}`;
-      
-      const connection = await InstagramPublisherService.saveConnection(
-        workspaceId,
-        formattedHandle,
-        instagramAccountId,
-        accessToken
-      );
-
-      return NextResponse.json({ 
-        success: true, 
-        connection,
-        message: `Successfully connected ${formattedHandle} via Meta OAuth`
-      });
-    }
-
-    if (action === 'publish') {
-      if (!imageUrl || !caption) {
-        return NextResponse.json({ error: 'Missing imageUrl or caption for publishing' }, { status: 400 });
-      }
-
-      const result = await InstagramPublisherService.publishSinglePost(
-        workspaceId,
-        imageUrl,
-        caption
-      );
-
-      return NextResponse.json(result);
-    }
-
-    return NextResponse.json({ error: 'Invalid action specified' }, { status: 400 });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    const formattedHandle = body.accountHandle.startsWith('@') ? body.accountHandle : `@${body.accountHandle}`;
+    const connection = await InstagramPublisherService.saveConnection(
+      workspaceId,
+      formattedHandle,
+      body.instagramAccountId,
+      body.accessToken
+    );
+    return NextResponse.json({
+      success: true,
+      connection: redactConnection(connection),
+      message: `Successfully connected ${formattedHandle} via Meta OAuth`,
+    });
   }
-}
+
+  // publish
+  if (!body.imageUrl || !body.caption) {
+    return NextResponse.json({ error: 'Missing imageUrl or caption for publishing' }, { status: 400 });
+  }
+  const result = await InstagramPublisherService.publishSinglePost(workspaceId, body.imageUrl, body.caption);
+  return NextResponse.json(result);
+});

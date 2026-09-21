@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { requireAuth, requireBrandAccess } from "@/backend/middlewares/auth";
+import { BaseError } from "@/backend/utils/errors";
 import { 
   getBrandMemoryContext, 
   saveToMemoryBank, 
@@ -13,11 +15,16 @@ export async function GET(req: Request) {
     if (!brandDnaId) {
       return NextResponse.json({ error: "Missing brandDnaId parameter" }, { status: 400 });
     }
+    const user = await requireAuth();
+    await requireBrandAccess(user.id, brandDnaId);
 
     const memoryContext = await getBrandMemoryContext(brandDnaId);
     return NextResponse.json(memoryContext);
 
   } catch (error: any) {
+    if (error instanceof BaseError) {
+      return NextResponse.json({ error: error.message }, { status: error.statusCode });
+    }
     console.error("GET Brand Memory Error:", error);
     return NextResponse.json({ error: error.message || "Failed to retrieve brand memory" }, { status: 500 });
   }
@@ -31,6 +38,8 @@ export async function POST(req: Request) {
     if (!brandDnaId) {
       return NextResponse.json({ error: "Missing brandDnaId" }, { status: 400 });
     }
+    const user = await requireAuth();
+    await requireBrandAccess(user.id, brandDnaId);
 
     if (action === "saveItem") {
       const { type, content, category } = body;
@@ -58,6 +67,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid action. Supported: saveItem, recordPerformance" }, { status: 400 });
 
   } catch (error: any) {
+    if (error instanceof BaseError) {
+      return NextResponse.json({ error: error.message }, { status: error.statusCode });
+    }
     console.error("POST Brand Memory Error:", error);
     return NextResponse.json({ error: error.message || "Failed to process brand memory transaction" }, { status: 500 });
   }

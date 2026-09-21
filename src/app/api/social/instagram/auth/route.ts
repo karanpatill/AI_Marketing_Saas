@@ -1,18 +1,27 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth, requireWorkspaceAccess } from '@/backend/middlewares/auth';
+import { createOAuthState } from '@/backend/utils/oauthState';
 import { FacebookPublisherService } from '@/backend/services/social/FacebookPublisherService';
+import { logger } from '@/backend/utils/logger';
 
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const workspaceId = searchParams.get('workspaceId');
+/** Browser navigation entry point: 302 to Meta's consent screen with IG scopes. */
+export async function GET(request: NextRequest) {
+  const origin = request.nextUrl.origin;
+  try {
+    const user = await requireAuth();
+    const workspaceId = request.nextUrl.searchParams.get('workspaceId');
+    if (!workspaceId) {
+      return NextResponse.json({ error: 'workspaceId is required' }, { status: 400 });
+    }
+    await requireWorkspaceAccess(user.id, workspaceId);
 
-  if (!workspaceId) {
-    return NextResponse.json({ error: 'workspaceId is required' }, { status: 400 });
+    const state = await createOAuthState('instagram', workspaceId);
+    const url = FacebookPublisherService.getInstagramAuthUrl(state, `${origin}/api/social/callback/instagram`);
+    return NextResponse.redirect(url);
+  } catch (error) {
+    logger.error({ err: error }, 'Instagram connect failed');
+    return NextResponse.redirect(
+      `${origin}/dashboard?instagram_error=${encodeURIComponent((error instanceof Error && error.message) || 'auth_url_failed')}&settingsTab=integrations`
+    );
   }
-
-  const protocol = request.headers.get('x-forwarded-proto') || (request.url.startsWith('https') ? 'https' : 'http');
-  const host = request.headers.get('host') || 'localhost:3000';
-  const redirectUri = `${protocol}://${host}/api/social/callback/instagram`;
-
-  const url = FacebookPublisherService.getInstagramAuthUrl(workspaceId, redirectUri);
-  return NextResponse.redirect(url);
 }

@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withApiWrapper } from "@/backend/middlewares/apiWrapper";
-import { requireAuth } from "@/backend/middlewares/auth";
+import { requireAuth, requireWorkspaceAccess } from "@/backend/middlewares/auth";
 import { createAdminClient } from "@/lib/supabaseServer";
 import { AssetService } from "@/backend/services/AssetService";
 
 export const GET = withApiWrapper(async (req: NextRequest) => {
-  await requireAuth();
+  const user = await requireAuth();
   const url = new URL(req.url);
   const workspaceId = url.searchParams.get("workspaceId");
   const type = url.searchParams.get("type") || undefined;
@@ -13,6 +13,7 @@ export const GET = withApiWrapper(async (req: NextRequest) => {
   if (!workspaceId) {
     return NextResponse.json({ error: "workspaceId is required" }, { status: 400 });
   }
+  await requireWorkspaceAccess(user.id, workspaceId);
 
   const supabase = createAdminClient();
   const service = new AssetService(supabase);
@@ -22,13 +23,14 @@ export const GET = withApiWrapper(async (req: NextRequest) => {
 });
 
 export const POST = withApiWrapper(async (req: NextRequest) => {
-  await requireAuth();
+  const user = await requireAuth();
   const body = await req.json();
   const { workspaceId, type, url: assetUrl, ...data } = body;
 
   if (!workspaceId || !type || !assetUrl) {
     return NextResponse.json({ error: "workspaceId, type, and url are required" }, { status: 400 });
   }
+  await requireWorkspaceAccess(user.id, workspaceId);
 
   const supabase = createAdminClient();
   const service = new AssetService(supabase);

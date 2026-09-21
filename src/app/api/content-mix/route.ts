@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { requireAuth, requireBrandAccess } from "@/backend/middlewares/auth";
+import { BaseError } from "@/backend/utils/errors";
 import { 
   generateContentMixRecommendation, 
   updateContentMixOverride, 
@@ -13,11 +15,16 @@ export async function GET(req: Request) {
     if (!brandDnaId) {
       return NextResponse.json({ error: "Missing brandDnaId parameter" }, { status: 400 });
     }
+    const user = await requireAuth();
+    await requireBrandAccess(user.id, brandDnaId);
 
     const plan = await getContentMixPlan(brandDnaId);
     return NextResponse.json(plan);
 
   } catch (error: any) {
+    if (error instanceof BaseError) {
+      return NextResponse.json({ error: error.message }, { status: error.statusCode });
+    }
     console.error("GET Content Mix Plan Error:", error);
     return NextResponse.json({ error: error.message || "Failed to retrieve content mix plan" }, { status: 500 });
   }
@@ -31,6 +38,8 @@ export async function POST(req: Request) {
     if (!brandDnaId) {
       return NextResponse.json({ error: "Missing brandDnaId" }, { status: 400 });
     }
+    const user = await requireAuth();
+    await requireBrandAccess(user.id, brandDnaId);
 
     if (action === "generate") {
       const plan = await generateContentMixRecommendation(brandDnaId);
@@ -50,6 +59,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid action. Supported: generate, override" }, { status: 400 });
 
   } catch (error: any) {
+    if (error instanceof BaseError) {
+      return NextResponse.json({ error: error.message }, { status: error.statusCode });
+    }
     console.error("POST Content Mix Error:", error);
     return NextResponse.json({ error: error.message || "Failed to process content mix transaction" }, { status: 500 });
   }

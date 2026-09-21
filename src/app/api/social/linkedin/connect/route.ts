@@ -1,20 +1,25 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth, requireWorkspaceAccess } from '@/backend/middlewares/auth';
+import { createOAuthState } from '@/backend/utils/oauthState';
 import { LinkedInPublisherService } from '@/backend/services/social/LinkedInPublisherService';
+import { logger } from '@/backend/utils/logger';
 
-export async function GET(request: Request) {
+/** Browser navigation entry point: 302 to LinkedIn's consent screen. */
+export async function GET(request: NextRequest) {
+  const origin = request.nextUrl.origin;
   try {
-    const { searchParams } = new URL(request.url);
-    const workspaceId = searchParams.get('workspaceId') || 'default_ws';
-    const origin = new URL(request.url).origin;
-    const redirectUri = `${origin}/api/social/callback/linkedin`;
+    const user = await requireAuth();
+    const workspaceId = request.nextUrl.searchParams.get('workspaceId');
+    if (!workspaceId) {
+      return NextResponse.redirect(`${origin}/dashboard?linkedin_error=missing_workspace`);
+    }
+    await requireWorkspaceAccess(user.id, workspaceId);
 
-    const authUrl = LinkedInPublisherService.getAuthUrl(workspaceId, redirectUri);
-
-    // Direct HTTP 302 Redirect to LinkedIn OAuth Authorization Page
+    const state = await createOAuthState('linkedin', workspaceId);
+    const authUrl = LinkedInPublisherService.getAuthUrl(state, `${origin}/api/social/callback/linkedin`);
     return NextResponse.redirect(authUrl);
-  } catch (error: any) {
-    console.error('[LinkedIn Connect Error]:', error);
-    const origin = new URL(request.url).origin;
-    return NextResponse.redirect(`${origin}/dashboard?linkedin_error=${encodeURIComponent(error.message || 'auth_url_failed')}`);
+  } catch (error) {
+    logger.error({ err: error }, 'LinkedIn connect failed');
+    return NextResponse.redirect(`${origin}/dashboard?linkedin_error=${encodeURIComponent((error instanceof Error && error.message) || 'auth_url_failed')}`);
   }
 }

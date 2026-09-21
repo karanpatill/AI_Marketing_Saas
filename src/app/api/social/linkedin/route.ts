@@ -1,86 +1,66 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
+import { withApiWrapper } from '@/backend/middlewares/apiWrapper';
+import { requireAuth, requireWorkspaceAccess } from '@/backend/middlewares/auth';
+import { createOAuthState } from '@/backend/utils/oauthState';
 import { LinkedInPublisherService } from '@/backend/services/social/LinkedInPublisherService';
+import { redactConnection } from '@/backend/services/social/redact';
 
-export async function GET(request: Request) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const workspaceId = searchParams.get('workspaceId');
-    const action = searchParams.get('action');
+const postSchema = z.object({
+  workspaceId: z.string().uuid(),
+  action: z.enum(['disconnect', 'set_org_id', 'publish']),
+  organizationId: z.string().optional(),
+  caption: z.string().max(3000).optional(),
+  videoUrl: z.string().url().optional(),
+  imageUrl: z.string().url().optional(),
+  imageBase64: z.string().optional(),
+});
 
-    if (!workspaceId) {
-      return NextResponse.json({ error: 'Missing workspaceId' }, { status: 400 });
-    }
+export const GET = withApiWrapper(async (request: NextRequest) => {
+  const user = await requireAuth();
+  const { searchParams } = request.nextUrl;
+  const workspaceId = searchParams.get('workspaceId');
+  const action = searchParams.get('action');
 
-    if (action === 'get_auth_url') {
-      const protocol = request.headers.get('x-forwarded-proto') || (request.url.startsWith('https') ? 'https' : 'http');
-      const host = request.headers.get('host') || 'localhost:3000';
-      const origin = `${protocol}://${host}`;
-      const redirectUri = `${origin}/api/social/callback/linkedin`;
-      const authUrl = LinkedInPublisherService.getAuthUrl(workspaceId, redirectUri);
-      return NextResponse.json({ authUrl });
-    }
-
-    const connection = await LinkedInPublisherService.getConnection(workspaceId);
-    return NextResponse.json({ connection });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  if (!workspaceId) {
+    return NextResponse.json({ error: 'Missing workspaceId' }, { status: 400 });
   }
-}
+  await requireWorkspaceAccess(user.id, workspaceId);
 
-export async function POST(request: Request) {
-  try {
-    const body = await request.json();
-    const { action, workspaceId, accountHandle, memberUrn, accessToken } = body;
-
-    if (!workspaceId) {
-      return NextResponse.json({ error: 'Missing workspaceId' }, { status: 400 });
-    }
-
-    if (action === 'disconnect') {
-      await LinkedInPublisherService.disconnect(workspaceId);
-      return NextResponse.json({ success: true });
-    }
-
-    if (action === 'set_org_id') {
-      const { organizationId } = body;
-      const success = await LinkedInPublisherService.setOrganizationId(workspaceId, organizationId || '');
-      return NextResponse.json({ success });
-    }
-
-    if (action === 'connect_manual') {
-      const connection = await LinkedInPublisherService.saveConnection(
-        workspaceId,
-        accountHandle || '@linkedin_user',
-        memberUrn || `urn:li:person:manual_${Date.now()}`,
-        accessToken || `li_access_${Date.now()}`
-      );
-      return NextResponse.json({ success: true, connection });
-    }
-
-    if (action === 'publish') {
-      const { caption } = body;
-      if (!caption) {
-        return NextResponse.json({ error: 'Missing caption for publishing' }, { status: 400 });
-      }
-      let result;
-      if (body.videoUrl) {
-        result = await LinkedInPublisherService.publishVideo(
-          workspaceId,
-          caption,
-          body.videoUrl
-        );
-      } else {
-        result = await LinkedInPublisherService.publishPost(
-          workspaceId,
-          caption,
-          body.imageBase64 || body.imageUrl
-        );
-      }
-      return NextResponse.json(result);
-    }
-
-    return NextResponse.json({ error: 'Invalid action specified' }, { status: 400 });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  if (action === 'get_auth_url') {
+    const state = await createOAuthState('linkedin', workspaceId);
+    const redirectUri = `${request.nextUrl.origin}/api/social/callback/linkedin`;
+    const authUrl = LinkedInPublisherService.getAuthUrl(state, redirectUri);
+    return NextResponse.json({ authUrl });
   }
-}
+
+  const connection = await LinkedInPublisherService.getConnection(workspaceId);
+  return NextResponse.json({ connection: redactConnection(connection) });
+});
+
+export const POST = withApiWrapper(async (request: NextRequest) => {
+  const user = await requireAuth();
+  const body = postSchema.parse(await request.json());
+  const { workspaceId, action } = body;
+
+  await requireWorkspaceAccess(user.id, workspaceId);
+
+  if (action === 'disconnect') {
+    await LinkedInPublisherService.disconnect(workspaceId);
+    return NextResponse.json({ success: true });
+  }
+
+  if (action === 'set_org_id') {
+    const success = await LinkedInPublisherService.setOrganizationId(workspaceId, body.organizationId || '');
+    return NextResponse.json({ success });
+  }
+
+  // publish
+  if (!body.caption) {
+    return NextResponse.json({ error: 'Missing caption for publishing' }, { status: 400 });
+  }
+  const result = body.videoUrl
+    ? await LinkedInPublisherService.publishVideo(workspaceId, body.caption, body.videoUrl)
+    : await LinkedInPublisherService.publishPost(workspaceId, body.caption, body.imageBase64 || body.imageUrl);
+  return NextResponse.json(result);
+});

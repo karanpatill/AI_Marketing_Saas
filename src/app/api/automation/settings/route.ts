@@ -3,6 +3,8 @@ import { createClient } from '@/lib/supabaseServer';
 import { AutomationRepository } from '@/backend/repositories/AutomationRepository';
 import { WorkspaceService } from '@/backend/services/WorkspaceService';
 import { logger } from '@/backend/utils/logger';
+import { requireWorkspaceAccess } from '@/backend/middlewares/auth';
+import { BaseError } from '@/backend/utils/errors';
 
 export async function GET(req: Request) {
   try {
@@ -22,8 +24,9 @@ export async function GET(req: Request) {
       if (workspaces.length === 0) {
         return NextResponse.json({ error: 'No workspace found' }, { status: 404 });
       }
-      workspaceId = workspaces[0].workspace_id;
+      workspaceId = workspaces[0].id;
     }
+    await requireWorkspaceAccess(user.id, workspaceId!);
 
     const autoRepo = new AutomationRepository(supabase);
     let settings = await autoRepo.getSettings(workspaceId!);
@@ -41,6 +44,9 @@ export async function GET(req: Request) {
 
     return NextResponse.json(settings);
   } catch (error: any) {
+    if (error instanceof BaseError) {
+      return NextResponse.json({ error: error.message }, { status: error.statusCode });
+    }
     logger.error('Failed to get automation settings', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
@@ -61,12 +67,16 @@ export async function PUT(req: Request) {
     if (!workspaceId) {
       return NextResponse.json({ error: 'Workspace ID required' }, { status: 400 });
     }
+    await requireWorkspaceAccess(user.id, workspaceId);
 
     const autoRepo = new AutomationRepository(supabase);
     const updatedSettings = await autoRepo.updateSettings(workspaceId, settings);
 
     return NextResponse.json(updatedSettings);
   } catch (error: any) {
+    if (error instanceof BaseError) {
+      return NextResponse.json({ error: error.message }, { status: error.statusCode });
+    }
     logger.error('Failed to update automation settings', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

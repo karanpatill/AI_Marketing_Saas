@@ -1,100 +1,81 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
+import { withApiWrapper } from '@/backend/middlewares/apiWrapper';
+import { requireAuth, requireWorkspaceAccess } from '@/backend/middlewares/auth';
+import { createOAuthState } from '@/backend/utils/oauthState';
 import { FacebookPublisherService } from '@/backend/services/social/FacebookPublisherService';
+import { redactConnection } from '@/backend/services/social/redact';
 
-export async function GET(request: Request) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const workspaceId = searchParams.get('workspaceId');
-    const action = searchParams.get('action');
+const postSchema = z.object({
+  workspaceId: z.string().uuid(),
+  action: z.enum(['disconnect', 'connect_page', 'publish']),
+  pageId: z.string().optional(),
+  pageName: z.string().optional(),
+  pageCategory: z.string().optional(),
+  accessToken: z.string().optional(),
+  userAccessToken: z.string().optional(),
+  caption: z.string().max(5000).optional(),
+  videoUrl: z.string().url().optional(),
+  imageUrl: z.string().url().optional(),
+  imageBase64: z.string().optional(),
+});
 
-    if (!workspaceId) {
-      return NextResponse.json({ error: 'Missing workspaceId' }, { status: 400 });
-    }
+export const GET = withApiWrapper(async (request: NextRequest) => {
+  const user = await requireAuth();
+  const { searchParams } = request.nextUrl;
+  const workspaceId = searchParams.get('workspaceId');
+  const action = searchParams.get('action');
 
-    if (action === 'get_auth_url') {
-      const protocol = request.headers.get('x-forwarded-proto') || (request.url.startsWith('https') ? 'https' : 'http');
-      const host = request.headers.get('host') || 'localhost:3000';
-      const origin = `${protocol}://${host}`;
-      const redirectUri = `${origin}/api/social/callback/facebook`;
-      const authUrl = FacebookPublisherService.getAuthUrl(workspaceId, redirectUri);
-      return NextResponse.json({ authUrl });
-    }
-
-    const connection = await FacebookPublisherService.getConnection(workspaceId);
-    return NextResponse.json({ connection });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  if (!workspaceId) {
+    return NextResponse.json({ error: 'Missing workspaceId' }, { status: 400 });
   }
-}
+  await requireWorkspaceAccess(user.id, workspaceId);
 
-export async function POST(request: Request) {
-  try {
-    const body = await request.json();
-    const { action, workspaceId, caption, pageId, pageName, pageCategory, accessToken } = body;
-
-    if (!workspaceId) {
-      return NextResponse.json({ error: 'Missing workspaceId' }, { status: 400 });
-    }
-
-    if (action === 'disconnect') {
-      await FacebookPublisherService.disconnect(workspaceId);
-      return NextResponse.json({ success: true });
-    }
-
-    if (action === 'connect_manual') {
-      if (!pageId || !accessToken) {
-        return NextResponse.json({ error: 'pageId and accessToken are required' }, { status: 400 });
-      }
-      const connection = await FacebookPublisherService.saveConnection(
-        workspaceId,
-        pageId,
-        pageName || 'Facebook Page',
-        accessToken,
-        pageCategory
-      );
-      return NextResponse.json({ success: true, connection });
-    }
-
-    if (action === 'connect_page') {
-      // Called after OAuth when user picks a page from their managed pages list
-      const { userAccessToken } = body;
-      if (!pageId || !accessToken || !userAccessToken) {
-        return NextResponse.json({ error: 'pageId, accessToken, and userAccessToken are required' }, { status: 400 });
-      }
-      const connection = await FacebookPublisherService.saveConnection(
-        workspaceId,
-        pageId,
-        pageName || 'Facebook Page',
-        accessToken,
-        pageCategory,
-        userAccessToken
-      );
-      return NextResponse.json({ success: true, connection });
-    }
-
-    if (action === 'publish') {
-      if (!caption) {
-        return NextResponse.json({ error: 'Missing caption for publishing' }, { status: 400 });
-      }
-      let result;
-      if (body.videoUrl) {
-        result = await FacebookPublisherService.publishVideo(
-          workspaceId,
-          caption,
-          body.videoUrl
-        );
-      } else {
-        result = await FacebookPublisherService.publishPost(
-          workspaceId,
-          caption,
-          body.imageBase64 || body.imageUrl
-        );
-      }
-      return NextResponse.json(result);
-    }
-
-    return NextResponse.json({ error: 'Invalid action specified' }, { status: 400 });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  if (action === 'get_auth_url') {
+    const state = await createOAuthState('facebook', workspaceId);
+    const redirectUri = `${request.nextUrl.origin}/api/social/callback/facebook`;
+    const authUrl = FacebookPublisherService.getAuthUrl(state, redirectUri);
+    return NextResponse.json({ authUrl });
   }
-}
+
+  const connection = await FacebookPublisherService.getConnection(workspaceId);
+  return NextResponse.json({ connection: redactConnection(connection) });
+});
+
+export const POST = withApiWrapper(async (request: NextRequest) => {
+  const user = await requireAuth();
+  const body = postSchema.parse(await request.json());
+  const { workspaceId, action } = body;
+
+  await requireWorkspaceAccess(user.id, workspaceId);
+
+  if (action === 'disconnect') {
+    await FacebookPublisherService.disconnect(workspaceId);
+    return NextResponse.json({ success: true });
+  }
+
+  if (action === 'connect_page') {
+    // Called after OAuth when the user picks one of several managed pages
+    if (!body.pageId || !body.accessToken || !body.userAccessToken) {
+      return NextResponse.json({ error: 'pageId, accessToken, and userAccessToken are required' }, { status: 400 });
+    }
+    const connection = await FacebookPublisherService.saveConnection(
+      workspaceId,
+      body.pageId,
+      body.pageName || 'Facebook Page',
+      body.accessToken,
+      body.pageCategory,
+      body.userAccessToken
+    );
+    return NextResponse.json({ success: true, connection: redactConnection(connection) });
+  }
+
+  // publish
+  if (!body.caption) {
+    return NextResponse.json({ error: 'Missing caption for publishing' }, { status: 400 });
+  }
+  const result = body.videoUrl
+    ? await FacebookPublisherService.publishVideo(workspaceId, body.caption, body.videoUrl)
+    : await FacebookPublisherService.publishPost(workspaceId, body.caption, body.imageBase64 || body.imageUrl);
+  return NextResponse.json(result);
+});
