@@ -3453,7 +3453,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                       </span>
 
                       {/* Video Player */}
-                      <div className="relative aspect-video w-full max-w-lg mx-auto bg-black rounded-2xl overflow-hidden border-none shadow-2xl">
+                      <div className="relative aspect-[9/16] w-full max-w-[300px] mx-auto bg-black rounded-2xl overflow-hidden border-none shadow-2xl">
                         <video
                           src={generatedVideoUrl}
                           controls

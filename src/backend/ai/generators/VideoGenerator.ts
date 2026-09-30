@@ -89,8 +89,8 @@ export class VideoGenerator implements IGenerationModule {
           "class_type": "EmptyLatentImage",
           "inputs": {
             "batch_size": 1,
-            "height": 480,
-            "width": 832
+            "height": 832,
+            "width": 480
           }
         },
         "6": {
@@ -285,8 +285,8 @@ export class VideoGenerator implements IGenerationModule {
       return {
         status: 'completed',
         outputReference: { 
-          videoUrl: 'https://cdn.example.com/sandbox-video.mp4', 
-          thumbnailUrl: 'https://cdn.example.com/sandbox-video.mp4',
+          videoUrl: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4', 
+          thumbnailUrl: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
           caption: prompt
         },
         metadata: { provider: 'sandbox_wan_2.2', duration: Date.now() - startTime }

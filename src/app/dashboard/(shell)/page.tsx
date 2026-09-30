@@ -6,6 +6,7 @@ import { DashboardService } from "@/backend/services/DashboardService";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Stat } from "@/components/ui/Stat";
 import { ButtonLink } from "@/components/ui/Button";
+import { GeneratePlanButton } from "@/components/ui/GeneratePlanButton";
 import { UpcomingPosts } from "@/features/overview/UpcomingPosts";
 import { BrandSnapshot } from "@/features/overview/BrandSnapshot";
 import { SetupChecklist } from "@/features/overview/SetupChecklist";
@@ -84,9 +85,7 @@ export default async function OverviewPage({ searchParams }: { searchParams: Pro
         }
         actions={
           <>
-            <ButtonLink href="/dashboard/legacy?tab=campaigns" variant="outline" leadingIcon={<CalendarDays className="h-4 w-4" />}>
-              Plan month
-            </ButtonLink>
+            <GeneratePlanButton orgId={data.organizations[0]?.id} brandId={brand?.id} />
             <ButtonLink href="/dashboard/legacy?tab=studio" leadingIcon={<Sparkles className="h-4 w-4" />}>
               Create post
             </ButtonLink>
