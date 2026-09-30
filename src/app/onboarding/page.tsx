@@ -33,13 +33,8 @@ type OnboardingData = {
   platforms: string[];
   competitors: string[];
   mainGoal: string;
-  colors: {
-    primary: string;
-    secondary: string;
-    accent: string;
-    background: string;
-    text: string;
-  };
+  primaryColor: string;
+  accentColor: string;
   logoUrl: string;
   productImages: string[];
   teamPhotos: string[];
@@ -54,7 +49,7 @@ type OnboardingData = {
 const INITIAL_DATA: OnboardingData = {
   brandName: "", website: "", industry: "", category: "", subCategory: "", businessDescription: "",
   mission: "", vision: "", usp: "", brandPersonality: "", brandValues: [],
-  colors: { primary: "#0D0D0D", secondary: "#1C1C1C", accent: "#C9A84C", background: "#FFFFFF", text: "#000000" },
+  primaryColor: "#0D0D0D", accentColor: "#C9A84C",
   products: [], services: [], pricing: "", targetAudience: "", customerPersonas: "", country: "", languages: [],
   platforms: [], competitors: [], mainGoal: "", logoUrl: "", productImages: [], teamPhotos: [], officeImages: [], brandVideos: [], fonts: [], icons: [], brandGuidelinesFile: "",
   approvedMoodboard: null,
@@ -130,7 +125,6 @@ export default function ChatOnboarding() {
           businessDescription: scraped?.businessDescription || "A modern brand.",
           mission: scraped?.mission || "To deliver excellence.",
           targetAudience: scraped?.targetAudience || "General consumers",
-          colors: scraped?.colors?.primary ? { ...data.colors, ...scraped.colors } : data.colors,
         };
         setData(newData);
 
@@ -180,7 +174,7 @@ export default function ChatOnboarding() {
       setIsTyping(true);
       setTimeout(() => {
         setIsTyping(false);
-        addMessage("ai", "text", "Got it. Finally, I've extracted your brand's exact color palette from your website. Verify it below.");
+        addMessage("ai", "text", "Got it. Finally, choose a visual direction for your AI-generated posts.");
         addMessage("ai", "moodboard_picker", "");
       }, 1000);
     } catch (err) {
@@ -189,8 +183,9 @@ export default function ChatOnboarding() {
     }
   };
 
-  const handleApprovePalette = () => {
-    addMessage("user", "text", "Visual direction approved.");
+  const handleSelectMoodboard = (key: string, mood: any) => {
+    setData(prev => ({ ...prev, approvedMoodboard: { id: key, name: mood.name, tagline: mood.tagline, imageUrl: null } }));
+    addMessage("user", "text", `I select ${mood.name}.`);
     setStep("complete");
     setIsTyping(true);
     setTimeout(() => {
@@ -282,7 +277,7 @@ export default function ChatOnboarding() {
       await supabase.from("brand_assets").insert({
         brand_dna_id: dnaResult.id,
         logo_url: data.logoUrl || "",
-        logo_studio_data: { uploadUrl: data.logoUrl || "", colors: data.colors }
+        logo_studio_data: { uploadUrl: data.logoUrl || "", colors: { primaryHex: data.primaryColor, secondaryHex: data.accentColor } }
       });
 
       await fetch("/api/strategy", {
@@ -291,7 +286,7 @@ export default function ChatOnboarding() {
         body: JSON.stringify({ brandDnaId: dnaResult.id })
       });
 
-      router.push(`/dashboard?brandDnaId=${dnaResult.id}`);
+      router.push(`/dashboard/${workspaceId}`);
     } catch (err) {
       alert("Setup failed.");
       setIsSubmitting(false);
@@ -369,31 +364,17 @@ export default function ChatOnboarding() {
                 )}
 
                 {msg.type === "moodboard_picker" && (
-                  <div className="bg-[#101010] border border-[#2A2A2A] p-6 rounded-2xl mt-2 w-full max-w-[500px] shadow-lg">
-                    <div className="flex items-center gap-2 mb-4">
-                      <div className="w-2 h-2 rounded-full bg-brand-secondary animate-pulse"></div>
-                      <span className="text-xs font-bold uppercase tracking-widest text-brand-secondary">Website Colors Extracted</span>
-                    </div>
-                    <div className="grid grid-cols-5 gap-2 mb-6">
-                      {[
-                        { label: "Primary", hex: data.colors.primary, key: "primary" },
-                        { label: "Secondary", hex: data.colors.secondary, key: "secondary" },
-                        { label: "Accent", hex: data.colors.accent, key: "accent" },
-                        { label: "Bg", hex: data.colors.background, key: "background" },
-                        { label: "Text", hex: data.colors.text, key: "text" }
-                      ].map(color => (
-                        <div key={color.key} className="flex flex-col items-center gap-2">
-                          <div className="w-12 h-12 rounded-full border border-[#2A2A2A] shadow-inner" style={{ background: color.hex }}></div>
-                          <span className="text-[9px] text-gray-400 font-bold uppercase">{color.label}</span>
-                          <input type="text" value={color.hex || '#000000'} onChange={(e) => setData({...data, colors: {...data.colors, [color.key]: e.target.value}})} className="w-full bg-transparent border-b border-[#2A2A2A] text-center text-[10px] text-white outline-none focus:border-brand-secondary" />
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-2 w-[600px] max-w-full">
+                    {Object.entries(MOODBOARD_PRESETS).map(([key, mood]) => (
+                      <div key={key} onClick={() => step === "moodboard" && handleSelectMoodboard(key, mood)} className={`p-4 rounded-xl border transition-all ${step === "moodboard" ? 'cursor-pointer hover:border-brand-secondary border-[#2A2A2A] bg-[#101010]' : 'border-[#2A2A2A] bg-[#101010] opacity-50'}`}>
+                        <div className="flex gap-1 mb-3">
+                          <div className="w-4 h-4 rounded-full" style={{ background: mood.colors[0] }}></div>
+                          <div className="w-4 h-4 rounded-full" style={{ background: mood.colors[1] }}></div>
                         </div>
-                      ))}
-                    </div>
-                    {step === "moodboard" && (
-                      <button onClick={handleApprovePalette} className="w-full py-3 bg-[#E1E0CC] hover:bg-white text-black text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-2">
-                        Approve Visual Direction <CheckCircle2 className="w-4 h-4" />
-                      </button>
-                    )}
+                        <h4 className="text-sm font-bold text-white mb-1">{mood.name}</h4>
+                        <p className="text-[10px] text-gray-500">{mood.tagline}</p>
+                      </div>
+                    ))}
                   </div>
                 )}
 
