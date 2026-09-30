@@ -1,3 +1,6 @@
+import os
+
+page_content = """\
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -43,7 +46,7 @@ type OnboardingData = {
   fonts: string[];
   icons: string[];
   brandGuidelinesFile: string;
-  visualDirection: { overallTheme: string; typographyStyle: string; imageryStyle: string; uiElements: string; } | null;
+  approvedMoodboard: { id: string; name: string; tagline: string; imageUrl: string | null } | null;
 };
 
 const INITIAL_DATA: OnboardingData = {
@@ -52,14 +55,19 @@ const INITIAL_DATA: OnboardingData = {
   primaryColor: "#0D0D0D", accentColor: "#C9A84C",
   products: [], services: [], pricing: "", targetAudience: "", customerPersonas: "", country: "", languages: [],
   platforms: [], competitors: [], mainGoal: "", logoUrl: "", productImages: [], teamPhotos: [], officeImages: [], brandVideos: [], fonts: [], icons: [], brandGuidelinesFile: "",
-  visualDirection: null,
+  approvedMoodboard: null,
 };
 
+const MOODBOARD_PRESETS = {
+  option_1: { name: "Dark Premium", tagline: "Authoritative, high-end, exclusive", colors: ["#0D0D0D", "#C9A84C"] },
+  option_2: { name: "Clean Minimal", tagline: "Approachable, transparent, modern", colors: ["#F3F4F6", "#5C6B57"] },
+  option_3: { name: "Vibrant Digital", tagline: "Disruptive, energetic, neon", colors: ["#090D16", "#8B5CF6"] },
+};
 
 type ChatMessage = {
   id: string;
   role: "ai" | "user";
-  type: "text" | "dna_card" | "logo_upload" ;
+  type: "text" | "dna_card" | "logo_upload" | "moodboard_picker";
   content: string;
 };
 
@@ -165,11 +173,12 @@ export default function ChatOnboarding() {
       setUploadingLogo(false);
 
       addMessage("user", "text", "Logo uploaded successfully.");
-      setStep("complete");
+      setStep("moodboard");
       setIsTyping(true);
       setTimeout(() => {
         setIsTyping(false);
-        addMessage("ai", "text", "Perfect. Your autonomous marketing engine is ready to deploy. Click below to initialize your workspace.");
+        addMessage("ai", "text", "Got it. Finally, choose a visual direction for your AI-generated posts.");
+        addMessage("ai", "moodboard_picker", "");
       }, 1000);
     } catch (err) {
       setUploadingLogo(false);
@@ -261,7 +270,7 @@ export default function ChatOnboarding() {
           competitors: data.competitors,
           platforms: data.platforms || [],
           main_goal: data.mainGoal,
-          visual_direction: data.visualDirection || null,
+          approved_moodboard: data.approvedMoodboard || null,
         })
       });
       
@@ -424,3 +433,9 @@ export default function ChatOnboarding() {
     </div>
   );
 }
+"""
+
+with open('D:/Automarc/src/app/onboarding/page.tsx', 'w', encoding='utf-8') as f:
+    f.write(page_content)
+
+print("Chat UI written successfully.")

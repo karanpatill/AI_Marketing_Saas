@@ -31,7 +31,7 @@ const createBrandSchema = z.object({
   competitors: stringList.optional(),
   platforms: stringList.optional(),
   main_goal: z.string().max(500).optional(),
-  approved_moodboard: z.unknown().nullable().optional(),
+  visual_direction: z.unknown().nullable().optional(),
 });
 
 export const GET = withApiWrapper(async (req: NextRequest) => {
@@ -50,11 +50,11 @@ export const GET = withApiWrapper(async (req: NextRequest) => {
 
 export const POST = withApiWrapper(async (req: NextRequest) => {
   const user = await requireAuth();
-  const { workspaceId, name, ...data } = createBrandSchema.parse(await req.json());
+  const { workspaceId, name, visual_direction, ...data } = createBrandSchema.parse(await req.json());
 
   await requireWorkspaceAccess(user.id, workspaceId);
 
   const service = new BrandService(createAdminClient());
-  const brand = await service.createBrand(workspaceId, name, data);
+  const brand = await service.createBrand(workspaceId, name, { ...data, approved_moodboard: visual_direction });
   return NextResponse.json(brand, { status: 201 });
 });

@@ -31,6 +31,7 @@ type ScrapedBrand = {
   customerPersonas: string;
   competitors: string[];
   colors: { primary: string; secondary: string; accent: string; background: string; text: string } | null;
+  visualDirection: { overallTheme: string; typographyStyle: string; imageryStyle: string; uiElements: string } | null;
   warning?: string;
 };
 
