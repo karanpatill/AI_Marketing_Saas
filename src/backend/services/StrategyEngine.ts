@@ -90,8 +90,8 @@ export class StrategyEngine {
 
       // We mock the media_url generation for now using an HTML placeholder service
       // We'll pass the specific format_style into the mock image so you can see the dynamic AI choices in the demo!
-      const mockText = \`\${post.format} - \${post.format_style}\`;
-      const mockMediaUrl = \`https://dummyimage.com/1080x1080/0A0A0A/E1E0CC&text=\${encodeURIComponent(mockText)}\`;
+      const mockText = `${post.format} - ${post.format_style}`;
+      const mockMediaUrl = `https://dummyimage.com/1080x1080/0A0A0A/E1E0CC&text=${encodeURIComponent(mockText)}`;
 
       return {
         campaign_id: campaign.id,
@@ -112,7 +112,7 @@ export class StrategyEngine {
 
     if (postsError) throw postsError;
 
-    console.log(\`Successfully generated and mocked 30 days of content for Campaign \${campaign.id}\`);
+    console.log(`Successfully generated and mocked 30 days of content for Campaign ${campaign.id}`);
     
     return {
       campaignId: campaign.id,
