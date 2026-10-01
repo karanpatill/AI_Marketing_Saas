@@ -31,24 +31,24 @@ Backend logic auto-scales the cost based on the format complexity.
 ## 3. SaaS Subscription Plans (AI Marketing OS)
 The platform is an "Autopilot Marketing OS". You pay for a 30-day automated calendar, and the pricing tiers are controlled by the *mix* of content types you get. Every paid plan also includes free manual tokens for on-demand studio generation.
 
-*   **Starter OS (₹1,499/mo):** Most affordable. Heavy on static, light on video.
-    *   *30-Day Mix:* 20 Static + 8 Carousels + 2 Cinematic Videos.
-    *   *Free Bonus:* **30 Manual Tokens** (For the manual studio).
-    *   *Cost to Serve:* ~₹316 (Auto-pilot) + ~₹90 (Tokens) = ₹406 API Cost.
-    *   *Net Profit:* **₹1,093 / user (73% Margin)**
+*   **Starter OS (₹1,499/mo):** Unbeatable value for small businesses.
+    *   *30-Day Mix:* 15 Static + 10 Carousels + **5 Cinematic Videos**.
+    *   *Free Bonus:* **50 Manual Tokens**.
+    *   *Cost to Serve:* ~₹565 (Auto-pilot) + ~₹150 (Tokens) = ₹715 API Cost.
+    *   *Net Profit:* **₹784 / user (52% Margin)**
 
-*   **Pro OS (₹2,999/mo):** The balanced content engine.
-    *   *30-Day Mix:* 10 Static + 10 Carousels + 10 Cinematic Videos.
-    *   *Free Bonus:* **100 Manual Tokens**.
-    *   *Cost to Serve:* ~₹950 (Auto-pilot) + ~₹300 (Tokens) = ₹1,250 API Cost.
-    *   *Net Profit:* **₹1,749 / user (58% Margin)**
+*   **Pro OS (₹2,999/mo):** High-growth video-heavy engine.
+    *   *30-Day Mix:* 5 Static + 10 Carousels + **15 Cinematic Videos** (A cinematic video every other day).
+    *   *Free Bonus:* **150 Manual Tokens**.
+    *   *Cost to Serve:* ~₹1,335 (Auto-pilot) + ~₹450 (Tokens) = ₹1,785 API Cost.
+    *   *Net Profit:* **₹1,214 / user (40% Margin)**
 
-*   **Agency OS (₹9,999/mo):** Multi-brand management.
+*   **Agency OS (₹9,999/mo):** Ultimate multi-brand powerhouse.
     *   *Capacity:* Manages up to 5 Brands simultaneously (150 posts total).
-    *   *Mix per Brand:* 15 Static + 10 Carousels + 5 Cinematic Videos.
-    *   *Free Bonus:* **300 Manual Tokens**.
-    *   *Cost to Serve (5 Brands):* ~₹2,825 (Auto-pilot) + ~₹900 (Tokens) = ₹3,725 API Cost.
-    *   *Net Profit:* **₹6,274 / user (63% Margin)**
+    *   *Mix per Brand:* 10 Static + 10 Carousels + **10 Cinematic Videos** (50 videos/mo total).
+    *   *Free Bonus:* **500 Manual Tokens**.
+    *   *Cost to Serve (5 Brands):* ~₹4,750 (Auto-pilot) + ~₹1,500 (Tokens) = ₹6,250 API Cost.
+    *   *Net Profit:* **₹3,749 / user (37% Margin)**
 
 ---
 
