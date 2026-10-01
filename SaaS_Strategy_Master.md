@@ -29,15 +29,23 @@ Backend logic auto-scales the cost based on the format complexity.
 ---
 
 ## 3. SaaS Subscription Plans (AI Marketing OS)
-The platform is an "Autopilot Marketing OS". Users pay for the hands-free calendar execution, manual studio is a complimentary bonus.
+The platform is an "Autopilot Marketing OS". You pay for a 30-day automated calendar, and the pricing tiers are controlled by the *mix* of content types you get.
 
-*   **Starter (Free Forever):** 15 Tokens/mo. (Allows generating a few manual static posts, everything watermarked).
-*   **Growth OS (₹4,999/mo):** 30-Day Auto-Posting (Mix of 15 Static/Carousel + 15 Videos) + 100 Bonus Manual Tokens.
-    *   *Cost to Serve:* ~₹1,250 (Auto-pilot API) + ~₹300 (Bonus Tokens) = ₹1,550
-    *   *Net Profit:* **₹3,449 / user (69% Margin)**
-*   **Agency OS (₹19,999/mo):** 5 Brands Auto-Posting + 500 Bonus Manual Tokens.
-    *   *Cost to Serve:* ~₹6,250 (Auto-pilot) + ~₹1,500 (Bonus) = ₹7,750
-    *   *Net Profit:* **₹12,249 / user (61% Margin)**
+*   **Starter OS (₹1,499/mo):** Most affordable. Heavy on static, light on video.
+    *   *30-Day Mix:* 20 Static + 8 Carousels + 2 Cinematic Videos.
+    *   *Cost to Serve:* ~₹316 API Cost.
+    *   *Net Profit:* **₹1,183 / user (79% Margin)**
+
+*   **Pro OS (₹2,999/mo):** The balanced content engine.
+    *   *30-Day Mix:* 10 Static + 10 Carousels + 10 Cinematic Videos.
+    *   *Cost to Serve:* ~₹950 API Cost.
+    *   *Net Profit:* **₹2,049 / user (68% Margin)**
+
+*   **Agency OS (₹9,999/mo):** Multi-brand management.
+    *   *Capacity:* Manages up to 5 Brands simultaneously (150 posts total).
+    *   *Mix per Brand:* 15 Static + 10 Carousels + 5 Cinematic Videos.
+    *   *Cost to Serve (5 Brands):* ~₹2,825 API Cost.
+    *   *Net Profit:* **₹7,174 / user (71% Margin)**
 
 ---
 
