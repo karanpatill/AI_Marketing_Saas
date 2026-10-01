@@ -44,7 +44,6 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // The app shell (dashboard) and onboarding have their own chrome.
   if (pathname?.startsWith("/onboarding") || pathname?.startsWith("/dashboard")) {
     return null;
   }
