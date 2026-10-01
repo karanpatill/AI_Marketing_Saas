@@ -285,8 +285,8 @@ export class VideoGenerator implements IGenerationModule {
       return {
         status: 'completed',
         outputReference: { 
-          videoUrl: 'https://media.w3.org/2010/05/sintel/trailer.mp4', 
-          thumbnailUrl: 'https://media.w3.org/2010/05/sintel/trailer.mp4',
+          videoUrl: 'https://zjbdojuoktejikcdypcn.supabase.co/storage/v1/object/public/brand-assets/Asenra_Brand_Video_Mock.mp4', 
+          thumbnailUrl: 'https://zjbdojuoktejikcdypcn.supabase.co/storage/v1/object/public/brand-assets/Asenra_Brand_Video_Mock.mp4',
           caption: prompt
         },
         metadata: { provider: 'sandbox_wan_2.2', duration: Date.now() - startTime }
