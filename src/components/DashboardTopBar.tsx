@@ -28,7 +28,7 @@ export default function DashboardTopBar({
   setShowNotifications
 }: DashboardTopBarProps) {
   return (
-    <div className="flex items-center justify-between gap-4 bg-[#0A0A0A] border border-[#E1E0CC]/15/80 rounded-2xl px-5 py-3 shadow-[0_4px_20px_rgb(0,0,0,0.01)] relative">
+    <div className="flex items-center justify-between gap-4 bg-[#0A0A0A] border border-[#E1E0CC]/15 rounded-2xl px-5 py-3 shadow-[0_4px_20px_rgb(0,0,0,0.01)] relative">
       {/* Back Button */}
       <Link 
         href="/"

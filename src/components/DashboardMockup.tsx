@@ -26,9 +26,9 @@ export default function DashboardMockup() {
       {/* ── Browser Chrome Header ── */}
       <div className="flex items-center justify-between bg-[#000000] px-4 py-3 border-b border-[#828282]/20">
         <div className="flex gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-[#E1E0CC]/10/60" />
-          <span className="w-2.5 h-2.5 rounded-full bg-[#E1E0CC]/10/60" />
-          <span className="w-2.5 h-2.5 rounded-full bg-[#E1E0CC]/10/60" />
+          <span className="w-2.5 h-2.5 rounded-full bg-[#E1E0CC]/10" />
+          <span className="w-2.5 h-2.5 rounded-full bg-[#E1E0CC]/10" />
+          <span className="w-2.5 h-2.5 rounded-full bg-[#E1E0CC]/10" />
         </div>
         
         {/* Address Bar */}

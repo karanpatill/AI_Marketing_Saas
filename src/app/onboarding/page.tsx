@@ -280,7 +280,7 @@ export default function ChatOnboarding() {
         body: JSON.stringify({ brandDnaId: dnaResult.id })
       });
 
-      router.push(`/dashboard/${workspaceId}`);
+      router.push('/dashboard');
     } catch (err) {
       alert("Setup failed.");
       setIsSubmitting(false);

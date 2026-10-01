@@ -1,38 +1,16 @@
-import React from "react";
-import { cn } from "@/lib/cn";
+import React from 'react';
 
-type Variant = "default" | "success" | "warning" | "error" | "info" | "outline" | "accent";
+export function Badge({ children, variant = 'default', className = '' }: { children: React.ReactNode, variant?: 'default' | 'success' | 'warning' | 'error' | 'outline', className?: string }) {
+  const variants = {
+    default: "bg-[#212121] text-[#E1E0CC]/80 border border-[#E1E0CC]/10",
+    success: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20",
+    warning: "bg-amber-500/10 text-amber-400 border border-amber-500/20",
+    error: "bg-red-500/10 text-red-400 border border-red-500/20",
+    outline: "border border-[#E1E0CC]/20 text-[#E1E0CC]"
+  };
 
-const variants: Record<Variant, string> = {
-  default: "bg-surface-2 text-ink-2",
-  accent: "bg-accent-soft text-accent-ink",
-  success: "bg-success-soft text-success",
-  warning: "bg-warning-soft text-warning",
-  error: "bg-danger-soft text-danger",
-  info: "bg-info-soft text-info",
-  outline: "border border-line-2 text-ink-2",
-};
-
-export function Badge({
-  children,
-  variant = "default",
-  className = "",
-  dot,
-}: {
-  children: React.ReactNode;
-  variant?: Variant;
-  className?: string;
-  dot?: boolean;
-}) {
   return (
-    <span
-      className={cn(
-        "inline-flex h-6 items-center gap-1.5 rounded-full px-2.5 text-label whitespace-nowrap",
-        variants[variant],
-        className
-      )}
-    >
-      {dot && <span className="h-1.5 w-1.5 rounded-full bg-current" aria-hidden />}
+    <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${variants[variant]} ${className}`}>
       {children}
     </span>
   );
