@@ -776,7 +776,8 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
               throw new Error("No output video URL was returned from finished request.");
             }
             setGeneratedVideoUrl(jobData.job.output_reference.videoUrl);
-            setVideoQueueStatus(null);
+              setAssetRefreshKey((current) => current + 1);
+              setVideoQueueStatus(null);
             isCompleted = true;
           } else if (jobData.job.status === 'failed') {
             throw new Error((typeof jobData.job.error === 'string' ? jobData.job.error : jobData.job.error?.message) || "Video generation job failed");
@@ -4821,3 +4822,4 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
     </div>
   );
 }
+
