@@ -3982,7 +3982,8 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
             </div>
           )}
 
-        </main>
+          </div>
+        </div>
 
 
 
@@ -4536,7 +4537,6 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
             </button>
           </div>
         )}
-        </div>
       </main>
 
 

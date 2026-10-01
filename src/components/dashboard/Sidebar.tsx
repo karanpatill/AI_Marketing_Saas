@@ -26,8 +26,8 @@ interface Org {
 }
 
 interface SidebarProps {
-  activeTab: string;
-  setActiveTab: (tab: string) => void;
+  activeTab: any;
+  setActiveTab: (tab: any) => void;
   workspaces: Workspace[];
   activeWorkspace: Workspace | null;
   setActiveWorkspace: (ws: Workspace) => void;
