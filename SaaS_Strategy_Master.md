@@ -19,20 +19,25 @@ To ensure $0 upfront costs during development and seamless scaling in production
 
 ---
 
-## 2. Token System & Generation Costs
+## 2. Token System & Generation Costs (Updated Real API Economics)
 Backend logic auto-scales the cost based on the format complexity.
-*   **1 Static Post:** Costs 1 Token (API Cost: ~₹3.5)
-*   **1 Carousel (5 slides):** Costs 3 Tokens (API Cost: ~₹10.5)
-*   **1 Cinematic Video:** Costs 5 Tokens (API Cost: ~₹17.0)
+*   **Base Token Value:** 1 Token = ~₹3 API Cost.
+*   **1 Static Post (DALL-E 3):** Costs 1 Token (API Cost: ~₹3)
+*   **1 Carousel (4 slides):** Costs 4 Tokens (API Cost: ~₹12)
+*   **1 Cinematic Video (10s Veo/Higgsfield):** Costs 27 Tokens (API Cost: ~₹80)
 
 ---
 
-## 3. SaaS Subscription Plans (Indian Market Optimized)
-*   **Starter (Free):** 10 Tokens (Watermarked outputs)
-*   **Growth (₹1,499/mo):** 30-Day Auto-Posting (1/day) + 30 Bonus Manual Tokens.
-    *   *Cost to Serve:* ~₹325 (Auto-pilot) + ~₹250 (Tokens) = ₹575
-    *   *Net Profit:* **₹924 / user (61% Margin)**
-*   **Agency (₹3,999/mo):** 5 Brands Auto-Posting + 150 Bonus Manual Tokens.
+## 3. SaaS Subscription Plans (AI Marketing OS)
+The platform is an "Autopilot Marketing OS". Users pay for the hands-free calendar execution, manual studio is a complimentary bonus.
+
+*   **Starter (Free Forever):** 15 Tokens/mo. (Allows generating a few manual static posts, everything watermarked).
+*   **Growth OS (₹4,999/mo):** 30-Day Auto-Posting (Mix of 15 Static/Carousel + 15 Videos) + 100 Bonus Manual Tokens.
+    *   *Cost to Serve:* ~₹1,250 (Auto-pilot API) + ~₹300 (Bonus Tokens) = ₹1,550
+    *   *Net Profit:* **₹3,449 / user (69% Margin)**
+*   **Agency OS (₹19,999/mo):** 5 Brands Auto-Posting + 500 Bonus Manual Tokens.
+    *   *Cost to Serve:* ~₹6,250 (Auto-pilot) + ~₹1,500 (Bonus) = ₹7,750
+    *   *Net Profit:* **₹12,249 / user (61% Margin)**
 
 ---
 
@@ -40,15 +45,15 @@ Backend logic auto-scales the cost based on the format complexity.
 
 ### A. Token Top-Up Packs (For Heavy Users)
 *   **100 Tokens Pack:** Sell for **₹799**.
-    *   *API Cost:* ₹350
-    *   *Net Profit:* **₹449 (56% Margin)**
+    *   *API Cost:* ~₹300
+    *   *Net Profit:* **₹499 (62% Margin)**
 
 ### B. The Infinite "₹50 Loop" (Freemium Growth Hack)
 1. Free users generate amazing posts but they have an "Automarc" watermark.
 2. They click Download/Post. Popup appears: *"Unlock Full HD, Remove Watermark, and get 10 Bonus Tokens for just ₹50."*
 3. They pay via UPI (frictionless).
-4. *Economics:* Revenue: ₹50. API Cost for 10 new tokens: ₹35. Net Profit: ₹15.
-5. They use the 10 tokens, get watermarks again, and repeat the ₹50 payment until they upgrade to the ₹1,499 plan.
+4. *Economics:* Revenue: ₹50. API Cost for 10 new tokens: ~₹30. Net Profit: ₹20.
+5. They use the 10 tokens, get watermarks again, and repeat the ₹50 payment until they upgrade to the ₹4,999 Growth OS plan.
 
 ---
 
