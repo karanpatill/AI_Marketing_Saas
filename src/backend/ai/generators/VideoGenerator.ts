@@ -285,8 +285,8 @@ export class VideoGenerator implements IGenerationModule {
       return {
         status: 'completed',
         outputReference: { 
-          videoUrl: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4', 
-          thumbnailUrl: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
+          videoUrl: 'https://media.w3.org/2010/05/sintel/trailer.mp4', 
+          thumbnailUrl: 'https://media.w3.org/2010/05/sintel/trailer.mp4',
           caption: prompt
         },
         metadata: { provider: 'sandbox_wan_2.2', duration: Date.now() - startTime }
