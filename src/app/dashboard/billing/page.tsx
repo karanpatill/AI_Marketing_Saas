@@ -155,27 +155,26 @@ export default function BillingPage() {
                 </div>
                 
                 <ul className="space-y-4 mb-10 flex-1">
-                  <li className="flex items-start gap-3 text-sm md:text-base text-[#E1E0CC]/80">
-                    <CheckCircle2 className="w-5 h-5 text-[#DEDBC8] shrink-0 mt-0.5" />
-                    <span>{plan.features?.description || "Basic features included"}</span>
-                  </li>
-                  <li className="flex items-start gap-3 text-sm md:text-base text-[#E1E0CC]/80">
-                    <CheckCircle2 className="w-5 h-5 text-[#DEDBC8] shrink-0 mt-0.5" />
-                    <span>Generate Static Posts</span>
-                  </li>
-                  {plan.type !== 'free' && (
-                    <li className="flex items-start gap-3 text-sm md:text-base text-[#E1E0CC]/80">
-                      <CheckCircle2 className="w-5 h-5 text-[#DEDBC8] shrink-0 mt-0.5" />
-                      <span>Generate Carousels</span>
-                    </li>
-                  )}
-                  {isAutomate && (
-                    <li className="flex items-start gap-3 text-sm md:text-base font-bold text-[#DEDBC8] drop-shadow-sm">
-                      <Zap className="w-5 h-5 text-[#DEDBC8] shrink-0 mt-0.5" />
-                      <span>End-to-End Brand Automation</span>
-                    </li>
-                  )}
-                </ul>
+                    {plan.features?.bulletPoints ? (
+                      plan.features.bulletPoints.map((point: string, i: number) => (
+                        <li key={i} className={lex items-start gap-3 text-sm md:text-base }>
+                          {point.includes('Automate') || point.includes('Priority') ? (
+                            <Zap className="w-5 h-5 text-[#DEDBC8] shrink-0 mt-0.5" />
+                          ) : (
+                            <CheckCircle2 className="w-5 h-5 text-[#DEDBC8] shrink-0 mt-0.5" />
+                          )}
+                          <span>{point}</span>
+                        </li>
+                      ))
+                    ) : (
+                      <>
+                        <li className="flex items-start gap-3 text-sm md:text-base text-[#E1E0CC]/80">
+                          <CheckCircle2 className="w-5 h-5 text-[#DEDBC8] shrink-0 mt-0.5" />
+                          <span>{plan.features?.description || "Basic features included"}</span>
+                        </li>
+                      </>
+                    )}
+                  </ul>
                 
                 <button
                   onClick={() => handleSubscribe(plan.id)}
