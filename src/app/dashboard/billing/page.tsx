@@ -157,7 +157,7 @@ export default function BillingPage() {
                 <ul className="space-y-4 mb-10 flex-1">
                     {plan.features?.bulletPoints ? (
                       plan.features.bulletPoints.map((point: string, i: number) => (
-                        <li key={i} className={lex items-start gap-3 text-sm md:text-base }>
+                        <li key={i} className={`flex items-start gap-3 text-sm md:text-base ${point.includes('Automate') || point.includes('Priority') ? 'font-bold text-[#DEDBC8] drop-shadow-sm' : 'text-[#E1E0CC]/80'}`}>
                           {point.includes('Automate') || point.includes('Priority') ? (
                             <Zap className="w-5 h-5 text-[#DEDBC8] shrink-0 mt-0.5" />
                           ) : (
