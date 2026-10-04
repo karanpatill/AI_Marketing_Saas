@@ -3,7 +3,7 @@ import { createAdminClient } from "@/lib/supabaseServer";
 import { withApiWrapper } from "@/backend/middlewares/apiWrapper";
 import { requireAuth, resolveWorkspaceForUser } from "@/backend/middlewares/auth";
 import { AIGenerationService } from "@/backend/services/AIGenerationService";
-import { BillingService } from "@/backend/services/BillingService";
+
 export const POST = withApiWrapper(async (req: NextRequest) => {
   const user = await requireAuth();
   
@@ -25,18 +25,10 @@ export const POST = withApiWrapper(async (req: NextRequest) => {
     }
   }
 
-  if (finalOrgId) {
-    const billingService = new BillingService(supabaseAdmin);
-    try {
-      await billingService.deductTokensForGeneration(finalOrgId, 'carousel');
-    } catch (error: any) {
-      if (error.statusCode === 402) {
-        return NextResponse.json({ error: error.message, code: 'PAYMENT_REQUIRED' }, { status: 402 });
-      }
-      console.error("Token deduction failed", error);
-      return NextResponse.json({ error: "Billing error occurred" }, { status: 500 });
-    }
-  }
+  // NOTE: Carousel generation is intentionally FREE for all users including Free Plan.
+  // The ₹50 "Remove Watermark" upsell loop handles monetization for free users.
+  // Token deduction only applies to manual Studio generations (static posts and videos).
+
 
   const aiService = new AIGenerationService(supabaseAdmin);
 
