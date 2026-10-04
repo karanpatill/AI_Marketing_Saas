@@ -1210,73 +1210,65 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
             <>
 
 
-          {/* Tab 1: Mission Control (Visual Style Tile Moodboard) */}
+                    {/* Tab 1: Mission Control (Visual Style Tile Moodboard) */}
           {activeTab === "control" && (
-            <div className="bg-[#1c1e21] border border-[#828282]/20 rounded-2xl p-6 md:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.12)] relative space-y-6">
+            <div className="bg-[#0A0A0A] border border-[#2A2A2A] p-10 shadow-2xl relative space-y-12 animate-fade-up">
               
-              {/* Top Header Section */}
-              <div className="border-b border-[#828282]/20 pb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+              {/* Premium Header */}
+              <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-8 border-b border-[#2A2A2A]">
                 <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#ffffff]/5 border border-[#828282]/20 text-[#ffffff]">
-                      Brand Board Direction
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-2 h-2 rounded-full bg-[#E1E0CC] animate-pulse shadow-[0_0_10px_rgba(225,224,204,0.5)]"></div>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#E1E0CC]">
+                      Brand DNA System
                     </span>
-                    {moodboard?.id && (
-                      <span className="text-sm text-[#828282]">Preset ID: {moodboard.id}</span>
-                    )}
                   </div>
-                  <WordsPullUp 
-                    text={dna?.brand_name || 'Brand'}
-                    className="text-2xl font-bold mt-1 text-[#ffffff] tracking-tight"
-                  />
-                  <p className="text-[13px] text-[#828282] mt-1">
-                    {moodboard?.name || "Bespoke Brand Strategy Board"} {moodboard?.tagline ? `— ${moodboard.tagline}` : ""}
+                  <h1 className="text-5xl font-light text-white tracking-tight">
+                    {dna?.brand_name || 'Brand'}
+                  </h1>
+                  <p className="text-sm text-[#828282] mt-3 font-light tracking-wide max-w-xl">
+                    {dna?.usp || "Intelligence, operationalised."}
                   </p>
                 </div>
-
-                <div className="flex items-center gap-3 shrink-0">
-                  <span className="text-[13px] text-[#828282] font-medium">{dna?.industry} · {dna?.category}</span>
+                
+                <div className="flex items-center gap-4">
+                  <span className="text-[10px] text-[#828282] font-bold uppercase tracking-[0.2em]">{dna?.industry} — {dna?.category}</span>
                   <button
                     onClick={() => setShowBrandEditor(prev => !prev)}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-medium transition-all border ${
-                      showBrandEditor
-                        ? 'bg-[#DEDBC8]/10 border-[#DEDBC8]/20 text-[#DEDBC8]'
-                        : 'bg-[#ffffff]/5 border-[#828282]/20 text-[#828282] hover:text-[#ffffff] hover:bg-[#ffffff]/10'
-                    }`}
+                    className="flex items-center gap-2 px-5 py-2.5 bg-transparent border border-[#2A2A2A] text-white hover:border-[#E1E0CC]/50 hover:bg-[#1C1C1C] transition-all text-xs font-bold uppercase tracking-wider ml-4"
                   >
-                    <Paintbrush className="w-4 h-4" />
-                    {showBrandEditor ? 'Close Editor' : 'Edit Brand Colors'}
+                    <Paintbrush className="w-3.5 h-3.5" />
+                    {showBrandEditor ? 'Close Editor' : 'Edit Variables'}
                   </button>
                   {showBrandEditor && (
                     <button
                       onClick={handleSaveBrandColors}
                       disabled={isSavingColors}
-                      className="flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-medium transition-all bg-[#DEDBC8] text-black hover:bg-white disabled:opacity-50"
+                      className="flex items-center gap-2 px-5 py-2.5 bg-[#E1E0CC] text-black hover:bg-white transition-all text-xs font-bold uppercase tracking-wider disabled:opacity-50"
                     >
-                      {isSavingColors ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                      Save Colors
+                      {isSavingColors ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                      Save
                     </button>
                   )}
                 </div>
               </div>
 
-              {/* ── BRAND COLOR EDITOR PANEL ── */}
+              {/* BRAND COLOR EDITOR PANEL */}
               {showBrandEditor && (
-                <div className="bg-[#050505] border border-[#828282]/20 rounded-xl p-6 space-y-5 animate-fade-up">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <span className="text-[13px] font-semibold text-[#ffffff]">Brand Color Editor</span>
+                <div className="bg-[#101010] border border-[#2A2A2A] p-8 space-y-6 animate-fade-up">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#2A2A2A] pb-4">
+                    <span className="text-xs font-bold uppercase tracking-[0.2em] text-[#ffffff]">Brand Color Editor</span>
                     <span className="text-[11px] text-[#828282]">Changes reflect across all generated posts & carousels</span>
                   </div>
 
-                  {/* Color pickers row */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                     {/* Primary */}
-                    <div className="bg-[#1c1e21] rounded-lg p-4 border border-[#828282]/20 group hover:border-[#828282]/20 transition-all flex flex-col gap-3">
-                      <span className="text-[11px] text-[#828282] font-medium uppercase tracking-wider">Primary Accent Color</span>
-                      <div className="flex items-center gap-3">
+                    <div className="flex flex-col gap-3">
+                      <span className="text-[10px] text-[#828282] font-bold uppercase tracking-[0.2em]">Primary Accent Color</span>
+                      <div className="flex items-center gap-4">
                         <label className="relative cursor-pointer shrink-0">
                           <div
-                            className="w-10 h-10 rounded-lg border border-[#828282]/20 group-hover:border-white/20 transition-all shadow-sm"
+                            className="w-12 h-12 border border-[#2A2A2A] hover:border-white/50 transition-all shadow-sm"
                             style={{ backgroundColor: assets?.logo_studio_data?.colors?.primaryHex || '#DEDBC8' }}
                           />
                           <input
@@ -1298,19 +1290,19 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                           />
                         </label>
                         <div className="min-w-0">
-                          <div className="text-[13px] font-medium text-[#ffffff] font-mono">{assets?.logo_studio_data?.colors?.primaryHex || '#DEDBC8'}</div>
-                          <div className="text-[11px] text-[#828282] mt-0.5">Click swatch to open picker</div>
+                          <div className="text-[13px] font-light text-[#ffffff] font-mono">{assets?.logo_studio_data?.colors?.primaryHex || '#DEDBC8'}</div>
+                          <div className="text-[10px] text-[#828282] mt-1 uppercase tracking-wider">Click swatch to edit</div>
                         </div>
                       </div>
                     </div>
 
-                    {/* Background / Secondary */}
-                    <div className="bg-[#1c1e21] rounded-lg p-4 border border-[#828282]/20 group hover:border-[#828282]/20 transition-all flex flex-col gap-3">
-                      <span className="text-[11px] text-[#828282] font-medium uppercase tracking-wider">Background / Secondary</span>
-                      <div className="flex items-center gap-3">
+                    {/* Secondary */}
+                    <div className="flex flex-col gap-3">
+                      <span className="text-[10px] text-[#828282] font-bold uppercase tracking-[0.2em]">Background / Base Color</span>
+                      <div className="flex items-center gap-4">
                         <label className="relative cursor-pointer shrink-0">
                           <div
-                            className="w-10 h-10 rounded-lg border border-[#828282]/20 group-hover:border-white/20 transition-all shadow-sm"
+                            className="w-12 h-12 border border-[#2A2A2A] hover:border-white/50 transition-all shadow-sm"
                             style={{ backgroundColor: assets?.logo_studio_data?.colors?.secondaryHex || '#0A0A0A' }}
                           />
                           <input
@@ -1332,243 +1324,128 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                           />
                         </label>
                         <div className="min-w-0">
-                          <div className="text-[13px] font-medium text-[#ffffff] font-mono">{assets?.logo_studio_data?.colors?.secondaryHex || '#0A0A0A'}</div>
-                          <div className="text-[11px] text-[#828282] mt-0.5">Click swatch to open picker</div>
+                          <div className="text-[13px] font-light text-[#ffffff] font-mono">{assets?.logo_studio_data?.colors?.secondaryHex || '#0A0A0A'}</div>
+                          <div className="text-[10px] text-[#828282] mt-1 uppercase tracking-wider">Click swatch to edit</div>
                         </div>
                       </div>
-                    </div>
-                  </div>
-
-
-
-                  {/* Live preview strip */}
-                  <div className="flex items-center gap-3 pt-1">
-                    <span className="text-[10px] text-[#828282] uppercase tracking-wider">Preview</span>
-                    <div
-                      className="flex-1 h-6 rounded-lg"
-                      style={{ background: `linear-gradient(90deg, ${assets?.logo_studio_data?.colors?.secondaryHex || '#0A0A0A'} 0%, ${assets?.logo_studio_data?.colors?.primaryHex || '#DEDBC8'} 100%)` }}
-                    />
-                    <div
-                      className="px-3 py-1 rounded-md text-[10px] font-bold"
-                      style={{ backgroundColor: assets?.logo_studio_data?.colors?.primaryHex || '#DEDBC8', color: assets?.logo_studio_data?.colors?.secondaryHex || '#000' }}
-                    >
-                      {dna?.brand_name || 'Brand'}
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* ── BRAND BOARD CANVAS GRID ── */}
-              <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
-
-                {/* ── ROW 1 ── */}
-
-                {/* BLOCK A: Logo + Brand Identity (4 cols) */}
-                <div className="md:col-span-4 bg-[#1c1e21] border border-[#828282]/20 rounded-2xl p-5 flex flex-col gap-4 shadow-sm">
-                  <p className="text-[11px] font-medium text-[#828282] uppercase tracking-wider">Brand Identity</p>
-
-                  {/* Logo circle — large and filled */}
-                  <div className="flex flex-col items-center gap-3">
-                    <div
-                      className="w-24 h-24 rounded-full flex items-center justify-center overflow-hidden border-2 shadow-none transition-all"
-                      style={{ backgroundColor: colors.secondaryHex || "#1c1e21", borderColor: colors.primaryHex || "#E1E0CC", color: colors.primaryHex || "#ffffff" }}
-                    >
-                      {(() => {
-                        const svgStr = assets?.logo_studio_data?.assets?.primaryLogoSvg;
-                        if (svgStr) {
-                          return (
-                            <div
-                              className="w-16 h-16 flex items-center justify-center [&>svg]:w-full [&>svg]:h-full"
-                              dangerouslySetInnerHTML={{ __html: svgStr }}
-                            />
-                          );
-                        }
-                        if (assets?.logo_url) {
-                          return <img src={assets.logo_url} alt="Logo" className="w-14 h-14 object-contain" />;
-                        }
-                        return (
-                          <span className="text-2xl font-black text-[#ffffff]" style={{ fontFamily: "serif" }}>
-                            {(dna?.brand_name || "B").charAt(0).toUpperCase()}
-                          </span>
-                        );
-                      })()}
-                    </div>
-                    <div className="text-center">
-                      <p className="text-[#ffffff] font-bold text-base tracking-tight">{dna?.brand_name}</p>
-                      <p className="text-[#828282] text-sm mt-0.5 italic max-w-[160px] text-center leading-snug">
-                        {dna?.usp ? `"${dna?.usp}"` : "No tagline set"}
-                      </p>
-                    </div>
+              {/* BRAND BOARD CANVAS GRID - MINIMALIST FLAT DESIGN */}
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
+                
+                {/* IDENTITY OVERVIEW - 4 COLS */}
+                <div className="md:col-span-4 space-y-6">
+                  <p className="text-[10px] font-bold text-[#828282] uppercase tracking-[0.2em]">Identity Core</p>
+                  
+                  <div className="aspect-square w-full bg-[#101010] border border-[#2A2A2A] flex items-center justify-center p-8 group relative overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-br from-[#E1E0CC]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                    {(() => {
+                      const svgStr = assets?.logo_studio_data?.assets?.primaryLogoSvg;
+                      if (svgStr) {
+                        return <div className="w-28 h-28 [&>svg]:w-full [&>svg]:h-full opacity-90 mix-blend-screen" dangerouslySetInnerHTML={{ __html: svgStr }} />;
+                      }
+                      if (assets?.logo_url) {
+                        return <img src={assets.logo_url} alt="Logo" className="w-28 h-28 object-contain opacity-90" />;
+                      }
+                      return (
+                        <span className="text-7xl font-light text-white tracking-tighter">
+                          {(dna?.brand_name || "B").charAt(0).toUpperCase()}
+                        </span>
+                      );
+                    })()}
                   </div>
-
-                  <div className="border-t border-[#828282]/20 pt-3 space-y-1">
-                    <div className="flex justify-between text-xs">
-                      <span className="text-[#828282] uppercase tracking-wider">Industry</span>
-                      <span className="text-[#ffffff] font-bold">{dna?.industry}</span>
-                    </div>
-                    <div className="flex justify-between text-xs">
-                      <span className="text-[#828282] uppercase tracking-wider">Personality</span>
-                      <span className="text-[#ffffff] font-bold capitalize">
-                        {dna?.brand_personality}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* BLOCK B: Color Palette (5 cols) */}
-                <div className="md:col-span-5 bg-[#1c1e21] border border-[#828282]/20 rounded-2xl p-5 flex flex-col gap-4 shadow-sm">
-                  <p className="text-[11px] font-medium text-[#828282] uppercase tracking-wider">Color Palette</p>
-                  <div className="grid grid-cols-2 gap-4 flex-1">
-                    {/* Primary */}
-                    <div className="space-y-2">
-                      <div
-                        className="h-24 w-full rounded-xl shadow-sm border border-[#828282]/20"
-                        style={{ backgroundColor: colors.primaryHex || "#1A0A00" }}
-                      />
-                      <div>
-                        <p className="text-[11px] font-medium text-[#ffffff]">Primary</p>
-                        <p className="text-[11px] text-[#828282] font-mono mt-0.5">{colors.primaryHex || "#1A0A00"}</p>
-                      </div>
-                    </div>
-                    {/* Accent */}
-                    <div className="space-y-2">
-                      <div
-                        className="h-24 w-full rounded-xl shadow-sm border border-[#828282]/20"
-                        style={{ backgroundColor: colors.secondaryHex || "#DEDBC8" }}
-                      />
-                      <div>
-                        <p className="text-[11px] font-medium text-[#ffffff]">Accent</p>
-                        <p className="text-[11px] text-[#828282] font-mono mt-0.5">{colors.secondaryHex || "#DEDBC8"}</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* BLOCK C: Typography (3 cols) */}
-                <div className="md:col-span-3 bg-[#1c1e21] border border-[#828282]/20 rounded-2xl p-5 flex flex-col gap-4 shadow-sm">
-                  <p className="text-[11px] font-medium text-[#828282] uppercase tracking-wider">Typography System</p>
-                  <div className="space-y-5 flex-1">
+                  
+                  <div className="grid grid-cols-2 gap-4 border-t border-[#2A2A2A] pt-6">
                     <div>
-                      <span className="text-[11px] text-[#828282] font-medium block mb-1">Headline</span>
-                      <span className="text-lg font-bold text-[#ffffff] block tracking-tight" style={{ fontFamily: typography.primaryFont }}>
+                      <span className="block text-[10px] text-[#828282] uppercase tracking-[0.2em] mb-1">Industry</span>
+                      <span className="text-sm text-white font-light">{dna?.industry || '-'}</span>
+                    </div>
+                    <div>
+                      <span className="block text-[10px] text-[#828282] uppercase tracking-[0.2em] mb-1">Personality</span>
+                      <span className="text-sm text-white font-light capitalize">{dna?.brand_personality || '-'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* COLOR PALETTE - 4 COLS */}
+                <div className="md:col-span-4 space-y-6">
+                  <p className="text-[10px] font-bold text-[#828282] uppercase tracking-[0.2em]">System Colors</p>
+                  
+                  <div className="space-y-6">
+                    <div className="group cursor-pointer">
+                      <div className="h-36 w-full border border-[#2A2A2A] transition-transform duration-500 group-hover:scale-[1.02]" style={{ backgroundColor: colors.secondaryHex || "#0A0A0A" }} />
+                      <div className="flex justify-between items-center mt-4">
+                        <span className="text-xs text-white uppercase tracking-wider">Background / Base</span>
+                        <span className="text-[11px] text-[#828282] font-mono">{colors.secondaryHex || "#0A0A0A"}</span>
+                      </div>
+                    </div>
+                    
+                    <div className="group cursor-pointer">
+                      <div className="h-36 w-full border border-[#2A2A2A] transition-transform duration-500 group-hover:scale-[1.02]" style={{ backgroundColor: colors.primaryHex || "#DEDBC8" }} />
+                      <div className="flex justify-between items-center mt-4">
+                        <span className="text-xs text-white uppercase tracking-wider">Primary Accent</span>
+                        <span className="text-[11px] text-[#828282] font-mono">{colors.primaryHex || "#DEDBC8"}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* TYPOGRAPHY - 4 COLS */}
+                <div className="md:col-span-4 space-y-6">
+                  <p className="text-[10px] font-bold text-[#828282] uppercase tracking-[0.2em]">Typography</p>
+                  
+                  <div className="bg-[#101010] border border-[#2A2A2A] p-8 space-y-8 h-full flex flex-col justify-between min-h-[300px]">
+                    <div>
+                      <span className="text-[10px] text-[#828282] uppercase tracking-[0.2em] block mb-4">Headline / Display</span>
+                      <span className="text-4xl text-white block tracking-tight" style={{ fontFamily: typography.primaryFont }}>
                         {typography.primaryFont}
                       </span>
-                      <span className="text-[12px] text-[#828282] block mt-1">AaBbCc 123</span>
+                      <span className="text-[13px] text-[#828282] block mt-2 font-light">Aa Bb Cc Dd Ee Ff 0123456789</span>
                     </div>
-                    <div>
-                      <span className="text-[11px] text-[#828282] font-medium block mb-1">Body</span>
-                      <span className="text-[14px] text-[#ffffff] block" style={{ fontFamily: typography.bodyFont }}>
+                    
+                    <div className="border-t border-[#2A2A2A] pt-8">
+                      <span className="text-[10px] text-[#828282] uppercase tracking-[0.2em] block mb-4">Body / Utility</span>
+                      <span className="text-xl text-white block" style={{ fontFamily: typography.bodyFont }}>
                         {typography.bodyFont}
                       </span>
-                      <span className="text-[12px] text-[#828282] block mt-1">aAbBcC 456</span>
+                      <span className="text-[13px] text-[#828282] block mt-2 font-light">Aa Bb Cc Dd Ee Ff 0123456789</span>
                     </div>
                   </div>
-                  <p className="text-[12px] text-[#828282] border-t border-[#828282]/20 pt-4 leading-relaxed">
-                    {typography.usage}
-                  </p>
                 </div>
 
-                {/* ── ROW 2 ── */}
-
-                {/* BLOCK D: Brand Mood & Tone — TEXT ONLY (5 cols) */}
-                <div className="md:col-span-5 bg-[#1c1e21] border border-[#828282]/20 rounded-2xl p-5 flex flex-col gap-4 shadow-sm">
-                  <p className="text-[11px] font-medium text-[#828282] uppercase tracking-wider">Brand Mood & Tone</p>
-
-                  {/* Personality tags */}
+              </div>
+              
+              {/* BRAND MESSAGING & VALUES - SPANS FULL WIDTH */}
+              <div className="border-t border-[#2A2A2A] pt-12 grid grid-cols-1 md:grid-cols-12 gap-12">
+                <div className="md:col-span-4">
+                  <p className="text-[10px] font-bold text-[#828282] uppercase tracking-[0.2em] mb-4">Core Mission</p>
+                  <p className="text-[15px] text-white font-light leading-relaxed">{dna?.mission || "Not defined"}</p>
+                </div>
+                
+                <div className="md:col-span-4">
+                  <p className="text-[10px] font-bold text-[#828282] uppercase tracking-[0.2em] mb-4">Target Audience</p>
+                  <p className="text-[15px] text-white font-light leading-relaxed">{dna?.target_audience || "Not defined"}</p>
+                </div>
+                
+                <div className="md:col-span-4">
+                  <p className="text-[10px] font-bold text-[#828282] uppercase tracking-[0.2em] mb-4">Brand Values</p>
                   <div className="flex flex-wrap gap-2">
                     {(dna?.brand_values || []).map((v) => (
-                      <span
-                        key={v}
-                        className="text-[11px] font-medium uppercase tracking-wider text-[#ffffff] px-3 py-1.5 rounded-md border bg-[#050505] border-[#828282]/20"
-                      >
+                      <span key={v} className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#E1E0CC] px-4 py-2 border border-[#E1E0CC]/20 bg-[#E1E0CC]/5">
                         {v}
                       </span>
                     ))}
                   </div>
-
-                  {/* Tone descriptors */}
-                  <div className="space-y-3 flex-1 mt-2">
-                    <p className="text-[11px] text-[#828282] font-medium uppercase tracking-wider block">Voice Attributes</p>
-                    <div className="space-y-2">
-                      {[
-                        { label: "Tone", value: dna?.brand_personality || "Professional" },
-                        { label: "Audience", value: dna?.target_audience || "Not defined" },
-                        { label: "Mission", value: dna?.mission || "Not defined" },
-                      ].map(({ label, value }) => (
-                        <div key={label} className="flex gap-3 text-[13px]">
-                          <span className="text-[#828282] font-medium w-16 shrink-0">{label}</span>
-                          <span className="text-[#ffffff] leading-snug line-clamp-2">{value}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Brand values as the tone line */}
-                  {(dna?.brand_values || []).length > 0 && (
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 pt-3 border-t border-[#828282]/20 text-[11px] font-medium text-[#828282] uppercase tracking-widest">
-                      {(dna?.brand_values || []).slice(0, 3).map((v, i) => (
-                        <span key={v} className="flex items-center gap-3">
-                          {i > 0 && <span aria-hidden>•</span>}
-                          {v}
-                        </span>
-                      ))}
-                    </div>
-                  )}
                 </div>
-
-                {/* BLOCK E: Social Post Visual Direction — approved moodboard (7 cols) */}
-                <div className="md:col-span-7 bg-[#1c1e21] border border-[#828282]/20 rounded-2xl overflow-hidden flex flex-col shadow-sm relative">
-                  <div className="px-5 pt-5 pb-3 z-10 relative">
-                    <p className="text-[11px] font-medium text-[#828282] uppercase tracking-wider drop-shadow-md">Social Post Visual Direction</p>
-                  </div>
-                  {moodboard?.imageUrl ? (
-                    <div className="flex-1 relative">
-                      {/* Show approved moodboard — NO logo overlay */}
-                      <img
-                        src={moodboard.imageUrl}
-                        alt="Approved Moodboard"
-                        className="w-full h-full object-cover object-top opacity-80"
-                        style={{ minHeight: "200px", maxHeight: "280px" }}
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A] via-[#0A0A0A]/40 to-transparent flex flex-col justify-end px-5 py-4">
-                        <p className="text-[11px] text-[#DEDBC8] font-medium uppercase tracking-wider">✦ Approved Visual Direction</p>
-                        <p className="text-[#ffffff] text-lg font-bold mt-1">{moodboard.name}</p>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex-1 flex items-center justify-center p-6 text-center">
-                      <div>
-                        <p className="text-[#828282] text-[13px] font-medium">No moodboard approved yet.</p>
-                        <p className="text-[#828282] text-[12px] mt-1 leading-snug">Generate and approve a direction in the onboarding visual direction step.</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* ── ROW 3 — Full width: Visual Brain Summary ── */}
-                <div className="md:col-span-12 bg-[#1c1e21] border border-[#828282]/20 rounded-2xl p-5 flex flex-col md:flex-row md:items-center gap-6 shadow-sm">
-                  <div className="space-y-2 flex-1">
-                    <p className="text-[11px] font-medium text-[#828282] uppercase tracking-wider">Visual Brand Summary</p>
-                    <p className="text-[13px] text-[#828282] leading-relaxed">
-                      {dna?.business_description}
-                    </p>
-                  </div>
-
-                  <div className="flex items-center gap-2 md:shrink-0">
-                    <div className="w-8 h-8 rounded-full border border-[#828282]/20" style={{ backgroundColor: colors.primaryHex || "#1A0A00" }} />
-                    <div className="w-8 h-8 rounded-full border border-[#828282]/20" style={{ backgroundColor: colors.secondaryHex || "#DEDBC8" }} />
-                    <div className="w-8 h-8 rounded-full border border-[#828282]/20 bg-[#1c1e21]" />
-                    <div className="w-8 h-8 rounded-full border border-[#828282]/20 bg-[#E1E0CC]" />
-                  </div>
-                </div>
-
               </div>
 
             </div>
           )}
 
-
-          {/* Tab 2: Original Detailed Brand DNA Cards */}
+{/* Tab 2: Original Detailed Brand DNA Cards */}
           {activeTab === "dna" && (
             <div className="space-y-6">
               
