@@ -1900,9 +1900,9 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
           {activeTab === "campaigns" && (
             <div className="relative animate-fade-up">
               {!hasAutomateAccess && (
-                <div className="absolute inset-0 z-50 bg-black/40 backdrop-blur-md rounded-3xl overflow-clip">
+                <div className="absolute inset-0 z-50 bg-[#0A0A0A]/80 backdrop-blur-xl rounded-3xl overflow-clip border border-[#E1E0CC]/5">
                   <div className="sticky top-32 flex flex-col items-center justify-center p-8 text-center space-y-4">
-                    <div className="w-16 h-16 rounded-full bg-[#E1E0CC]/10 flex items-center justify-center text-[#E1E0CC] mx-auto mb-4">
+                    <div className="w-16 h-16 rounded-full bg-[#E1E0CC]/10 flex items-center justify-center text-[#E1E0CC] mx-auto mb-4 shadow-[0_0_30px_rgba(225,224,204,0.1)]">
                       <Lock className="w-8 h-8" />
                     </div>
                     <h2 className="text-2xl font-bold tracking-tight text-[#ffffff]">Campaigns & Calendar</h2>
@@ -1920,7 +1920,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                 </div>
               )}
 
-              <div className={`space-y-8 ${!hasAutomateAccess ? "opacity-50 pointer-events-none select-none filter blur-[4px]" : ""}`}>
+              <div className={`space-y-8 ${!hasAutomateAccess ? "opacity-30 pointer-events-none select-none" : ""}`}>
               {/* SECTION 2: 30-DAY CONTENT PLANNER GRID */}
               <div className="space-y-4">
                 
