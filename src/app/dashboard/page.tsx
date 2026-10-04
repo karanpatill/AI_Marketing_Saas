@@ -2211,10 +2211,10 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
           )}
 
 
-          {/* Tab 5: Campaign Generate Studio */}
+          {/* Tab 5: Post Studio */}
           {activeTab === "studio" && (
             <div className="space-y-6 animate-fade-up">
-              </div>
+
 
               {/* Main Studio Grid */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
