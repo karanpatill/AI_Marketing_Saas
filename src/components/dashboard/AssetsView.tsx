@@ -352,7 +352,7 @@ export function AssetsView({ workspaceId, refreshKey = 0 }: { workspaceId: strin
                   )}
 
                   {/* Hover Actions */}
-                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3 backdrop-blur-sm z-20">
+                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity flex flex-wrap items-center justify-center gap-3 backdrop-blur-sm z-20 [@media(hover:none)]:opacity-100 [@media(hover:none)]:inset-auto [@media(hover:none)]:bottom-0 [@media(hover:none)]:left-0 [@media(hover:none)]:right-0 [@media(hover:none)]:py-3 [@media(hover:none)]:bg-transparent [@media(hover:none)]:bg-gradient-to-t [@media(hover:none)]:from-black/85 [@media(hover:none)]:to-transparent [@media(hover:none)]:backdrop-blur-none">
                     {activeSubTab === "image" && (
                        <button
                          onClick={async (e) => {

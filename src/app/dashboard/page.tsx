@@ -1208,28 +1208,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
             </div>
           ) : (
             <>
-              {/* Top Info Banner - Only render if DNA is synced */}
-              {dna && (
-                <div className="bg-[#1c1e21] border border-[#828282]/20 rounded-2xl px-5 py-4 flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-3 min-w-0">
-                    {/* Color dot indicator */}
-                    <div
-                      className="w-3 h-3 rounded-full shrink-0 ring-2 ring-white/10"
-                      style={{ backgroundColor: assets?.logo_studio_data?.colors?.primaryHex || '#DEDBC8' }}
-                    />
-                    <div className="min-w-0">
-                      <h1 className="text-base font-bold text-[#ffffff] tracking-tight truncate">{dna?.brand_name}</h1>
-                      <p className="text-[11px] text-[#828282] truncate">{dna?.category}{dna?.industry ? ` · ${dna.industry}` : ''}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#DEDBC8]/10 border border-[#DEDBC8]/20 text-[#DEDBC8] text-[10px] font-semibold">
-                      <ShieldCheck className="w-3 h-3" />
-                      Memory Synced
-                    </div>
-                  </div>
-                </div>
-              )}
+
 
           {/* Tab 1: Mission Control (Visual Style Tile Moodboard) */}
           {activeTab === "control" && (
@@ -1942,163 +1921,6 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
               )}
 
               <div className={`space-y-8 ${!hasAutomateAccess ? "opacity-50 pointer-events-none select-none filter blur-[4px]" : ""}`}>
-              
-              {/* MAIN USP HERO: AUTOMATE YOUR BRAND */}
-              <div className="relative overflow-hidden rounded-2xl bg-[#1c1e21] border border-[#E1E0CC]/5 hover:border-[#E1E0CC]/15 transition-all p-6 sm:p-8 shadow-none text-[#ffffff]">
-                <div className="relative z-10 space-y-6">
-                  {/* Top USP Banner Title */}
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#E1E0CC]/50 pb-6">
-                    <div className="space-y-2 max-w-2xl">
-                      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#E1E0CC]/10 border-none text-[#ffffff] text-sm font-sans font-bold uppercase tracking-wider">
-                        <Sparkles className="w-3 h-3 text-brand-secondary" />
-                        CORE USP • BRAND AUTOMATION ENGINE
-                      </div>
-                      <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-[#ffffff] flex items-center gap-3">
-                        Automate Your Brand
-                        <span className={`text-[11px] font-bold tracking-wide px-3 py-1 rounded-full flex items-center gap-1.5 ${
-                          isAutopilotActive 
-                            ? "bg-[#E1E0CC]/15 text-[#ffffff]" 
-                            : "bg-black/50 text-[#828282]"
-                        }`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${isAutopilotActive ? "bg-[#E1E0CC]/10 animate-pulse" : "bg-[#828282]"}`} />
-                          {isAutopilotActive ? "AUTO-PILOT ACTIVE" : "AUTO-PILOT PAUSED"}
-                        </span>
-                      </h2>
-                      <p className="text-xs text-[#828282] leading-relaxed">
-                        Connect your social channels once. Our autonomous AI engine plans, generates, designs, and auto-posts 30 days of brand strategy directly to your target channels.
-                      </p>
-                    </div>
-
-                    {/* Auto-Pilot Toggle Button */}
-                    <button
-                      disabled={isTogglingAutopilot || !activeWorkspace?.id}
-                      onClick={async () => {
-                        if (!activeWorkspace?.id) return;
-                        setIsTogglingAutopilot(true);
-                        const newEnabled = !isAutopilotActive;
-                        try {
-                          const res = await fetch('/api/workspace/autopost', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                              workspaceId: activeWorkspace.id,
-                              enabled: newEnabled,
-                              time: activeWorkspace?.auto_post_time || localAutoPostTime || "09:00",
-                              type: activeWorkspace?.auto_post_type || "carousel",
-                            })
-                          });
-                          if (res.ok) {
-                            // Optimistically update the workspace state so UI reflects immediately
-                            setActiveWorkspace((prev: any) => prev ? { ...prev, auto_post_enabled: newEnabled } : prev);
-                          } else {
-                            const errData = await res.json();
-                            setToast({ message: "Failed to update Auto-Pilot: " + (errData.error || "Unknown error"), type: "error" });
-                          }
-                        } catch (err: any) {
-                          setToast({ message: "Network error: " + err.message, type: "error" });
-                        } finally {
-                          setIsTogglingAutopilot(false);
-                        }
-                      }}
-                      className={`px-5 py-2.5 rounded-2xl text-xs font-bold uppercase tracking-[0.2em] transition-all flex items-center gap-2 shrink-0 disabled:opacity-60 disabled:cursor-not-allowed ${
-                        isAutopilotActive 
-                          ? "bg-[#E1E0CC] text-[#101010] hover:bg-[#1c1e21] border border-[#E1E0CC]/5 hover:border-[#E1E0CC]/15 hover:text-[#ffffff] border-transparent hover:border-[#E1E0CC]/50" 
-                          : "bg-[#E1E0CC] text-[#101010] hover:bg-white"
-                      }`}
-                    >
-                      <Zap className="w-3.5 h-3.5" />
-                      {isTogglingAutopilot ? "Updating..." : isAutopilotActive ? "Auto-Pilot Active (Pause)" : "Activate Auto-Pilot"}
-                    </button>
-                  </div>
-
-                  {/* Connected Social Media Channels Grid (Instagram Exclusive) */}
-                  <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-sm font-sans font-bold uppercase text-[#828282] tracking-wider">
-                        Connected Publishing Target (Instagram Active)
-                      </span>
-                      <button
-                        onClick={handleConnectInstagram}
-                        disabled={isFetchingInstagram}
-                        className="text-sm font-sans tracking-normal font-bold text-[#ffffff] hover:underline cursor-pointer disabled:opacity-50"
-                      >
-                        {isFetchingInstagram ? "Connecting..." : instagramConn?.isConnected ? "Reconnect Instagram" : "+ Configure Instagram Connection"}
-                      </button>
-                    </div>
-                    
-                    <div className="bg-black/50 border-none rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-bold uppercase text-[#ffffff] tracking-wider">Instagram Business</span>
-                          {instagramConn?.isConnected && (
-                            <span className="text-xs font-sans tracking-normal font-bold px-2 py-0.5 rounded bg-[#E1E0CC]/10 text-[#828282] border-none flex items-center gap-1">
-                              <span className="w-1.5 h-1.5 rounded-full bg-[#E1E0CC]/50 animate-pulse" />
-                              PRIMARY & EXCLUSIVE PLATFORM
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-xs font-sans tracking-normal text-[#ffffff]">
-                          {instagramConn?.isConnected 
-                            ? <>Connected Account: <span className="text-[#ffffff] font-bold">{instagramConn.accountHandle}</span></>
-                            : "No Instagram account connected yet."}
-                        </p>
-                      </div>
-
-                      <div className="flex items-center gap-3">
-                        <div className="text-right font-sans tracking-normal">
-                          <span className="text-xs font-bold text-[#ffffff] block">
-                            {calendar.length} Posts Planned
-                          </span>
-                          <span className="text-xs text-[#828282]">
-                            {calendar.filter(i => i.status === "completed").length} Completed • {calendar.filter(i => i.status === "scheduled" || !i.status).length} Auto-Scheduled
-                          </span>
-                        </div>
-                        <button
-                          onClick={handleConnectInstagram}
-                          disabled={isFetchingInstagram}
-                          className="px-3.5 py-2 bg-primary hover:bg-[#E1E0CC] text-black font-medium text-sm rounded-full transition-all cursor-pointer disabled:opacity-50"
-                        >
-                          {instagramConn?.isConnected ? "Settings" : "Connect"}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Engine Rules & Schedule */}
-                  <div className="bg-black/40 border-none rounded-2xl p-4 grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-[#E1E0CC]/90 rounded-lg text-[#101010]">
-                        <Calendar className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <span className="text-xs text-[#828282] uppercase font-sans font-bold tracking-wider block">Posting Schedule</span>
-                        <span className="font-semibold text-[#ffffff] text-xs">{isAutopilotActive ? `1 post / day at ${activeWorkspace?.auto_post_time || localAutoPostTime} UTC` : "Paused"}</span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-[#E1E0CC]/90 rounded-lg text-[#101010]">
-                        <Globe className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <span className="text-xs text-[#828282] uppercase font-sans font-bold tracking-wider block">Content Type</span>
-                        <span className="font-semibold text-[#ffffff] text-xs capitalize">{(activeWorkspace?.auto_post_type || "carousel") === "post" ? "Single posts" : `${activeWorkspace?.auto_post_type || "carousel"}s`}</span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-[#E1E0CC]/90 rounded-lg text-[#101010]">
-                        <ShieldCheck className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <span className="text-xs text-[#828282] uppercase font-sans font-bold tracking-wider block">Publishing To</span>
-                        <span className="font-semibold text-[#ffffff] text-xs">{instagramConn?.isConnected ? `Instagram · ${instagramConn.accountHandle}` : "No channel connected"}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
               {/* SECTION 2: 30-DAY CONTENT PLANNER GRID */}
               <div className="space-y-4">
                 
@@ -2392,33 +2214,13 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
           {/* Tab 5: Campaign Generate Studio */}
           {activeTab === "studio" && (
             <div className="space-y-6 animate-fade-up">
-              {/* Header */}
-              <div className="bg-[#1c1e21] bg-gradient-to-br from-[#1C1C1C] to-black border border-[#E1E0CC]/5 hover:border-[#E1E0CC]/15 transition-all shadow-[0_0_30px_rgba(225,224,204,0.02)]/80 rounded-2xl p-5 shadow-[0_4px_20px_rgb(0,0,0,0.01)] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                  <h3 className="text-sm font-bold text-[#ffffff] flex items-center gap-1.5 uppercase tracking-wider">
-                    <Image className="w-4 h-4 text-[#DEDBC8]" />
-                    Campaign Generate Studio
-                  </h3>
-                  <p className="text-[11px] text-[#828282] mt-0.5">
-                    Generate premium, brand-consistent marketing graphics using Flux Schnell.
-                  </p>
-                </div>
-                {/* Active Brand Visual Indicator */}
-                <div className="flex items-center gap-2 bg-[#0D0D0D] px-3.5 py-2 rounded-2xl border-none text-[#ffffff]/70 text-[11px] font-semibold uppercase tracking-wider">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#E1E0CC]/10 animate-pulse" />
-                  <span>Brand Guidelines Active</span>
-                  <div className="flex items-center gap-1 ml-1.5 border-l border-[#E1E0CC]/50 pl-2">
-                    <span className="w-3.5 h-3.5 rounded-full border border-[#828282]/20" style={{ backgroundColor: assets?.logo_studio_data?.colors?.primaryHex || "#0D0D0D" }} />
-                    <span className="w-3.5 h-3.5 rounded-full border border-[#828282]/20" style={{ backgroundColor: assets?.logo_studio_data?.colors?.secondaryHex || "#DEDBC8" }} />
-                  </div>
-                </div>
               </div>
 
               {/* Main Studio Grid */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
                 
                 {/* Left panel: Prompt & Settings (5 Cols) */}
-                <div className="lg:col-span-5 bg-[#1c1e21] border border-[#E1E0CC]/5 hover:border-[#E1E0CC]/15 transition-all rounded-2xl p-5 shadow-none space-y-5">
+                <div className="lg:col-span-4 bg-[#1c1e21] border border-[#E1E0CC]/5 hover:border-[#E1E0CC]/15 transition-all rounded-2xl p-5 shadow-none space-y-5">
                   <div className="space-y-1.5">
                     <label className="text-[11px] font-semibold text-[#828282] uppercase tracking-wider block">
                       Describe your post topic / idea
@@ -2513,7 +2315,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                 </div>
 
                 {/* Right panel: Post Preview Canvas (7 Cols) */}
-                <div className="lg:col-span-7 bg-[#0D0D0D] border-none rounded-2xl p-5 flex flex-col items-center justify-center relative min-h-[460px] overflow-hidden shadow-2xl">
+                <div className="lg:col-span-8 bg-[#0D0D0D] border-none rounded-2xl p-5 flex flex-col items-center justify-center relative min-h-[600px] overflow-hidden shadow-2xl">
                   {isGeneratingPost ? (
                     <div className="text-center space-y-3">
                       <Loader2 className="w-8 h-8 text-[#DEDBC8] animate-spin mx-auto" />
@@ -2705,7 +2507,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
                 
                 {/* Input Panel */}
-                <div className="lg:col-span-5 bg-[#1c1e21] border border-[#E1E0CC]/5 hover:border-[#E1E0CC]/15 transition-all rounded-2xl p-5 shadow-none space-y-5">
+                <div className="lg:col-span-4 bg-[#1c1e21] border border-[#E1E0CC]/5 hover:border-[#E1E0CC]/15 transition-all rounded-2xl p-5 shadow-none space-y-5">
                   <div className="space-y-1.5">
                     <label className="text-[11px] font-semibold text-[#828282] uppercase tracking-wider block">
                       Carousel Objective / Concept
@@ -2755,7 +2557,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                 </div>
 
                 {/* Carousel Viewer/Canvas (7 Cols) */}
-                <div className="lg:col-span-7 bg-[#0D0D0D] border-none rounded-2xl p-6 flex flex-col min-h-[500px] justify-between relative shadow-2xl overflow-hidden">
+                <div className="lg:col-span-8 bg-[#0D0D0D] border-none rounded-2xl p-6 flex flex-col min-h-[600px] justify-between relative shadow-2xl overflow-hidden">
                   
                   {isGeneratingCarousel ? (
                     <div className="my-auto text-center space-y-3">
@@ -3062,12 +2864,12 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                     Video Studio
                   </h3>
                   <p className="text-[11px] text-[#828282] mt-0.5">
-                    Generate cinematic social ads & video campaigns using the LongCat-Video 13.6B generation engine.
+                    Generate cinematic social ads & video campaigns using the Kling Cinematic generation engine.
                   </p>
                 </div>
                 <div className="flex items-center gap-2 bg-[#0D0D0D] px-3.5 py-2 rounded-2xl border-none text-[#ffffff]/70 text-[11px] font-semibold uppercase tracking-wider">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#E1E0CC]/10 animate-pulse" />
-                  <span>Meituan LongCat Engine Active</span>
+                  <span>Kling Standard Mode Active</span>
                 </div>
               </div>
 
@@ -3075,7 +2877,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
                 
                 {/* Input Panel */}
-                <div className="lg:col-span-5 bg-[#1c1e21] border border-[#E1E0CC]/5 hover:border-[#E1E0CC]/15 transition-all rounded-2xl p-5 shadow-none space-y-5">
+                <div className="lg:col-span-4 bg-[#1c1e21] border border-[#E1E0CC]/5 hover:border-[#E1E0CC]/15 transition-all rounded-2xl p-5 shadow-none space-y-5">
                   <div className="space-y-1.5">
                     <label className="text-[11px] font-semibold text-[#828282] uppercase tracking-wider block">
                       Video Scene / Concept Description
@@ -3091,7 +2893,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                   {/* Duration Selector */}
                   <div className="space-y-1.5">
                     <label className="text-[11px] font-semibold text-[#828282] uppercase tracking-wider block">
-                      Duration Scale (Meituan Long Video)
+                      Duration Scale (Kling Standard)
                     </label>
                     <div className="grid grid-cols-3 gap-2">
                       {["10s", "20s", "30s"].map((dur) => (
@@ -3138,9 +2940,9 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
 
                   {/* Mechanics Details */}
                   <div className="bg-black border-none rounded-2xl p-3.5 text-sm text-[#ffffff]/70 font-light leading-relaxed space-y-2">
-                    <p className="font-bold text-[#ffffff]/80 uppercase tracking-wider">LONG CAT VIDEO SPECS</p>
+                    <p className="font-bold text-[#ffffff]/80 uppercase tracking-wider">KLING API SPECS</p>
                     <ul className="space-y-1 list-disc pl-3.5 leading-relaxed">
-                      <li>Uses a 13.6B parameter Dense Transformer model.</li>
+                      <li>Generates cinematic, temporally coherent product visuals.</li>
                       <li>Calculates smooth camera shifts & volumetric lighting matching your primary color ({assets?.logo_studio_data?.colors?.primaryHex || "#0D0D0D"}) and accent color ({assets?.logo_studio_data?.colors?.secondaryHex || "#DEDBC8"}).</li>
                       <li>Ensures temporal coherence and subject appearance stability across all generated frames.</li>
                     </ul>
@@ -3148,7 +2950,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                 </div>
 
                 {/* Video Preview Canvas */}
-                <div className="lg:col-span-7 bg-[#0D0D0D] border-none rounded-2xl p-6 flex flex-col min-h-[500px] justify-between relative shadow-2xl overflow-hidden">
+                <div className="lg:col-span-8 bg-[#0D0D0D] border-none rounded-2xl p-6 flex flex-col min-h-[600px] justify-between relative shadow-2xl overflow-hidden">
                   
                   {isGeneratingVideo ? (
                     <div className="my-auto text-center space-y-3">
@@ -3165,7 +2967,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                       </span>
 
                       {/* Video Player */}
-                      <div className="relative aspect-[9/16] w-full max-w-[300px] mx-auto bg-black rounded-2xl overflow-hidden border-none shadow-2xl">
+                      <div className="relative h-full max-h-[600px] aspect-[9/16] mx-auto bg-black rounded-2xl overflow-hidden border border-[#E1E0CC]/5 shadow-2xl">
                         <video
                           src={generatedVideoUrl}
                           controls
@@ -4190,7 +3992,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                                 {dna?.brand_name?.[0] || "A"}
                               </div>
                               <div>
-                                <h4 className="text-[#ffffff] text-xs font-normal tracking-wide leading-none">{dna?.brand_name || "Asenra"}</h4>
+                                <h4 className="text-[#ffffff] text-xs font-normal tracking-wide leading-none">{dna?.brand_name || (activeWorkspace?.name || "Your Brand")}</h4>
                                 <span className="text-[8px] text-[#ffffff] font-normal">Sponsored</span>
                               </div>
                             </div>
@@ -4256,7 +4058,7 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                               <div className="w-7 h-7 rounded-full bg-[#1c1e21] border border-[#E1E0CC]/5 hover:border-[#E1E0CC]/15 transition-all backdrop-blur-md border border-white/20 flex items-center justify-center font-bold text-[#ffffff] text-sm">
                                 {dna?.brand_name?.[0] || "A"}
                               </div>
-                              <span className="text-sm font-bold text-[#ffffff] tracking-wider">{dna?.brand_name || "Asenra"}</span>
+                              <span className="text-sm font-bold text-[#ffffff] tracking-wider">{dna?.brand_name || (activeWorkspace?.name || "Your Brand")}</span>
                             </div>
                             <span className="text-xs font-sans tracking-normal bg-[#1c1e21] border border-[#E1E0CC]/5 hover:border-[#E1E0CC]/15 transition-all backdrop-blur-md px-2 py-0.5 rounded-full text-[#ffffff]/90 border border-[#828282]/20">
                               {activeSlide + 1} / {viewingAsset.generated_assets.slides.length}
@@ -4372,12 +4174,12 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
                               <div className="w-6 h-6 rounded-full bg-[#1c1e21] border border-[#E1E0CC]/5 hover:border-[#E1E0CC]/15 transition-all border border-white/20 flex items-center justify-center font-bold text-xs">
                                 {dna?.brand_name?.[0] || "A"}
                               </div>
-                              <span className="text-xs font-bold tracking-wide">{dna?.brand_name || "Asenra"}</span>
+                              <span className="text-xs font-bold tracking-wide">{dna?.brand_name || (activeWorkspace?.name || "Your Brand")}</span>
                               <button className="px-2 py-0.5 bg-[#1c1e21] border border-[#E1E0CC]/5 hover:border-[#E1E0CC]/15 transition-all rounded-md text-[8px] font-bold uppercase tracking-wider">Follow</button>
                             </div>
                             {/* Audio track label */}
                             <p className="text-[8px] text-[#ffffff] flex items-center space-x-1 truncate font-sans tracking-normal">
-                              <span>&#9835;</span> <span>Original Audio - {dna?.brand_name || "Asenra"}</span>
+                              <span>&#9835;</span> <span>Original Audio - {dna?.brand_name || (activeWorkspace?.name || "Your Brand")}</span>
                             </p>
                             {/* Interactive timeline bar */}
                             <div className="h-1 bg-[#1c1e21] border border-[#E1E0CC]/5 hover:border-[#E1E0CC]/15 transition-all rounded-full overflow-hidden">
@@ -4543,4 +4345,8 @@ CREATE A HIGH-CONVERTING, PREMIUM ${item.post_type === 'carousel' ? 'MULTI-SLIDE
     </div>
   );
 }
+
+
+
+
 

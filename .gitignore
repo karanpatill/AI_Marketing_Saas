@@ -41,3 +41,6 @@ env.local*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Scratch space
+_scratch/

@@ -1,14 +1,11 @@
 import type { Metadata } from "next";
-import { Inter, Instrument_Serif } from "next/font/google";
+import { Almarai, Instrument_Serif } from "next/font/google";
 import "./globals.css";
-import SmoothScroll from "@/components/SmoothScroll";
-import Navbar from "@/components/Navbar";
-import TailwindCache from "@/components/TailwindCache";
 
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-  display: "swap",
+const almarai = Almarai({
+  variable: "--font-almarai",
+  subsets: ["arabic"],
+  weight: ["300", "400", "700", "800"],
 });
 
 const instrumentSerif = Instrument_Serif({
@@ -16,7 +13,6 @@ const instrumentSerif = Instrument_Serif({
   subsets: ["latin"],
   weight: ["400"],
   style: ["italic"],
-  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -34,7 +30,8 @@ export const metadata: Metadata = {
   ],
   openGraph: {
     title: "Automarc — Your Brand, Automated",
-    description: "Tell us about your business. We handle the rest.",
+    description:
+      "Tell us about your business. We handle the rest.",
     type: "website",
   },
   icons: {
@@ -44,14 +41,21 @@ export const metadata: Metadata = {
   },
 };
 
+import SmoothScroll from "@/components/SmoothScroll";
+import Navbar from "@/components/Navbar";
+import TailwindCache from "@/components/TailwindCache";
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} ${instrumentSerif.variable}`}>
-      <body className="min-h-screen bg-canvas font-sans text-ink antialiased">
+    <html
+      lang="en"
+      className={`${almarai.variable} ${instrumentSerif.variable}`}
+    >
+      <body className="bg-black text-[#E1E0CC] min-h-screen font-sans antialiased selection:bg-[#DEDBC8]/20 selection:text-[#E1E0CC]">
         <Navbar />
         <SmoothScroll>{children}</SmoothScroll>
         <TailwindCache />

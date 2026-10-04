@@ -1,85 +1,80 @@
 # Automarc - Master SaaS Strategy & Economics
 
-This document contains the complete technical architecture, pricing strategy, and growth mechanics for Automarc.
+This document contains the complete technical architecture, pricing strategy, and growth mechanics for Automarc, a Premium AI Marketing OS for D2C Brands.
 
-## 1. The Dual-Phase Tech Stack
-To ensure $0 upfront costs during development and seamless scaling in production.
+## 1. The Production Tech Stack (The "Anti-Slop" Engine)
+Automarc does not use generic API wrappers. It uses a highly specialized multi-model stack to produce agency-quality D2C content.
 
-**Phase 1: Bootstrapping ($0 Budget)**
-*   **Brain (Strategy):** Google Gemini 1.5 Flash API (100% Free Tier)
-*   **Image Engine:** Pollinations.ai / Hugging Face (Free)
-*   **Storage:** Supabase Storage (Free Tier)
-*   **Queue/CRON:** Trigger.dev (Free Hobby Tier)
-
-**Phase 2: Production (Paying Customers)**
-*   **Brain (Strategy):** Anthropic Claude 3.5 Sonnet (The ultimate anti-slop engine)
-*   **Image Engine:** OpenAI DALL-E 3 (~$0.04 / image)
-*   **Video Engine:** Higgsfield API (Best-in-class controllable video generation)
-*   **Storage:** Cloudflare R2 (Zero egress fees)
+*   **Brain / Strategy:** Anthropic Claude 3.5 Sonnet (The ultimate marketing copywriter; zero generic "AI slop" or emojis).
+*   **Voice Engine:** OpenAI TTS (High-end, hyper-realistic voiceovers).
+*   **Image Engine:** OpenAI DALL-E 3 (High prompt adherence for product/static shots, ~₹4.54 per 1024x1024 image).
+*   **Video Engine:** Kling API (Standard Mode). Highly capable Image-to-Video API for cinematic product reveals (~₹34 per 10s video).
+*   **Composition / Assembly:** Remotion (React-based video rendering to overlay precise D2C brand colors, fonts, and CTA buttons on top of Kling videos).
+*   **Infrastructure (Fixed Costs):** Vercel Pro ($20), Supabase Pro ($25), Upstash QStash ($10), Resend ($10). Total Fixed Cost: ~₹5,450/month (Breaks even at ~8 paid users).
 
 ---
 
-## 2. Token System & Generation Costs (Updated Real API Economics)
-Backend logic auto-scales the cost based on the format complexity.
-*   **Base Token Value:** 1 Token = ~₹3 API Cost.
-*   **1 Static Post (DALL-E 3):** Costs 1 Token (API Cost: ~₹3)
-*   **1 Carousel (4 slides):** Costs 4 Tokens (API Cost: ~₹12)
-*   **1 Cinematic Video (10s Veo/Higgsfield):** Costs 27 Tokens (API Cost: ~₹80)
+## 2. Token System & Generation Costs
+Bonus Credits (Tokens) are offered to users to manually generate one-off content in the Studio (flash sales, etc.).
+
+*   **1 Token** = 1 Static Image (DALL-E 3). API Cost: **~₹4.54**
+*   **8 Tokens** = 1 Cinematic Video (10s Kling). API Cost: **~₹36.00**
+*   *(Example: A 5-slide carousel deducts 5 Tokens).*
 
 ---
 
-## 3. SaaS Subscription Plans (AI Marketing OS)
-The platform is an "Autopilot Marketing OS". You pay for a 30-day automated calendar, and the pricing tiers are controlled by the *mix* of content types you get. Every paid plan also includes free manual tokens for on-demand studio generation.
+## 3. The Daily Autopilot Rotation (Cost Control)
+To maintain a strict 30-50% profit margin while delivering daily posts, the AI Content Calendar strictly enforces a **1/3 Rotation Constraint**:
+**[Carousel → Static Image → Cinematic Video]**
 
-*   **Starter OS (₹1,499/mo):** Unbeatable value for small businesses.
-    *   *30-Day Mix:* 15 Static + 10 Carousels + **5 Cinematic Videos**.
-    *   *Free Bonus:* **50 Manual Tokens**.
-    *   *Cost to Serve:* ~₹565 (Auto-pilot) + ~₹150 (Tokens) = ₹715 API Cost.
-    *   *Net Profit:* **₹784 / user (52% Margin)**
-
-*   **Pro OS (₹2,999/mo):** High-growth video-heavy engine.
-    *   *30-Day Mix:* 5 Static + 10 Carousels + **15 Cinematic Videos** (A cinematic video every other day).
-    *   *Free Bonus:* **150 Manual Tokens**.
-    *   *Cost to Serve:* ~₹1,335 (Auto-pilot) + ~₹450 (Tokens) = ₹1,785 API Cost.
-    *   *Net Profit:* **₹1,214 / user (40% Margin)**
-
-*   **Agency OS (₹9,999/mo):** Ultimate multi-brand powerhouse.
-    *   *Capacity:* Manages up to 5 Brands simultaneously (150 posts total).
-    *   *Mix per Brand:* 10 Static + 10 Carousels + **10 Cinematic Videos** (50 videos/mo total).
-    *   *Free Bonus:* **500 Manual Tokens**.
-    *   *Cost to Serve (5 Brands):* ~₹4,750 (Auto-pilot) + ~₹1,500 (Tokens) = ₹6,250 API Cost.
-    *   *Net Profit:* **₹3,749 / user (37% Margin)**
+This guarantees that only 33% of automated posts are expensive videos, driving the blended API cost of a 30-day autopilot down to just **~₹540 per month**.
 
 ---
 
-## 4. The Micro-Transaction Goldmines
+## 4. SaaS Subscription Plans (The Hybrid OS Model)
+Automarc is a software-first automation tool. The core product is the Daily Autopilot, and the Bonus Credits are a creative perk.
 
-### A. Token Top-Up Packs (For Heavy Users)
-*   **100 Tokens Pack:** Sell for **₹799**.
-    *   *API Cost:* ~₹300
-    *   *Net Profit:* **₹499 (62% Margin)**
+*   **Free Plan (The Lead Magnet):**
+    *   *Features:* 1 Workspace, 10 Bonus Credits.
+    *   *Restriction:* **Manual Trigger Only.** No daily autopilot. All content is watermarked.
 
-### B. The Infinite "₹50 Loop" (Freemium Growth Hack)
-1. Free users generate amazing posts but they have an "Automarc" watermark.
-2. They click Download/Post. Popup appears: *"Unlock Full HD, Remove Watermark, and get 10 Bonus Tokens for just ₹50."*
-3. They pay via UPI (frictionless).
-4. *Economics:* Revenue: ₹50. API Cost for 10 new tokens: ~₹30. Net Profit: ₹20.
-5. They use the 10 tokens, get watermarks again, and repeat the ₹50 payment until they upgrade to the ₹4,999 Growth OS plan.
+*   **Starter OS (₹1,489 / month):**
+    *   *Target:* Solo D2C founders.
+    *   *Engine:* 1 Workspace, **1 Post Daily** (Rotation).
+    *   *Perk:* **30 Bonus Credits/mo**.
+    *   *Max API Cost:* ₹540 (Auto) + ₹136 (Credits) = ₹676.
+    *   *Net Profit:* **₹813 / user (54% Margin)**
+
+*   **Growth OS (₹2,489 / month):**
+    *   *Target:* Aggressive D2C brands.
+    *   *Engine:* 1 Workspace, **2 Posts Daily** (Rotation).
+    *   *Perk:* **60 Bonus Credits/mo**.
+    *   *Max API Cost:* ₹1080 (Auto) + ₹272 (Credits) = ₹1352.
+    *   *Net Profit:* **₹1,137 / user (45% Margin)**
+
+*   **Build-Your-Own OS (Custom B2B Agency Tier):**
+    *   *Target:* Marketing Agencies managing multiple clients.
+    *   *Logic:* Minimum 2 Workspaces. Users drag sliders for Workspaces and Posts/Day.
+    *   *Pricing Formula:* `(Workspaces) × (Posts/Day) × ₹1,489/mo`
+    *   *Credits Bundled:* `(Workspaces) × (Posts/Day) × 30 Credits`
+    *   *Margin:* Dynamically locked at a permanent **~55% Margin** regardless of scale.
 
 ---
 
-## 5. The "Anti-Slop" Agentic Architecture (The Moat)
-Automarc does not use a basic "give me 30 posts" prompt. It uses a **Multi-Agent Pipeline** in Trigger.dev to ensure agency-quality, non-boring content.
+## 5. The "₹50 Infinite Loop" (Freemium Growth Hack)
+The Free Plan is monetized directly through high-friction micro-transactions.
 
-**The Trigger.dev Pipeline:**
-1.  **Brand Strategist Agent:** Reads the user's industry and builds a "Brand DNA" object (visual language, tone, avoided words).
-2.  **Idea Factory Agent:** Generates 100 raw "Hook Mechanics" (e.g., Bollywood Recontextualization, Expectation vs Reality, POV).
-3.  **Anti-Slop Evaluator:** An AI Critic that ruthlessly deletes any hook that sounds corporate, generic, or "AI-generated". Passes only the top 30 ideas.
-4.  **Format Orchestrator:** Maps the 30 ideas to a strict schedule (Static → Carousel → Video) and writes the exact captions and DALL-E/Higgsfield prompts.
+1. Free users generate amazing posts in the Studio, but they have a large "Automarc" watermark.
+2. When they click Download, a popup appears: *"Unlock Full HD, Remove Watermark, and get 10 Bonus Tokens for just ₹50."*
+3. They pay instantly via a frictionless UPI QR code.
+4. *Economics:* Revenue: ₹50. Cost for 10 Tokens: ~₹45. Net Profit: **₹5 per UPI scan.**
+5. *The Loop:* They burn through the 10 tokens, hit the watermark wall again, and repeat the UPI scan until they get tired and upgrade to the full Starter OS.
 
 ---
 
-## 6. Cost Optimization Architecture (Daily Execution)
-*   **The Monthly Planner:** The pipeline above runs *once a month*. It generates text only (JSON Plan) and saves it to the database. (Very cheap).
-*   **The Daily Generator:** A daily CRON job runs at 6:00 AM, looks at today's JSON plan, and *only then* calls DALL-E / Higgsfield to generate the media.
-*   **Why?** Prevents API rate limits, allows real-time adjustments if the user changes their Brand DNA mid-month, and prevents massive upfront API costs if a user cancels.
+## 6. The "Anti-Slop" Pipeline Architecture
+Automarc never uses generic ChatGPT prompts. The Upstash QStash cron job triggers a multi-agent Claude pipeline:
+1.  **The Strategist:** Reads Brand DNA, sets the psychological angle.
+2.  **The Copywriter:** Writes punchy D2C copy (Strict Negative Prompt: No emojis, no corporate jargon, no "Unlock your potential").
+3.  **The Art Director:** Generates the exact DALL-E 3 / Kling visual prompts.
+4.  **The Composer (Remotion):** Merges the assets, overlays exact hex colors/fonts, and renders the final `.mp4`.

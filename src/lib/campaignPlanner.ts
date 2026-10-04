@@ -104,9 +104,17 @@ interface GeneratedCampaignPayload {
     };
   });
 
-  const { error: calendarError } = await supabase
+  let { error: calendarError } = await supabase
     .from("brand_calendar")
     .insert(calendarRows);
+
+  // brand_calendar.campaign_id is added by src/backend/db/campaign_link.sql. Until that migration
+  // runs, still schedule the posts — just without the link back to the campaign.
+  if (calendarError && /campaign_id/.test(calendarError.message)) {
+    ({ error: calendarError } = await supabase
+      .from("brand_calendar")
+      .insert(calendarRows.map((row) => ({ ...row, campaign_id: undefined }))));
+  }
 
   if (calendarError) {
     throw new Error(`Failed to populate campaign calendar posts: ${calendarError.message}`);

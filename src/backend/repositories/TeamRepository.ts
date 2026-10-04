@@ -4,19 +4,27 @@ export class TeamRepository {
   constructor(private readonly supabase: SupabaseClient) {}
 
   async getTeamMembers(orgId: string) {
-    const { data, error } = await this.supabase
+    // members.user_id has no foreign key to profiles, so PostgREST can't embed the join;
+    // fetch both and merge into the same shape the service expects.
+    const { data: members, error } = await this.supabase
       .from("members")
-      .select(`
-        id,
-        role,
-        joined_at,
-        user_id,
-        profiles:user_id (name, email, avatar_url)
-      `)
+      .select("id, role, joined_at, user_id")
       .eq("org_id", orgId);
 
     if (error) throw error;
-    return data || [];
+    if (!members?.length) return [];
+
+    const { data: profiles, error: profileError } = await this.supabase
+      .from("profiles")
+      .select("id, name, email, avatar_url")
+      .in("id", members.map((m) => m.user_id));
+
+    if (profileError) throw profileError;
+    const byId = new Map((profiles || []).map((p) => [p.id, p]));
+    return members.map((m) => {
+      const p = byId.get(m.user_id);
+      return { ...m, profiles: p ? { name: p.name, email: p.email, avatar_url: p.avatar_url } : null };
+    });
   }
 
   async getMember(orgId: string, userId: string) {
