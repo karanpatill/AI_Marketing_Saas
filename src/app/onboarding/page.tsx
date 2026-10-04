@@ -288,50 +288,63 @@ export default function ChatOnboarding() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] flex flex-col font-sans text-white">
+    <div className="min-h-screen bg-[#0A0A0A] flex flex-col font-sans text-white relative selection:bg-[#E1E0CC]/30 selection:text-white">
+      {/* Premium Background Effects */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(225,224,204,0.08),rgba(255,255,255,0))] pointer-events-none" />
+      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay pointer-events-none" />
+      
       <Navbar />
-      <div className="flex-1 overflow-hidden flex flex-col max-w-3xl mx-auto w-full pt-10">
+      
+      <div className="flex-1 overflow-hidden flex flex-col max-w-4xl mx-auto w-full pt-10 relative z-10">
         
         {/* Chat Area */}
-        <div ref={scrollRef} className="flex-1 overflow-y-auto px-6 pb-32 space-y-8 scroll-smooth hide-scrollbar">
-          {messages.map((msg) => (
-            <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-fade-up`}>
+        <div ref={scrollRef} className="flex-1 overflow-y-auto px-6 pb-40 space-y-10 scroll-smooth hide-scrollbar">
+          {messages.map((msg, idx) => (
+            <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-fade-up`} style={{ animationDelay: `${idx * 0.1}s` }}>
               {msg.role === 'ai' && (
-                <div className="w-8 h-8 rounded-full bg-brand-secondary/20 flex items-center justify-center mr-3 mt-1 shrink-0">
-                  <Sparkles className="w-4 h-4 text-brand-secondary" />
+                <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#E1E0CC]/20 to-transparent border border-[#E1E0CC]/10 flex items-center justify-center mr-4 mt-1 shrink-0 shadow-[0_0_20px_rgba(225,224,204,0.05)]">
+                  <Sparkles className="w-4 h-4 text-[#E1E0CC]" />
                 </div>
               )}
               
-              <div className={`max-w-[85%] ${msg.role === 'user' ? 'bg-[#1C1C1C] border border-[#2A2A2A] text-white px-5 py-3 rounded-2xl rounded-tr-sm' : ''}`}>
+              <div className={`max-w-[85%] ${
+                msg.role === 'user' 
+                  ? 'bg-[#1C1C1C]/80 backdrop-blur-md border border-[#ffffff]/5 text-white px-6 py-4 rounded-3xl rounded-tr-sm shadow-xl' 
+                  : ''
+              }`}>
                 
                 {msg.type === "text" && (
-                  <p className={`${msg.role === 'ai' ? 'text-[15px] leading-relaxed text-[#E1E0CC]' : 'text-sm'}`}>
+                  <p className={`${msg.role === 'ai' ? 'text-[17px] leading-relaxed text-[#ffffff]/90 font-light tracking-wide' : 'text-[15px] leading-relaxed'}`}>
                     {msg.content}
                   </p>
                 )}
 
                 {msg.type === "dna_card" && (
-                  <div className="bg-[#101010] border border-[#2A2A2A] p-6 rounded-2xl mt-2 w-full shadow-lg">
-                    <div className="flex items-center gap-2 mb-4">
-                      <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-                      <span className="text-xs font-bold uppercase tracking-widest text-emerald-500">DNA Extracted</span>
+                  <div className="bg-[#101010]/90 backdrop-blur-xl border border-[#E1E0CC]/10 p-8 rounded-3xl mt-4 w-full shadow-[0_20px_40px_rgba(0,0,0,0.4)] relative overflow-hidden group">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#E1E0CC]/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                    
+                    <div className="flex items-center gap-3 mb-6 border-b border-[#ffffff]/5 pb-4">
+                      <div className="w-2.5 h-2.5 rounded-full bg-[#E1E0CC] animate-pulse shadow-[0_0_10px_rgba(225,224,204,0.5)]"></div>
+                      <span className="text-xs font-bold uppercase tracking-[0.2em] text-[#E1E0CC]">Brand DNA Extracted</span>
                     </div>
-                    <div className="space-y-4">
-                      <div>
-                        <label className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Brand Name</label>
-                        <input className="w-full bg-transparent border-b border-[#2A2A2A] focus:border-brand-secondary outline-none py-1 text-sm text-white" value={data.brandName} onChange={e => setData({...data, brandName: e.target.value})} />
+                    
+                    <div className="space-y-6">
+                      <div className="group/input">
+                        <label className="text-[10px] text-[#828282] uppercase tracking-[0.2em] font-bold block mb-1">Brand Name</label>
+                        <input className="w-full bg-transparent border-b border-[#2A2A2A] focus:border-[#E1E0CC] outline-none py-2 text-base text-white transition-colors" value={data.brandName} onChange={e => setData({...data, brandName: e.target.value})} />
                       </div>
-                      <div>
-                        <label className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Mission</label>
-                        <textarea className="w-full bg-transparent border-b border-[#2A2A2A] focus:border-brand-secondary outline-none py-1 text-sm text-white resize-none" value={data.mission} onChange={e => setData({...data, mission: e.target.value})} />
+                      <div className="group/input">
+                        <label className="text-[10px] text-[#828282] uppercase tracking-[0.2em] font-bold block mb-1">Mission</label>
+                        <textarea className="w-full bg-transparent border-b border-[#2A2A2A] focus:border-[#E1E0CC] outline-none py-2 text-base text-white resize-none transition-colors min-h-[60px]" value={data.mission} onChange={e => setData({...data, mission: e.target.value})} />
                       </div>
-                      <div>
-                        <label className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Target Audience</label>
-                        <input className="w-full bg-transparent border-b border-[#2A2A2A] focus:border-brand-secondary outline-none py-1 text-sm text-white" value={data.targetAudience} onChange={e => setData({...data, targetAudience: e.target.value})} />
+                      <div className="group/input">
+                        <label className="text-[10px] text-[#828282] uppercase tracking-[0.2em] font-bold block mb-1">Target Audience</label>
+                        <input className="w-full bg-transparent border-b border-[#2A2A2A] focus:border-[#E1E0CC] outline-none py-2 text-base text-white transition-colors" value={data.targetAudience} onChange={e => setData({...data, targetAudience: e.target.value})} />
                       </div>
                     </div>
+                    
                     {step === "dna" && (
-                      <button onClick={handleApproveDna} className="mt-6 w-full py-3 bg-[#E1E0CC] hover:bg-white text-black text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-2">
+                      <button onClick={handleApproveDna} className="mt-8 w-full py-4 bg-[#E1E0CC] hover:bg-[#ffffff] text-[#0A0A0A] text-sm font-bold uppercase tracking-wider rounded-2xl transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(225,224,204,0.15)] hover:shadow-[0_0_30px_rgba(225,224,204,0.3)]">
                         Approve & Continue <ArrowRight className="w-4 h-4" />
                       </button>
                     )}
@@ -400,22 +413,25 @@ export default function ChatOnboarding() {
 
         {/* Input Area */}
         {step === "url" && (
-          <div className="absolute bottom-0 left-0 w-full p-6 bg-gradient-to-t from-[#0A0A0A] via-[#0A0A0A] to-transparent">
-            <div className="max-w-3xl mx-auto relative">
-              <input
-                type="text"
-                placeholder="Enter your website URL or describe your business..."
-                className="w-full bg-[#1C1C1C] border border-[#2A2A2A] focus:border-brand-secondary outline-none text-white px-6 py-4 rounded-2xl pr-14 shadow-2xl"
-                value={inputStr}
-                onChange={e => setInputStr(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleSend()}
-              />
-              <button 
-                onClick={handleSend}
-                className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-brand-secondary text-black rounded-xl flex items-center justify-center hover:scale-105 transition-transform"
-              >
-                <ArrowRight className="w-4 h-4" />
-              </button>
+          <div className="absolute bottom-0 left-0 w-full p-6 pb-12 bg-gradient-to-t from-[#0A0A0A] via-[#0A0A0A]/90 to-transparent pointer-events-none">
+            <div className="max-w-3xl mx-auto relative pointer-events-auto">
+              <div className="relative group">
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-[#E1E0CC]/20 via-[#E1E0CC]/5 to-[#E1E0CC]/20 rounded-3xl blur opacity-30 group-hover:opacity-50 transition duration-500"></div>
+                <input
+                  type="text"
+                  placeholder="Enter your website URL or describe your business..."
+                  className="w-full bg-[#101010]/80 backdrop-blur-xl border border-[#ffffff]/10 focus:border-[#E1E0CC]/40 outline-none text-white px-8 py-5 rounded-3xl pr-16 shadow-2xl text-[15px] placeholder:text-[#828282] transition-all"
+                  value={inputStr}
+                  onChange={e => setInputStr(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleSend()}
+                />
+                <button 
+                  onClick={handleSend}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-[#E1E0CC] text-[#0A0A0A] rounded-2xl flex items-center justify-center hover:scale-105 hover:bg-white transition-all shadow-lg"
+                >
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           </div>
         )}
